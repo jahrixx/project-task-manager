@@ -1,93 +1,170 @@
 <script lang="ts">
-    import { currentUser } from '../../lib/mockData';
+    import type { User } from '$lib/stores/user';
+    import { get } from 'svelte/store';
+    import { user } from '$lib/stores/user';
+    import { onMount } from 'svelte';
+    import Sidebar from '../../components/Sidebar.svelte';
 
-    let profilePic = $currentUser.profilePic || '/src/components/assets/default-avatar.png';
-    let firstname = $currentUser.firstname;
-    let lastname = $currentUser.lastname;
-
-    let oldPassword = $currentUser.password;
+    let profilePic = '';
+    let oldPassword = '';
     let newPassword = '';
     let confirmPassword = '';
-   
+    let loading = true;
+    let currentUsername = get(user)?.username || '';
 
-    function updateProfile() {
-        // Update user data (Mock)
-        if (newPassword && newPassword !== confirmPassword) {
-            alert("New password and confirm password do not match.");
+    // **Fetch User Data**
+    onMount(async () => {
+        try {
+            const currentUser = get(user);
+            if (!currentUser?.id) {
+                alert("User ID not found!");
+                return;
+            }
+
+            const response = await fetch(`http://localhost:3000/users/${currentUser.id}`);
+            if (!response.ok) throw new Error("Failed to fetch user data");
+
+            const userData: User = await response.json();
+            console.log(currentUser.id);
+            
+            user.update(u => ({ ...u, profilePic: userData.profilePic }));
+
+            profilePic = userData.profilePic 
+                ? `http://localhost:3000${userData.profilePic}`  // Ensure no extra `/uploads/`
+                : '/src/components/assets/default-avatar.png';
+
+            console.log(profilePic)
+        } catch (error) {
+            alert("Network Error.")
+        } finally {
+            loading = false;
+        }
+    });
+
+    // **Update Password**
+    async function updatePassword() {
+        if (!oldPassword || !newPassword || !confirmPassword) {
+            alert('All password fields are required.');
+            return;
+        }
+        if (newPassword !== confirmPassword) {
+            alert('New password and confirm password do not match.');
             return;
         }
 
-        currentUser.update(user => ({ ...user, firstname, lastname, profilePic }));
-        alert("Profile updated successfully!");
-    }
+        try {
+            const response = await fetch(`http://localhost:3000/users/update-password`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: get(user)?.id, oldPassword, newPassword }),
+            });
 
-    function uploadImage(event: Event) {
-        const target = event.target as HTMLInputElement;
-        if (target && target.files) {
-            const file = target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = () => {
-                profilePic = reader.result as string;
-                currentUser.update(user => ({ ...user, profilePic }));
-            };
-            reader.readAsDataURL(file);
+            const data = await response.json();
+
+            if (!response.ok) {
+                alert(data.message);
+                return;
+            }
+
+            alert(data.message);
+            if (data.redirect) {
+                window.location.href = data.redirect;
+            }
+        } catch (error) {
+            alert("An error occurred. Please try again.");
         }
     }
-}
+
+    // **Upload Profile Picture**
+    async function uploadImage(event: Event) {
+        const target = event.target as HTMLInputElement;
+        if (target?.files?.length) {
+            const file = target.files[0];
+            const formData = new FormData();
+            formData.append('profilePic', file);
+
+            try {
+                const response = await fetch(`http://localhost:3000/users/upload/${get(user)?.id}`, {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (!response.ok) throw new Error('Failed to upload profile picture');
+
+                const data = await response.json();
+                const newProfilePicUrl = `http://localhost:3000${data.profilePicUrl}`;
+                
+                // Update profile picture URL dynamically
+                profilePic = newProfilePicUrl;
+                                
+                // Update the user store and localStorage
+                user.update((u) => {
+                    if (u) {
+                        const updatedUser = { ...u, profilePic: newProfilePicUrl };
+                        localStorage.setItem("user", JSON.stringify(updatedUser)); // Save to localStorage
+                        return updatedUser;
+                    }
+                    return u;
+                });
+                alert("✅ Profile Picture Updated Successfully!");
+            } catch (error) {
+                alert("❌ Network error during file upload!");
+            }
+        }
+    }
 </script>
 
-<div class="edit-profile">
-    <div class="profile-section">
-        <img src={profilePic} alt="Profile" class="profile-pic" />
-        <label class="custom-file-upload">
-            <input type="file" accept="image/*" on:change={uploadImage} />
-            Upload New Photo
-        </label>
-    </div>
-
-    <div class="form-container">
-        <div class="user-info">
-            <h3>Edit User Information</h3>
-            <div class="form-group">
-                <label for="firstname">First Name</label>
-                <input id="firstname" type="text" bind:value={firstname} />
-            </div>
-
-            <div class="form-group">
-                <label for="lastname">Last Name</label>
-                <input id="lastname" type="text" bind:value={lastname} />
-            </div>
+<title>Edit Profile</title>
+{#if loading}
+    <p style="text-align: center;">Loading Profile...</p>
+{:else}
+    <Sidebar />
+    <div class="edit-profile">
+        <h1 style="margin-bottom: 20px; margin-top: 20px;">Change Password</h1>
+        <div class="profile-section">
+            <img src="{profilePic}" alt="Profile" class="profile-pic" />
+            <label class="custom-file-upload">
+                <input type="file" accept="image/*" on:change={uploadImage} />
+                Upload New Photo
+            </label>
         </div>
+
         <div class="password-section">
-            <h3>Change Password</h3>
             <div class="form-group">
-                <label for="oldPassword">Old Password</label>
+                <label for="username">Username</label>
+                <input id="username" type="text" bind:value={currentUsername} readonly disabled />
+            </div>
+            <div class="form-group">
+                <label for="oldPassword">Current Password</label>
                 <input id="oldPassword" type="password" bind:value={oldPassword} placeholder="Enter current password" />
             </div>
-    
+
             <div class="form-group">
                 <label for="newPassword">New Password</label>
-                <input id="newPassword" type="password" bind:value={newPassword} placeholder="Enter new password" required/>
+                <input id="newPassword" type="password" bind:value={newPassword} placeholder="Enter new password" />
             </div>
-    
+
             <div class="form-group">
                 <label for="confirmPassword">Confirm Password</label>
-                <input id="confirmPassword" type="password" bind:value={confirmPassword} placeholder="Confirm new password" required/>
+                <input id="confirmPassword" type="password" bind:value={confirmPassword} placeholder="Confirm new password" />
             </div>
         </div>
-    </div>
 
-    <button on:click={updateProfile}>Save Changes</button>
-</div>
+        <div style="display: flex; justify-content: center; text-align: center;">
+            <button on:click={updatePassword}>Change Password</button>
+        </div>
+    </div>    
+{/if}
+
 <style>
     .edit-profile {
-        max-width: 600px;
+        max-width: 450px;
         margin: auto;
         background: transparent;
         padding: 1rem;
         text-align: center;
-        margin-top: 2px;
+        margin-top: 20px;
+        margin-left: 600px;
     }
 
     .profile-section {
@@ -129,19 +206,10 @@
         display: none;
     }
 
-    /* Flexbox container for side-by-side layout */
-    .form-container {
-        display: flex;
-        justify-content: space-between;
-        gap: 20px;
-    }
-
-    .user-info, .password-section {
-        flex: 1;
-        padding-left: 10px;
-        padding-right: 10px;
-        border-radius: 8px;
+    .password-section {
         text-align: left;
+        padding: 10px;
+        border-radius: 8px;
     }
 
     .form-group {
@@ -170,7 +238,7 @@
     }
 
     button {
-        width: 100%;
+        width: 80%;
         padding: 12px;
         background-color: #23BEDA;
         color: white;
@@ -188,8 +256,8 @@
     }
 
     @media (max-width: 600px) {
-        .form-container {
-            flex-direction: column;
+        .edit-profile {
+            margin-left: auto;
         }
     }
 </style>

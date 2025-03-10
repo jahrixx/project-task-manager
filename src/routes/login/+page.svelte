@@ -1,51 +1,59 @@
 <script lang="ts">
-    import { get } from 'svelte/store';
-    import { users, currentUser, isLoggedIn } from '../../lib/mockData';
     import { goto } from '$app/navigation';
+    import { user, isAuthenticated } from '$lib/stores/user';
 
-    let email = '';
+    let username = '';
     let password = '';
     let errorMessage = '';
+    const BACKEND_URL = "http://localhost:3000";
 
-    function login() {
-        if (!email || !password) {
-            errorMessage = "Email and password are required!";
-            showError();
-            return;
-        }
-        const foundUser = get(users).find((user) => user.email === email && user.password === password);
-        if (foundUser) {
-            currentUser.set(foundUser);
-            isLoggedIn.set(true);
-            errorMessage = "";
-            goto('/');
-        } else {
-            errorMessage = "Incorrect email or password.";
-            showError();
-        }
-    }
+    async function login() {
+        errorMessage = '';
 
-    function showError(){
-        alert(errorMessage);
+        try {
+            const response = await fetch(`${BACKEND_URL}/auth/login`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username, password }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                $user = data;
+                $isAuthenticated = true;
+                goto('/dashboard');
+            } else {
+                errorMessage = data.message || 'Login Failed!';
+                alert(errorMessage);
+            }
+        } catch (error) {
+            errorMessage = "An error occurred during login.";
+            alert(errorMessage);
+        }
     }
 </script>
 
-<title>Login</title>
-<div class="login-container">
-    <div class="login-box">
-        <div class="logo-container">
-            <img src="/src/components/assets/logo.png" alt="Logo">
-            <h2>Project Task Manager</h2>
-        </div>
-        
-        <input type="email" placeholder="Email" bind:value={email} />
-        <input type="password" placeholder="Password" bind:value={password} />
-        <button on:click={login}>Login</button>
-        <!-- {#if errorMessage}
-            <p style="color: red;">{errorMessage}</p>
-        {/if} -->
+<main>
+    <title>Login</title>
+    <!-- {#if errorMessage}
+        <p style="color: red;">{errorMessage}</p>
+    {/if} -->
+    <div class="login-container">
+        <form on:submit|preventDefault={login}>
+            <div class="login-box">
+                <div class="logo-container">
+                    <img src="/src/components/assets/logo.png" alt="Logo">
+                    <h2>Project Task Manager</h2>
+                </div>
+                
+                <input type="text" id="username" placeholder="Username" bind:value={username} required/>
+                <input type="password" id="password" placeholder="Password" bind:value={password} required/>
+                <button type="submit">Login</button>
+            </div>    
+        </form>
     </div>
-</div>    
+</main>
 
 <style>
  .login-container {

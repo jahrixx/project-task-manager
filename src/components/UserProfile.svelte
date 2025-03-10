@@ -1,28 +1,52 @@
 <script lang="ts">
     import { goto } from '$app/navigation';
-    import { currentUser } from '../lib/mockData';
+    import { isAuthenticated, user, type User } from '$lib/stores/user';
+    import { onMount } from 'svelte';
+
+    let currentUser: User | null = null;
+    let loading = true;
+
+    $: {
+        if($user){
+            currentUser = $user;
+            console.log(currentUser);
+            loading = false;
+        } else {
+            loading = false;
+        }
+    }
+    onMount(() => {
+        if(!$user){
+            goto('/login');
+        }
+    })
 </script>
 
-<div class="user-header">
-    <img src="{$currentUser.profilePic || '/src/components/assets/default-avatar.png'}" alt="Profile" class="profile-pic" />
-    
-    <div class="user-info">
-        <button class="user-name" 
-            on:click={() => goto('/edit-profile')} 
-            on:keydown={(event) => event.key === 'Enter' && goto('/edit-profile')} 
-            aria-label="View Profile">
-            {$currentUser.firstname} {$currentUser.lastname}
-        </button>
-        <span class="user-role">{$currentUser.role}</span>
-    </div>
-</div>
+{#if loading}
+<p style="text-align: center; color: red;">loading user...</p>
+    {:else if currentUser}
+        <div class="user-header">
+            <img src="{currentUser.profilePic ? `http://localhost:3000${currentUser.profilePic}` : '/src/components/assets/default-avatar.png'}" alt="Profile" class="profile-pic" />
+            <div class="user-info">
+                <button class="user-name" 
+                    on:click={() => goto('/edit-profile')} 
+                    on:keydown={(event) => event.key === 'Enter' && goto('/edit-profile')} 
+                    aria-label="View Profile">
+                    {currentUser.firstName} {currentUser.lastName}
+                </button><br>
+                <span class="user-role">{currentUser.role} - {currentUser.office}</span>
+            </div>
+        </div>
+{/if}
 
 <style>
     .user-header {
         display: flex;
         align-items: center;
         gap: 5px;
-        margin-top: 10px;
+        margin-top: 35px;
+        margin-bottom: 20px;
+        margin-left: 15px;
         /* padding: 10px; */
         /* background: #f8f9fa;
         border-radius: 8px;
@@ -36,11 +60,6 @@
         object-fit: cover;
         border: 2px solid #23BEDA;
         margin-left: 30px;
-    }
-
-    .user-info {
-        display: flex;
-        flex-direction: column;
     }
 
     .user-name {

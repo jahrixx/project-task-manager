@@ -1,19 +1,38 @@
 <script lang="ts">
+    import { onMount } from "svelte";
+    import { isAuthenticated } from "$lib/stores/user";
+    import { goto } from "$app/navigation";
+    import Sidebar from "../../components/Sidebar.svelte";
+    import UserProfile from "../../components/UserProfile.svelte";
+    import Login from '../login/+page.svelte';
     
+    onMount(async () => {
+        if(!isAuthenticated){
+            goto('/login');
+            return;
+        }
+    });
 </script>
 
-<div class="container">
-    <div class="main-container">
-        <h1>Welcome to Report Generation</h1>
+<title>Reports Generation</title>
+{#if !isAuthenticated}
+    <Login />
+{:else}
+    <div class="container">
+        <Sidebar />
+        <div class="main-container">
+            <UserProfile />
+            <h1>Welcome to Report Management!</h1>
+        </div>
     </div>
-</div>
+{/if}
 
 <style>
+    h1 {
+        margin-left: 50px;
+    }
+    
     .main-container {
-        flex: 1;
-        /* margin-left: 250px; */
-        padding: 20px;
-        overflow-y: auto;
-        background: #ffffff;
+        margin-left: 250px;
     }
 </style>
