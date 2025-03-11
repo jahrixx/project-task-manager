@@ -52,6 +52,7 @@
 
         filterByDept();
     }
+
     function filterByDept() {
         if(selectedDepartments.length === 0){
             users = allUsers;
@@ -60,6 +61,7 @@
 
         users = allUsers.filter(user => selectedDepartments.includes(user.office ?? ""));
     }
+    
     function filterUsers() {
         users = allUsers.filter(user =>
             (user.firstName?.toLowerCase() ?? "").includes(searchQuery.toLowerCase()) ||
@@ -85,10 +87,10 @@
         try {
             if (editId) {
                 await updateUser(editId, form);
-                alert("✅ User updated successfully!");
+                alert("User updated successfully!");
             } else {
                 await createUser(form);
-                alert("✅ User created successfully!");
+                alert("User created successfully!");
             }
 
             allUsers = await getUsers();
@@ -97,7 +99,7 @@
             editId = null;
             showForm = false;
         } catch (error) {
-            console.error("❌ Error:", error);
+            console.error("Error:", error);
             alert("An error occurred.");
         }
     }
@@ -138,7 +140,7 @@
 
     async function removeUser(id: number | undefined) {
         if (id === undefined) {
-            console.error("❌ Cannot delete user: ID is undefined.");
+            console.error("Cannot delete user: ID is undefined.");
             return;
         }
         await deleteUser(id);
@@ -177,7 +179,7 @@
                 </div>
                 <div class="search">
                     <div class="search-input-container">
-                        <input type="text" class="search-bar" placeholder="Search by user" bind:value={searchQuery} on:keydown={ (e) => { if (e.key === "Enter")e.preventDefault(); }} >
+                        <input type="text" class="search-bar" placeholder="Search" bind:value={searchQuery} on:keydown={ (e) => { if (e.key === "Enter")e.preventDefault(); }} >
                         <button class="search-icon" on:click={filterUsers}>🔍</button>
                         {#if searchQuery}
                             <button class="reset-icon" on:click={resetSearch}>❌</button>

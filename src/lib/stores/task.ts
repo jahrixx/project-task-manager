@@ -7,6 +7,8 @@ export interface TaskData {
     status: string;
     assignedTo: number | null;
     createdBy: number | null;
+    assignedToName: string | null;
+    createdByName: string | null;
 }
 
 export interface TaskResponse {

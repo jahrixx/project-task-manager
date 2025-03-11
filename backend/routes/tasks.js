@@ -11,9 +11,18 @@ router.get("/", async (req, res) => {
     console.log("GET /tasks called with:", { userId, role, office, numericUserId });
 
     let baseQuery = `
-        SELECT tasks.id, tasks.title, tasks.description, tasks.startDate, tasks.endDate, 
-               tasks.status, u1.firstName AS assignedTo, u2.firstName AS createdBy, 
-               u2.role AS creatorRole, u2.office AS creatorOffice
+        SELECT tasks.id, 
+               tasks.title, 
+               tasks.description, 
+               tasks.startDate, 
+               tasks.endDate, 
+               tasks.status,
+               tasks.createdBy,
+               tasks.assignedTo, 
+               u1.firstName AS assignedToName, 
+               u2.firstName AS createdByName, 
+               u2.role AS creatorRole, 
+               u2.office AS creatorOffice
         FROM tasks
         LEFT JOIN users u1 ON tasks.assignedTo = u1.id
         LEFT JOIN users u2 ON tasks.createdBy = u2.id
@@ -25,18 +34,28 @@ router.get("/", async (req, res) => {
         if (role === "Manager") {
             // For Managers: show tasks they created, tasks assigned to them,
             // and tasks assigned to employees in the same office.
-            conditions.push(
-                "(tasks.createdBy = ? OR tasks.assignedTo = ? OR (u1.role = 'Employee' AND UPPER(u1.office) = UPPER(?)))"
-            );
+            conditions.push(`
+                    (
+                        (tasks.createdBy = tasks.assignedTo AND tasks.createdBy = ?) OR
+                        (tasks.assignedTo = ?) OR
+                        (u1.role = 'Employee' AND UPPER(u1.office) = UPPER(?))
+                    )
+                `);
+            
+            // conditions.push(
+            //     "(tasks.createdBy = ? OR tasks.assignedTo = ? OR (u1.role = 'Employee' AND UPPER(u1.office) = UPPER(?)))"
+            // );
             queryParams.push(numericUserId, numericUserId, office.trim());
         } else if (role === "Employee") {
             // For Employees: show tasks where they are either the creator or the assignee.
-            conditions.push("(tasks.createdBy = ? OR tasks.assignedTo = ?)");
+            // conditions.push("(tasks.createdBy = ? OR tasks.assignedTo = ?)");
+            conditions.push(`
+                    (tasks.createdBy = ? OR tasks.assignedTo = ?)
+                `)
             queryParams.push(numericUserId, numericUserId);
         }
     }
 
-    
     if (conditions.length > 0) {
         baseQuery += " WHERE " + conditions.join(" AND ");
     }
@@ -49,7 +68,7 @@ router.get("/", async (req, res) => {
         console.log("Tasks Retrieved:", tasks);
         res.json(tasks);
     } catch (error) {
-        console.error("❌ Error fetching tasks from MySQL:", error);
+        console.error("Error fetching tasks from MySQL:", error);
         res.status(500).json({ message: "Server error while fetching tasks." });
     }
 });
@@ -161,39 +180,24 @@ router.put("/:id", async (req, res) => {
         }
         res.json({ message: "Task updated successfully." });
     } catch (error) {
-        console.error("❌ Error updating task:", error);
+        console.error("Error updating task:", error);
         res.status(500).json({ message: "Server error while updating task." });
     }
 });
 
 // DELETE: Remove a task
 router.delete("/:id", async (req, res) => {
+    const pool = getPool();
     const { id } = req.params;
     try {
-        const pool = getPool();
-        
-        const [task] = await pool.query("SELECT FROM tasks WHERE id = ?", [id]);
-            if(task.length === 0){
-                return res.status(404).json({ message: "Task not found." });    
-            }
-
         const [result] = await pool.query("DELETE FROM tasks WHERE id = ?", [id]);
-            if (result.affectedRows === 0) {
-                return res.status(404).json({ message: "Task not found." });
-            }
-            res.json({ message: "Task deleted successfully." });
-
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: "Task not found." });
+        }
+        res.json({ message: "Task deleted successfully." });
     } catch (error) {
         console.error("Error deleting task:", error);
-        console.error("Error deleting task stack:", error.stack);
-            // Handle foreign key constraint errors
-            if (error.code === 'ER_ROW_IS_REFERENCED_2') {
-                return res.status(400).json({
-                    message: "⚠️ Cannot delete task. It's being referenced in another table."
-                });
-            }
         res.status(500).json({ message: "Server error while deleting task." });
-
     }
 });
 

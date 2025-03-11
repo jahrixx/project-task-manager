@@ -17,8 +17,6 @@
 
     onMount(() => {
         const unsubscribe = user.subscribe($user => {
-            console.log("Current User:", $user);
-
             if (!$user && get(isAuthenticated)) {
                 goto('/login');
             }

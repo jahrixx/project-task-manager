@@ -1,5 +1,6 @@
 import { writable } from "svelte/store";
 import type { TaskData, TaskResponse } from "$lib/stores/task";
+import { json } from "@sveltejs/kit";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
@@ -60,19 +61,15 @@ export async function fetchTasks(userId: number | null, role: string | null, off
         }
 
         let data = await response.json();
-
-        // Automatically mark tasks as "Overdue" if endDate has passed
         const today = new Date();
 
         data = data.map((task: any) => {
             const endDate = new Date(task.endDate);
-            
-            // Skip tasks that are already completed or cancelled
+        
             if (task.status === "Completed" || task.status === "Cancelled") {
                 return task;
             }
 
-            // If today is the due date or already past the due date, set status to Overdue
             if (endDate <= today) {
                 task.status = "Overdue";
             }
@@ -86,26 +83,54 @@ export async function fetchTasks(userId: number | null, role: string | null, off
     }
 }
 
-export async function deleteTask(id: number | undefined): Promise<void> {
-    if (id === undefined) {
-        console.error("Cannot delete task: Task ID is undefined.");
-        return;
-    }
+//Update Task
+export async function updateTask(id: number | undefined, taskData: TaskData): Promise<TaskResponse> {
+    console.log("Updating Task with ID :", id);
 
     try {
         const response = await fetch(`${API_URL}/tasks/${id}`, {
-            method: "DELETE",
+            method: "PUT",
+            headers: { "Content-Type" : "application/json" },
+            body: JSON.stringify(taskData),
         });
 
-        if (!response.ok) {
+        if(!response.ok){
             const errorData = await response.json();
-            throw new Error(errorData.message || "Failed to delete task.");
+            throw new Error(errorData.message || "Failed to update task!");
         }
+        return await response.json();
 
-        console.log(`Task with ID ${id} deleted successfully!`);
     } catch (error) {
-        console.error("Error deleting task:", error);
+        console.error("Error updating task", error);
         throw error;
     }
 }
 
+//Delete Task
+export async function deleteTask(id: number) {
+    await fetch(`${API_URL}/tasks/${id}`, { method: "DELETE" });
+}
+
+//Delete Task
+// export async function deleteTask(id: number | undefined): Promise<void> {
+//     if (id === undefined) {
+//         console.error("Cannot delete task: Task ID is undefined.");
+//         return;
+//     }
+
+//     try {
+//         const response = await fetch(`${API_URL}/tasks/${id}`, {
+//             method: "DELETE",
+//         });
+
+//         if (!response.ok) {
+//             const errorData = await response.json();
+//             throw new Error(errorData.message || "Failed to delete task.");
+//         }
+
+//         console.log(`Task with ID ${id} deleted successfully!`);
+//     } catch (error) {
+//         console.error("Error deleting task:", error);
+//         throw error;
+//     }
+// }

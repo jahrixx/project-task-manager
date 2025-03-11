@@ -23,10 +23,10 @@ export async function createUser(data: User) {
             throw new Error(result.message || "Failed to create user.");
         }
 
-        console.log("✅ User created successfully:", result);
+        console.log("User created successfully:", result);
         return result;
     } catch (error) {
-        console.error("❌ Error creating user:", error);
+        console.error("Error creating user:", error);
         alert(`Error: ${error}`);
     }
 }
@@ -47,7 +47,7 @@ export async function updateUser(id: number, data: User) {
 
         return await response.json(); // Return updated user data
     } catch (error) {
-        console.error("❌ Error updating user:", error);
+        console.error("Error updating user:", error);
         throw error;
     }
 }

@@ -83,7 +83,7 @@
                         {#if activeModal === 'Offices'}
                             <div class="overlay">
                                 {#each $dashboardStats.officesList as office}
-                                    <p>Office: {office.name}</p>
+                                    <p>{office.name}</p>
                                 {/each}
                             </div>
                         {/if}

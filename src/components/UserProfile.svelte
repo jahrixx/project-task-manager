@@ -9,7 +9,6 @@
     $: {
         if($user){
             currentUser = $user;
-            console.log(currentUser);
             loading = false;
         } else {
             loading = false;
