@@ -23,8 +23,8 @@
         id: null,
         title: '',
         description: '',
-        startDate: null,
-        endDate: null,
+        startDate: '',
+        endDate: '',
         status: 'Pending',
         assignedTo: null,
         createdBy: get(user)?.id ?? null,
@@ -42,7 +42,7 @@
         }
     }
 
-    let isUpdating = false;
+    let editId: any = null;
     let showForm = false;
     let showFilters = false;
 
@@ -71,26 +71,54 @@
         }
     });
 
+    //new
     async function handleSubmit() {
-        errorMessage = '';
-        successMessage = '';
+        if(!taskData.title || !taskData.description || !taskData.startDate || !taskData.endDate || !taskData.status){
+            alert("Title, Description, Start and End Date, Status are Required!");
+            return;
+        }
 
         try {
-            await createTask(taskData);
-            successMessage = 'Task Created Successfully!';
+            if(editId) {
+                await updateTask(editId, taskData);
+                alert("Task Updated Successfully!");
+            } else {
+                await createTask(taskData);
+                alert("Task Created Successfully!");
+            }
 
             const currentUser = get(user);
-            await fetchTasks(
+                await fetchTasks(
                     currentUser?.id ?? 0, 
                     currentUser?.role ?? '', 
                     currentUser?.office ?? ''
                 );
 
             clearForm();
+            editId = null;
+            showForm = false;
         } catch (error) {
             console.error("Task creation error:", error);
-            errorMessage = 'An unexpected error occurred!';
+            alert("An error occured!");
         }
+    }
+
+    //new 
+    function editTask(task: TaskData) {
+        taskData = { 
+            id: task.id || null,
+            title: task.title || "", 
+            description: task.description || "", 
+            status: task.status || "",
+            startDate: task.startDate ? task.startDate.split("T")[0] : "", 
+            endDate: task.endDate ? task.endDate.split("T")[0] : "",
+            assignedTo: task.assignedTo || null,
+            createdBy: task.createdBy || null,
+            assignedToName: task.assignedToName || null,
+            createdByName: task.createdByName || null
+        };
+        editId = task.id;
+        showForm = true;
     }
 
     async function removeTask(taskId: number | null) {
@@ -129,8 +157,8 @@
             id: null,
             title: '',
             description: '',
-            startDate: null,
-            endDate: null,
+            startDate: '',
+            endDate: '',
             status: 'Pending',
             assignedTo: null,
             createdBy: get(user)?.id || null,
@@ -151,13 +179,17 @@
         });
     }
 
-    function isOverdue(endDate: string | null) {
-        if (!endDate) return false;
-
+    function isOverdue(endDate: string, status: string) {   
         const dueDate = new Date(endDate);
         const today = new Date();
 
-        return dueDate < today;
+        if(!endDate){
+            return false;
+        } else if (status === 'Completed'){
+            return 'green'
+        } else {
+            return dueDate < today;
+        }
     }
 
     function setView(view: 'own' | 'employee'){
@@ -254,7 +286,7 @@
                     <div class="overlay">
                         <div class="form-container">
                             <button class="close-btn" on:click={clearForm}>&times;</button>
-                            <h3 class="header-title">Create Task</h3>
+                            <h3 class="header-title">{editId ? "Update" : "Create"} Task</h3>
                             <div class="form-inputs">
                                 <form on:submit|preventDefault={handleSubmit}>
                                     <div class="form-group">
@@ -300,7 +332,7 @@
                                         </div>
                                     {/if}
                                     <div class="form-btns">
-                                        <button type="submit">Create Task</button>
+                                        <button type="submit">{editId ? "Update" : "Create"} Task</button>
                                         <!-- <button type="button" on:click={clearForm}>Clear Form</button> -->
                                     </div>
                                 </form>
@@ -344,10 +376,10 @@
                                                 </div>
                                             </td>
                                             <td>
-                                                <span style="color: {isOverdue(task.endDate) ? 'red' : 'black'};">{formatDate(task.endDate)}</span>
+                                                <span style="color: {isOverdue(task.endDate, task.status) === 'green' ? 'green' : isOverdue(task.endDate, task.status) ? 'red' : 'black'};">{formatDate(task.endDate)}</span>
                                             </td>
                                             <td class="actions">
-                                                <button class="btn edit">Update</button>
+                                                <button class="btn edit" on:click={() => editTask(task)}>Update</button>
                                                 <button class="btn delete" on:click={() => removeTask(task.id)}>Delete</button>
                                             </td>
                                         </tr>
@@ -389,10 +421,10 @@
                                                 </div>
                                             </td>
                                             <td>
-                                                <span style="color: {isOverdue(task.endDate) ? 'red' : 'black'};">{formatDate(task.endDate)}</span>
+                                                <span style="color: {isOverdue(task.endDate, task.status) === 'green' ? 'green' : isOverdue(task.endDate, task.status) ? 'red' : 'black'};">{formatDate(task.endDate)}</span>
                                             </td>
                                             <td class="actions">
-                                                <button class="btn edit">Update</button>
+                                                <!-- <button class="btn edit">Update</button> -->
                                                 <button class="btn delete" on:click={() => removeTask(task.id)}>Delete</button>
                                             </td>
                                         </tr>
@@ -438,10 +470,10 @@
                                             </div>
                                         </td>
                                         <td>
-                                            <span style="color: {isOverdue(task.endDate) ? 'red' : 'black'};">{formatDate(task.endDate)}</span>
+                                            <span style="color: {isOverdue(task.endDate, task.status) === 'green' ? 'green' : isOverdue(task.endDate, task.status) ? 'red' : 'black'};">{formatDate(task.endDate)}</span>
                                         </td>
                                         <td class="actions">
-                                            <button class="btn edit">Update</button>
+                                            <button class="btn edit" on:click={() => editTask(task)}>Update</button>
                                             <button class="btn delete" on:click={() => removeTask(task.id)}>Delete</button>
                                         </td>
                                     </tr>

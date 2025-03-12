@@ -114,6 +114,15 @@
                         <button class="add-btn">+</button>
                     </div>
                 </div>
+                <div class="activities">
+                    <h2 style="margin: auto; width: 92%;">Recent Actvities<hr style="height: 3px; background-color: lightgray;"></h2>
+                    <div class="Container-recent-activities" style="background-color: black; height: 20px;">
+
+                    </div>
+                </div>
+                <div class="current-task-and-notifications">
+                    
+                </div>
             </div>
         </div>
     {/if}

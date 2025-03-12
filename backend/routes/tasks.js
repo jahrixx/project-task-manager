@@ -161,7 +161,7 @@ router.put("/:id", async (req, res) => {
     const { id } = req.params;
     const { title, description, startDate, endDate, status, assignedTo } = req.body;
 
-    if (!title || !description || !startDate || !endDate || !status || !assignedTo) {
+    if (!title || !description || !startDate || !endDate || !status) {
         return res.status(400).json({ message: "Missing required fields in update request." });
     }
 

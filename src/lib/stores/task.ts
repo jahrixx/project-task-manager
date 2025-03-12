@@ -2,8 +2,8 @@ export interface TaskData {
     id: number | null;
     title: string;
     description: string;
-    startDate: string | null; // JSON responses typically use ISO string format
-    endDate: string | null;
+    startDate: string;
+    endDate: string;
     status: string;
     assignedTo: number | null;
     createdBy: number | null;
@@ -13,5 +13,5 @@ export interface TaskData {
 
 export interface TaskResponse {
     message?: string;
-    taskId?: number; // Ensure this matches the DB type
+    taskId?: number;
 }
