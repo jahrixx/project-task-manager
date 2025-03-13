@@ -47,40 +47,33 @@ export async function fetchEmployees(office: string | number): Promise<{ id: num
 }
 
 
-export async function fetchTasks(userId: number | null, role: string | null, office: string | null): Promise<void> {
+export async function fetchTasks(userId: number | null, role: string | null, office: string | null) {
     try {
+       
         const userIdParam = userId ?? 0;
         const roleParam = role ?? "";
         const officeParam = office ?? "";
-
+   
         const response = await fetch(`${API_URL}/tasks?userId=${userIdParam}&role=${roleParam}&office=${officeParam}`);
-        
+       
         if (!response.ok) {
             const errorData = await response.json();
             throw new Error(errorData.message || "Failed to fetch tasks.");
         }
 
-        let data = await response.json();
-        const today = new Date();
-
-        data = data.map((task: any) => {
-            const endDate = new Date(task.endDate);
+        const data = await response.json();
         
-            if (task.status === "Completed" || task.status === "Cancelled") {
-                return task;
-            }
+        return role === "Admin"
+            ? transformGroupedTasks(data)
+            : [{ officeName: "My Tasks", tasks: data }];
 
-            if (endDate <= today) {
-                task.status = "Overdue";
-            }
-
-            return task;
-        });
-
-        tasks.set(data);
     } catch (error) {
         console.error("Failed to fetch tasks:", error);
     }
+}
+
+function transformGroupedTasks(data: any){
+    return Object.entries(data).map(([officeName, tasks]) => ({officeName, tasks}))
 }
 
 //Update Task

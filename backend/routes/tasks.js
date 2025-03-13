@@ -31,9 +31,10 @@ router.get("/", async (req, res) => {
     let conditions = [];
 
     if (userId && role) {
-        if (role === "Manager") {
-            // For Managers: show tasks they created, tasks assigned to them,
-            // and tasks assigned to employees in the same office.
+        if (role === "Admin") {
+            baseQuery += "ORDER BY u2.office ASC, tasks.id DESC";
+
+        } else if (role === "Manager") {
             conditions.push(`
                     (
                         (tasks.createdBy = tasks.assignedTo AND tasks.createdBy = ?) OR
@@ -41,17 +42,11 @@ router.get("/", async (req, res) => {
                         (u1.role = 'Employee' AND UPPER(u1.office) = UPPER(?))
                     )
                 `);
-            
-            // conditions.push(
-            //     "(tasks.createdBy = ? OR tasks.assignedTo = ? OR (u1.role = 'Employee' AND UPPER(u1.office) = UPPER(?)))"
-            // );
+
             queryParams.push(numericUserId, numericUserId, office.trim());
+
         } else if (role === "Employee") {
-            // For Employees: show tasks where they are either the creator or the assignee.
-            // conditions.push("(tasks.createdBy = ? OR tasks.assignedTo = ?)");
-            conditions.push(`
-                    (tasks.createdBy = ? OR tasks.assignedTo = ?)
-                `)
+            conditions.push(`(tasks.createdBy = ? OR tasks.assignedTo = ?)`);
             queryParams.push(numericUserId, numericUserId);
         }
     }
@@ -66,7 +61,22 @@ router.get("/", async (req, res) => {
     try {
         const [tasks] = await pool.query(baseQuery, queryParams);
         console.log("Tasks Retrieved:", tasks);
-        res.json(tasks);
+
+        if(role === "Admin"){
+            const groupedTasks = tasks.reduce((acc, task) => {
+                if(!acc[task.creatorOffice]) {
+                    acc[task.creatorOffice] = [];
+                }
+                acc[task.creatorOffice].push(task);
+                return acc;
+            }, {});
+
+            console.log("Tasks Retrieved (Grouped By Office):", groupedTasks);
+            res.json(groupedTasks);
+        } else {
+            console.log("Tasks Retrieved: ", tasks);
+            res.json(tasks);
+        }
     } catch (error) {
         console.error("Error fetching tasks from MySQL:", error);
         res.status(500).json({ message: "Server error while fetching tasks." });

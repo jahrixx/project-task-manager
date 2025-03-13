@@ -8,12 +8,17 @@
     import UserProfile from "../../components/UserProfile.svelte";
     import Login from '../login/+page.svelte';
     import { derived, get } from "svelte/store";
-    import { redirect } from "@sveltejs/kit";
+    import { all } from "axios";
 
     export const userRole = derived(user, ($user: User | null) => $user?.role || "");
 
+    let editId: any = null;
+    let showForm = false;
+    let showFilters = false;
+
     let managerTasks: TaskData[] = [];
     let employeeTasks: TaskData[] = [];
+    let allTasks: Record<string, TaskData[]> = {}; 
     let currentView = 'own';    
 
     let employeesInOffice: { id: number; name: string; role: string; office: string }[] = [];
@@ -32,19 +37,18 @@
         createdByName: null
     };
 
-    $ : if ($tasks && get(user)){
-        const currentUser = get(user);
+    $ : if ($tasks && get(user) && Array.isArray($tasks)){
+            console.log("Reactive statement tasks:", $tasks);
+            const currentUser = get(user);
+        
         if(currentUser?.role === "Manager"){
-            managerTasks = $tasks.filter(task => task.createdBy === currentUser.id && task.assignedTo === currentUser.id);
-            employeeTasks = $tasks.filter(task => task.assignedTo !== currentUser.id);
+            managerTasks = $tasks.filter(task => task.createdBy === currentUser.id || task.assignedTo === currentUser.id);
+            employeeTasks = $tasks.filter(task => task.createdBy !== currentUser.id);
+            // employeeTasks = $tasks.filter(task => task.assignedTo !== currentUser.id);
         } else {
             employeeTasks = $tasks.filter(task => task.assignedTo === currentUser?.id);
         }
     }
-
-    let editId: any = null;
-    let showForm = false;
-    let showFilters = false;
 
     onMount(async () => {
         if (!get(isAuthenticated)) {
@@ -53,22 +57,30 @@
         }
 
         const currentUser = get(user);
-        if(currentUser){
-            await fetchTasks(
-                        currentUser?.id ?? 0, 
-                        currentUser?.role ?? '', 
-                        currentUser?.office ?? ''
-                    );
+            if(currentUser){
+                const fetchedTasks = await fetchTasks(
+                                                currentUser?.id ?? 0, 
+                                                currentUser?.role ?? '', 
+                                                currentUser?.office ?? ''
+                                            );
+                if (currentUser.role === "Admin") {
+                    allTasks = fetchedTasks 
+                    ? Object.fromEntries(fetchedTasks.map(group => [group.officeName, group.tasks])) : {};
+                    
+                    console.log(allTasks)
+                } else {
+                    $tasks = fetchedTasks ? fetchedTasks.flatMap(group => group.tasks) : [];
+                } 
 
-            if (currentUser?.role === 'Manager') {
-                try {
-                    employeesInOffice = await fetchEmployees(currentUser?.office ?? '');
-                } catch (error) {
-                    console.error("Failed to fetch employees:", error);
-                    errorMessage = "Error fetching employees.";
+                if (currentUser?.role === 'Manager') {
+                    try {
+                        employeesInOffice = await fetchEmployees(currentUser?.office ?? '');
+                    } catch (error) {
+                        console.error("Failed to fetch employees:", error);
+                        errorMessage = "Error fetching employees.";
+                    }
                 }
-            }
-        }
+            } 
     });
 
     //new
@@ -103,24 +115,6 @@
         }
     }
 
-    //new 
-    function editTask(task: TaskData) {
-        taskData = { 
-            id: task.id || null,
-            title: task.title || "", 
-            description: task.description || "", 
-            status: task.status || "",
-            startDate: task.startDate ? task.startDate.split("T")[0] : "", 
-            endDate: task.endDate ? task.endDate.split("T")[0] : "",
-            assignedTo: task.assignedTo || null,
-            createdBy: task.createdBy || null,
-            assignedToName: task.assignedToName || null,
-            createdByName: task.createdByName || null
-        };
-        editId = task.id;
-        showForm = true;
-    }
-
     async function removeTask(taskId: number | null) {
         console.log("Remove task clicked:", taskId);
 
@@ -148,6 +142,24 @@
             console.error("Error deleting task :", error);
             errorMessage = "Failed to delete task. Please try again later!";
         }
+    }
+
+    //new 
+    function editTask(task: TaskData) {
+        taskData = { 
+            id: task.id || null,
+            title: task.title || "", 
+            description: task.description || "", 
+            status: task.status || "",
+            startDate: task.startDate ? task.startDate.split("T")[0] : "", 
+            endDate: task.endDate ? task.endDate.split("T")[0] : "",
+            assignedTo: task.assignedTo || null,
+            createdBy: task.createdBy || null,
+            assignedToName: task.assignedToName || null,
+            createdByName: task.createdByName || null
+        };
+        editId = task.id;
+        showForm = true;
     }
 
     function clearForm(){
@@ -272,12 +284,20 @@
                     </div>
                 </div>
             </div>
-      
             {#if $userRole === 'Admin'}
-                <div class="h1">
-                    <h1>Welcome to Task Management!</h1>
-                    <p>Task Viewing Only for Admin Task Management!</p>    
-                </div>
+                {#each Object.entries(allTasks ?? {}) as [office, tasks]}
+                    <h3>{office}</h3>
+                    <div class="task-holder">
+                        {#each tasks as task}
+                            <div class="task-card">
+                                <div class="task-header">{task.title}</div>
+                                <!-- <p>{task.description}</p> -->
+                                <p>Assigned To: <strong>{task.assignedToName}</strong></p>
+                                <span class="task-status {task.status.toLowerCase()}"><p>{task.status}</p></span>
+                            </div>
+                        {/each}
+                    </div>
+                {/each}
             {/if}
 
             {#if $userRole === 'Manager' || $userRole === 'Employee'}
@@ -367,6 +387,12 @@
                                                 <div class="task">
                                                     <b>{task.title}</b><br>
                                                     {task.description}
+                                                    
+                                                    {#if task.assignedTo !== task.createdBy}
+                                                        <br><br><span><i><b>Task Assigned To: </b> {task.assignedToName}</i></span>
+                                                    {:else}
+                                                        <span></span>
+                                                    {/if}
                                                 </div>
                                             </td>
                                             <td>
@@ -401,7 +427,7 @@
                                     <th>Task</th>
                                     <th>Status</th>
                                     <th>Due Date</th>
-                                    <th style="text-align: center;">Actions</th>
+                                    <!-- <th style="text-align: center;">Actions</th> -->
                                 </tr>
                             </thead>
                             <tbody>
@@ -410,7 +436,7 @@
                                         <tr>
                                             <td>
                                                 <div class="task">
-                                                    <b>{task.title} <i>- {task.assignedToName}</i></b><br>
+                                                    <b>{task.title}</b><br>
                                                     {task.description}
                                                 </div>
                                             </td>
@@ -423,10 +449,10 @@
                                             <td>
                                                 <span style="color: {isOverdue(task.endDate, task.status) === 'green' ? 'green' : isOverdue(task.endDate, task.status) ? 'red' : 'black'};">{formatDate(task.endDate)}</span>
                                             </td>
-                                            <td class="actions">
-                                                <!-- <button class="btn edit">Update</button> -->
+                                            <!-- <td class="actions">
+                                                <button class="btn edit">Update</button>
                                                 <button class="btn delete" on:click={() => removeTask(task.id)}>Delete</button>
-                                            </td>
+                                            </td> -->
                                         </tr>
                                     {/each}
                                     {:else}
@@ -461,6 +487,12 @@
                                             <div class="task">
                                                 <b>{task.title}</b><br>
                                                 {task.description}
+                                                
+                                                {#if task.assignedTo !== task.createdBy}
+                                                    <br><br><span><i><b>Task Assigned By Manager: </b> {task.createdByName}</i></span>
+                                                {:else}
+                                                    <span></span>
+                                                {/if}
                                             </div>
                                         </td>
                                         <td>
@@ -498,10 +530,6 @@
         border-radius: 3px;
         margin-left: auto;
         margin-right: auto;
-    }
-
-    .h1 {
-        margin-left: 50px;
     }
 
     h3 {
@@ -583,8 +611,7 @@
     }
 
     table th, table td {
-        padding: 10px;
-        /* border: 1px solid #ddd; */
+        padding: 5px;
         text-align: left;
         font-size: 14px;
         font-family: Arial, Helvetica, sans-serif;
@@ -593,6 +620,12 @@
     table th {
         background-color: none;
         color: darkgray;
+    }
+
+    table td {
+        padding-top: 15px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid lightgray;
     }
 
     /* Custom column width */
@@ -898,4 +931,75 @@
         line-height: normal;
     }
 
+    /* Admin All Task View */
+    .task-holder {
+        display: flex;
+        overflow-x: auto;
+        gap: 20px;
+        padding: 20px;
+        white-space: nowrap;
+    }
+
+    .task-holder::-webkit-scrollbar {
+        height: 5px;
+    }
+
+    .task-holder::-webkit-scrollbar-track {
+        background: none;
+        border-radius: 4px;
+    }
+
+    .task-holder::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 4px;
+    }
+
+    .task-holder::-webkit-scrollbar-thumb:hover {
+        background: #555; 
+        cursor: pointer;
+    }
+
+    .task-card{
+        background: #175e88;
+        border: 1px solid black;
+        border-radius: 5px;
+        padding: 1rem;
+        margin: 0.5rem 0;
+        box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease-in-out;
+        display: inline-block;
+        vertical-align: top;
+        min-width: 250px;
+    }
+
+    .task-card:hover{
+        transform: translateY(-5px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .task-header{
+        text-align: center;
+        font-size: 15px;
+        font-weight: bold;
+        margin-bottom: 10px;
+        border-bottom: 1px solid lightgray;
+        padding-bottom: 5px;
+        color: white;
+    }
+    .task-card p{
+        text-align: center;
+        margin-bottom: 8px;
+        line-height: 1;
+        color: white;
+    }
+
+    .task-status{
+        right: 0;
+        display: inline-block;
+        border-radius: 5px;
+        font-size: 12px;
+        font-weight: bold;
+        text-transform: uppercase;
+        color: white;
+    }
 </style>

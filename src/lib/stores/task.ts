@@ -1,3 +1,5 @@
+import { writable } from "svelte/store";
+
 export interface TaskData {
     id: number | null;
     title: string;
@@ -9,6 +11,7 @@ export interface TaskData {
     createdBy: number | null;
     assignedToName: string | null;
     createdByName: string | null;
+    office?: string;
 }
 
 export interface TaskResponse {
