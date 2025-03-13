@@ -147,6 +147,13 @@ router.post("/", async (req, res) => {
             [title, description, startDate, endDate, status, assignedUserId, createdBy]
         );
 
+        const taskId = result.insertId;
+
+        // create task insert to activities table
+        await pool.query(
+            "INSERT INTO activities (message, createdBy, assignedTo, taskId) VALUES (?, ?, ?, ?)",
+            [`created task ${title} with status ${status.toLowerCase()}`, createdBy, assignedTo, taskId]
+        );
         res.status(201).json({ message: "Task assigned successfully!", taskId: result.insertId });
 
     } catch (error) {
@@ -159,7 +166,8 @@ router.post("/", async (req, res) => {
 // PUT: Update an existing task
 router.put("/:id", async (req, res) => {
     const { id } = req.params;
-    const { title, description, startDate, endDate, status, assignedTo } = req.body;
+    const { title, description, startDate, endDate, status, createdBy, assignedTo } = req.body;
+    const completedBy = createdBy || assignedTo;
 
     if (!title || !description || !startDate || !endDate || !status) {
         return res.status(400).json({ message: "Missing required fields in update request." });
@@ -175,6 +183,12 @@ router.put("/:id", async (req, res) => {
             "UPDATE tasks SET title = ?, description = ?, startDate = ?, endDate = ?, status = ?, assignedTo = ? WHERE id = ?",
             [title, description, startDate, endDate, status, assignedTo, id]
         );
+                
+        // insert into activity table
+        await pool.query(`
+            INSERT INTO activities (message, createdBy, assignedTo, taskId) VALUES (?,?,?,?)`,
+            [`updated task ${title} with status ${status.toLowerCase()}`, completedBy, null, id]);
+    
         if (result.affectedRows === 0) {
             return res.status(500).json({ message: "Failed to update task. No rows affected." });
         }
@@ -189,11 +203,25 @@ router.put("/:id", async (req, res) => {
 router.delete("/:id", async (req, res) => {
     const pool = getPool();
     const { id } = req.params;
+
     try {
-        const [result] = await pool.query("DELETE FROM tasks WHERE id = ?", [id]);
-        if (result.affectedRows === 0) {
+        const [task] = await pool.query("SELECT title, status, createdBy FROM tasks WHERE id = ?", [id]);
+        if(task.length === 0){
             return res.status(404).json({ message: "Task not found." });
         }
+
+        const { title, status, createdBy } = task[0];
+        // insert to activities table
+        await pool.query(
+            `INSERT INTO activities (message, createdBy, assignedTo, taskId) VALUES (?,?,?,?)`,
+            [`deleted task ${title} with status ${status.toLowerCase()}`, createdBy, null, id]
+        );
+
+        const [result] = await pool.query("DELETE FROM tasks WHERE id = ?", [id]);
+        if (result.affectedRows === 0) {
+            return res.status(500).json({ message: "Failed to Delete Task." });
+        }
+
         res.json({ message: "Task deleted successfully." });
     } catch (error) {
         console.error("Error deleting task:", error);

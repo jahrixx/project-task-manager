@@ -108,7 +108,17 @@ export async function updateTask(id: number | undefined, taskData: TaskData): Pr
 
 //Delete Task
 export async function deleteTask(id: number) {
-    await fetch(`${API_URL}/tasks/${id}`, { method: "DELETE" });
+    const res = await fetch(`${API_URL}/tasks/${id}`, { 
+        method: "DELETE",
+        // headers: {"Content-Type" : "application/json"},
+        // body: JSON.stringify({ createdBy, assignedTo }), 
+    });
+
+    if(!res.ok){
+        throw new Error("Failed to Delete Task!")
+    }
+
+    return res.json();
 }
 
 //Delete Task

@@ -84,6 +84,22 @@ async function createTables() {
             )
         `);
         console.log("✅ Tasks table created or already exists.");
+
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS activities (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                message LONGTEXT NOT NULL,
+                date DATETIME DEFAULT CURRENT_TIMESTAMP,
+                createdBy INT,
+                assignedTo INT,
+                taskId INT,
+                FOREIGN KEY (createdBy) REFERENCES users(id),
+                FOREIGN KEY (assignedTo) REFERENCES users(id),
+                FOREIGN KEY (taskId) REFERENCES tasks(id) ON DELETE SET NULL
+            )
+        `);
+        console.log("✅ Activities table created or already exists.");
+
     } catch (err) {
         console.error("❌ Database initialization failed:", err);
     }

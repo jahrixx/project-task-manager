@@ -1,0 +1,135 @@
+<script lang="ts">
+    export let activities: { message: string, date: string, userFullname: string }[] = [];
+    export let role: string;
+    // export let fullname: string;
+
+    function formatDateTime(timestamp: string): string {
+        const date = new Date(timestamp);
+        const now = new Date();
+        const yesterday = new Date();
+        const today = new Date();
+
+        today.setDate(now.getDate());
+        yesterday.setDate(now.getDate() - 1);
+
+        if(date.toDateString() === yesterday.toDateString()){
+            return `Yesterday, ${date.toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+            })}`;
+        } else if(date.toDateString() === now.toDateString()){
+            return `Today, ${date.toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+            })}`;
+        } else {
+            return new Intl.DateTimeFormat('en-US', {
+                month: 'short',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+            }).format(date);
+        }
+
+        // return date.toLocaleDateString('en-US', {
+        //     month: 'short',
+        //     day: '2-digit',
+        //     hour12: true
+        // })
+    }
+
+</script>
+
+<div class="recent-activities">
+    {#if activities.length > 0}
+        <ul> 
+            {#each activities as activity (activity.date)}
+                <li>
+                    {#if role === 'Admin'}
+                        <div class="activity-item">
+                            <div style="width: 180px;">
+                                <p><b>{formatDateTime(activity.date)}</b></p>
+                            </div>
+                            <div>
+                                <p><b><i>{activity.userFullname}</i></b> {activity.message}</p>
+                            </div>
+                        </div>
+                    {:else if role === 'Manager'}
+                        <div class="activity-item">
+                            <div style="width: 180px;">
+                                <p><b>{formatDateTime(activity.date)}</b></p>
+                            </div>
+                            <div>
+                                <p><b><i>{activity.userFullname}</i></b> {activity.message}</p>
+                            </div>
+                        </div>
+                    {:else if role === 'Employee'}
+                        <div class="activity-item">
+                            <div style="width: 180px;">
+                                <p><b>{formatDateTime(activity.date)}</b></p>
+                            </div>
+                            <div>
+                                <p><b><i>{activity.userFullname}</i></b> {activity.message}</p>
+                            </div>
+                        </div>
+                    {/if}
+                        <!-- <span>{new Date(activity.date).toLocaleString()}</span> -->
+                </li>
+            {/each}
+        </ul>
+        {:else}
+            <p style="text-align: center;">No Recent Activities!</p>
+    {/if}
+</div>
+
+<style>
+    .activity-item{
+        display: flex; 
+        gap: 50px; 
+        margin: 0; 
+        padding: 0; 
+        line-height: normal;
+    }
+
+    .activity-item p {
+        margin: 5px;
+    }
+
+    .recent-activities {
+        background-color: transparent;
+        color: black;
+        border-radius: 8px;
+        padding: 15px;
+        max-height: 100px;
+        overflow-y: auto;
+        scrollbar-width: none;
+    }
+
+    .recent-activities::-webkit-scrollbar{
+        display: none;
+    }
+
+    .recent-activities ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .recent-activities li {
+        /* border-bottom: 1px solid #eee; */
+        padding: 0;
+        margin: 0;
+    }
+
+    /* .recent-activities li:last-child {
+        border-bottom: none;
+    } */
+
+    /* .recent-activities small {
+        color: #888;
+        font-size: 12px;
+    } */
+</style>

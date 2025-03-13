@@ -6,18 +6,35 @@
     import Login from '../login/+page.svelte';
     import Sidebar from '../../components/Sidebar.svelte';
     import UserProfile from '../../components/UserProfile.svelte';
+    import RecentActivities from '../../components/RecentActivities.svelte';
+    import { get } from 'svelte/store';
+    import { fetchActivities } from '$lib/api/activityService';
 
-    onMount(async () => {
+    let activeModal = '';
+    let activities: any = [];
+    let role = '';
+
+    onMount(async () => {  
         if(!isAuthenticated){
             goto('/login');
             return; 
         }
-        if ($userRole === 'Admin') {
-            fetchDashboardStats();
-        }
-    });
+        
+        const currentUser = get(user);
+        const userId = currentUser?.id ?? 0;
+        role = currentUser?.role || '';
 
-    let activeModal = '';
+        try {
+            const res = await fetchActivities(userId, role);
+            activities = res;
+            console.log("Results: ",activities);    
+        } catch (error) {
+            console.error("Error fetching activities: ", error);
+        }
+            if ($userRole === 'Admin') {
+                fetchDashboardStats();
+            }
+    });
 
     function toggleModal(type: string) {
         activeModal = activeModal === type ? '' : type;
@@ -35,8 +52,8 @@
                 <UserProfile />
                 <div class="dash-controls">
                     <div class="task-card">
-                        <span class="circle">1</span>
-                        <span class="task-text">Managers</span>
+                        <!-- <span class="circle">No.</span> -->
+                        <span class="task-text">No. of Managers</span>
                         <button class="add-btn" on:click={() => toggleModal('Managers')}>
                             {#if activeModal === 'Managers'}
                                 <span class="x-icon">❌</span>
@@ -53,8 +70,8 @@
                         {/if}
                     </div>
                     <div class="task-card">
-                        <span class="circle">2</span>
-                        <span class="task-text">Employees</span>
+                        <!-- <span class="circle">No.</span> -->
+                        <span class="task-text">No. of Employees</span>
                         <button class="add-btn" on:click={() => toggleModal('Employees')}>
                             {#if activeModal === 'Employees'}
                                 <span class="x-icon">❌</span>
@@ -71,8 +88,8 @@
                         {/if}
                     </div>
                     <div class="task-card">
-                        <span class="circle">3</span>
-                        <span class="task-text">Offices</span>
+                        <!-- <span class="circle">No.</span> -->
+                        <span class="task-text">No. of Offices</span>
                         <button class="add-btn" on:click={() => toggleModal('Offices')}>
                             {#if activeModal === 'Offices'}
                                 <span class="x-icon">❌</span>
@@ -89,6 +106,12 @@
                         {/if}
                     </div>
                 </div>
+                <div class="activities">
+                    <h2 style="margin: auto; width: 92%;">Recent Activities<hr style="height: 3px; background-color: lightgray;"></h2>
+                    <div class="container-recent-activities" style="margin: auto; width: 90%;">
+                        <RecentActivities {activities} {role}/>
+                    </div>
+                </div>
             </div>
         </div>            
     {/if}
@@ -99,25 +122,25 @@
                 <UserProfile />
                 <div class="dash-controls">
                     <div class="task-card">
-                        <span class="circle">1</span>
+                        <!-- <span class="circle"></span> -->
                         <span class="task-text">Lorem Ipsum</span>
                         <button class="add-btn">+</button>
                     </div>
                     <div class="task-card">
-                        <span class="circle">2</span>
+                        <!-- <span class="circle"></span> -->
                         <span class="task-text">Lorem Ipsum</span>
                         <button class="add-btn" on:click={() => toggleModal('Employees')}>+</button>
                     </div>
                     <div class="task-card">
-                        <span class="circle">3</span>
+                        <!-- <span class="circle"></span> -->
                         <span class="task-text">Lorem Ipsum</span>
                         <button class="add-btn">+</button>
                     </div>
                 </div>
                 <div class="activities">
-                    <h2 style="margin: auto; width: 92%;">Recent Actvities<hr style="height: 3px; background-color: lightgray;"></h2>
-                    <div class="Container-recent-activities" style="background-color: black; height: 20px;">
-
+                    <h2 style="margin: auto; width: 92%;">Recent Activities<hr style="height: 3px; background-color: lightgray;"></h2>
+                    <div class="container-recent-activities" style="margin: auto; width: 90%;">
+                        <RecentActivities {activities} {role}/>
                     </div>
                 </div>
                 <div class="current-task-and-notifications">
@@ -159,7 +182,7 @@
         background: #1CA0C3;
     }
 
-    .circle {
+    /* .circle {
         display: flex;
         align-items: center;
         justify-content: center;
@@ -170,15 +193,17 @@
         font-weight: bold;
         font-size: 1.5rem;
         border-radius: 50%;
-    }
+    } */
 
     .task-text {
+        margin-left: 30px;
         flex: 1;
         font-size: 1.5rem;
         color: white;
     }
 
     .add-btn {
+        margin-right: 30px;
         background: white;
         color: #23BEDA;
         border: none;
