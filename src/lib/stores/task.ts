@@ -18,3 +18,6 @@ export interface TaskResponse {
     message?: string;
     taskId?: number;
 }
+
+export const tasks = writable<TaskData[]>([]);
+export const selectedTask = writable<TaskData | null>(null);
