@@ -1,7 +1,10 @@
+import { writable } from "svelte/store";
 import type { TaskData, TaskResponse } from "$lib/stores/task";
+import { json } from "@sveltejs/kit";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
+export const tasks = writable<TaskData[]>([]);
 
 // Function to create a new task
 export async function createTask(taskData: TaskData): Promise<TaskResponse> {
