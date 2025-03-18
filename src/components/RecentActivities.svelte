@@ -1,7 +1,6 @@
 <script lang="ts">
     export let activities: { message: string, date: string, userFullname: string }[] = [];
     export let role: string;
-    // export let fullname: string;
 
     function formatDateTime(timestamp: string): string {
         const date = new Date(timestamp);
@@ -33,12 +32,6 @@
                 hour12: true
             }).format(date);
         }
-
-        // return date.toLocaleDateString('en-US', {
-        //     month: 'short',
-        //     day: '2-digit',
-        //     hour12: true
-        // })
     }
 
 </script>
@@ -46,7 +39,7 @@
 <div class="recent-activities">
     {#if activities.length > 0}
         <ul> 
-            {#each activities as activity (activity.date)}
+            {#each activities as activity, index (activity.date+'-'+index)}
                 <li>
                     {#if role === 'Admin'}
                         <div class="activity-item">
@@ -76,7 +69,6 @@
                             </div>
                         </div>
                     {/if}
-                        <!-- <span>{new Date(activity.date).toLocaleString()}</span> -->
                 </li>
             {/each}
         </ul>
@@ -119,17 +111,7 @@
     }
 
     .recent-activities li {
-        /* border-bottom: 1px solid #eee; */
         padding: 0;
         margin: 0;
     }
-
-    /* .recent-activities li:last-child {
-        border-bottom: none;
-    } */
-
-    /* .recent-activities small {
-        color: #888;
-        font-size: 12px;
-    } */
 </style>

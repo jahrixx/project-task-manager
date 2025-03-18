@@ -27,7 +27,7 @@
         try {
             const res = await fetchActivities(userId, role);
             activities = res;
-            console.log("Results: ",activities);    
+            console.log("List of Recent Activities: ",activities);    
         } catch (error) {
             console.error("Error fetching activities: ", error);
         }

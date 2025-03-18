@@ -18,12 +18,16 @@
 
     let managerTasks: TaskData[] = [];
     let employeeTasks: TaskData[] = [];
+    let selectedDepartments: any = [];
     let allTasks: Record<string, TaskData[]> = {}; 
-    let currentView = 'own';    
-
+    let filteredTasks: Record<string, TaskData[]> = {};
     let employeesInOffice: { id: number; name: string; role: string; office: string }[] = [];
+    
     let errorMessage = '';
     let successMessage = '';
+    let currentView = 'own';   
+    let searchQuery = "";
+    let currentUser;
     let taskData: TaskData = {
         id: null,
         title: '',
@@ -36,10 +40,11 @@
         assignedToName: null,
         createdByName: null
     };
+    
+    $: currentUser = get(user);
 
     $ : if ($tasks && get(user) && Array.isArray($tasks)){
             console.log("Reactive statement tasks:", $tasks);
-            const currentUser = get(user);
         
         if(currentUser?.role === "Manager"){
             managerTasks = $tasks.filter(task => task.createdBy === currentUser.id || task.assignedTo === currentUser.id);
@@ -56,92 +61,95 @@
             return;
         }
 
-        const currentUser = get(user);
-            if(currentUser){
-                const fetchedTasks = await fetchTasks(
-                                                currentUser?.id ?? 0, 
-                                                currentUser?.role ?? '', 
-                                                currentUser?.office ?? ''
-                                            );
-                if (currentUser.role === "Admin") {
-                    allTasks = fetchedTasks 
-                    ? Object.fromEntries(fetchedTasks.map(group => [group.officeName, group.tasks])) : {};
-                    
-                    console.log(allTasks)
-                } else {
-                    $tasks = fetchedTasks ? fetchedTasks.flatMap(group => group.tasks) : [];
-                } 
-
-                if (currentUser?.role === 'Manager') {
-                    try {
-                        employeesInOffice = await fetchEmployees(currentUser?.office ?? '');
-                    } catch (error) {
-                        console.error("Failed to fetch employees:", error);
-                        errorMessage = "Error fetching employees.";
-                    }
-                }
+        if(currentUser){
+            const fetchedTasks = await fetchTasks(
+                                            currentUser?.id ?? 0, 
+                                            currentUser?.role ?? '', 
+                                            currentUser?.office ?? ''
+                                        );
+            if (currentUser.role === "Admin") {
+                allTasks = fetchedTasks 
+                ? Object.fromEntries(fetchedTasks.map(group => [group.officeName, group.tasks])) : {};
+                
+                filteredTasks = { ...allTasks };
+                
+            } else {
+                $tasks = fetchedTasks ? fetchedTasks.flatMap(group => group.tasks) : [];
             } 
+
+            if (currentUser?.role === 'Manager') {
+                try {
+                    employeesInOffice = await fetchEmployees(currentUser?.office ?? '');
+                } catch (error) {
+                    console.error("Failed to fetch employees:", error);
+                    errorMessage = "Error fetching employees.";
+                }
+            }
+        } 
     });
 
-    //new
+    //Update and Create
     async function handleSubmit() {
         if(!taskData.title || !taskData.description || !taskData.startDate || !taskData.endDate || !taskData.status){
             alert("Title, Description, Start and End Date, Status are Required!");
             return;
-        }
-
-        try {
-            if(editId) {
-                await updateTask(editId, taskData);
-                alert("Task Updated Successfully!");
-            } else {
-                await createTask(taskData);
-                alert("Task Created Successfully!");
+        } else {
+            try {
+                if(editId) {
+                    await updateTask(editId, taskData);
+                    alert("Task Updated Successfully!");
+                } else {
+                    await createTask(taskData);
+                    alert("Task Created Successfully!");
+                } 
+            } catch (error) {
+                console.error("Task creation error:", error);
+                alert("An error occured!");
+            } finally {
+                await refreshTasks();
+                clearForm();
+                editId = null;
+                showForm = false;
             }
-
-            const currentUser = get(user);
-                await fetchTasks(
-                    currentUser?.id ?? 0, 
-                    currentUser?.role ?? '', 
-                    currentUser?.office ?? ''
-                );
-
-            clearForm();
-            editId = null;
-            showForm = false;
-        } catch (error) {
-            console.error("Task creation error:", error);
-            alert("An error occured!");
         }
     }
 
     async function removeTask(taskId: number | null) {
-        console.log("Remove task clicked:", taskId);
-
         if(!taskId) {
             console.error("Cannot delete task id: ID is undefined");
             return;
-        }
+        } else if(!confirm("Are you sure you want to delete this task?")) {
+            return;
+        } 
+            try {
+                await deleteTask(taskId);
+                alert("Task deleted successfully");
+                await refreshTasks();
+            } catch (error) {
+                console.error("Error deleting task :", error);
+                errorMessage = "Failed to delete task. Please try again later!";
+            }
+    }
 
-        if(!confirm("Are you sure you want to delete this task?")) {
+    async function refreshTasks() {
+        const currentUser = get(user);
+        if(!currentUser){
             return;
         }
-
-        try {
-            await deleteTask(taskId);
-            successMessage = "Task deleted successfully";
-            
-            const currentUser = get(user);
-            await fetchTasks(
+        const fetchedTasks = await fetchTasks(
                     currentUser?.id ?? 0, 
                     currentUser?.role ?? '', 
                     currentUser?.office ?? ''
                 );
+                console.log("Fetched tasks after execution:", fetchedTasks);
 
-        } catch (error) {
-            console.error("Error deleting task :", error);
-            errorMessage = "Failed to delete task. Please try again later!";
-        }
+            if (currentUser?.role === "Admin") {
+                allTasks = fetchedTasks
+                    ? Object.fromEntries(fetchedTasks.map(group => [group.officeName, group.tasks]))
+                    : {};
+            } else {
+                $tasks = fetchedTasks ? fetchedTasks.flatMap(group => group.tasks) : [];
+            }
     }
 
     //new 
@@ -212,6 +220,93 @@
         showFilters = !showFilters;
     }
 
+    function filterTasks() {
+        const currentUser = get(user);
+        let search = searchQuery.toLowerCase();
+
+        switch (currentUser?.role){
+            case "Admin" : 
+                filteredTasks = Object.fromEntries(
+                    Object.entries(allTasks ?? {}).map(([office, tasks]) => [
+                        office,
+                        tasks.filter(task =>
+                            (task.title?.toLowerCase() ?? "").includes(search) ||
+                            (task.description?.toLowerCase() ?? "").includes(search) ||
+                            (task.assignedToName?.toLowerCase() ?? "").includes(search)
+                        ),
+                    ]).filter(([_, tasks]) => tasks.length > 0) 
+                );
+                break;
+
+            case "Manager" :
+                let filteredManagerTasks = managerTasks.filter(task =>
+                    (task.title?.toLowerCase() ?? "").includes(search) ||
+                    (task.description?.toLowerCase() ?? "").includes(search) ||
+                    (task.assignedToName?.toLowerCase() ?? "").includes(search)
+                );
+
+                let filteredEmployeeTasks = employeeTasks.filter(task =>
+                    (task.title?.toLowerCase() ?? "").includes(search) ||
+                    (task.description?.toLowerCase() ?? "").includes(search) ||
+                    (task.assignedToName?.toLowerCase() ?? "").includes(search)
+                );
+                break;
+
+            case "Employee" : 
+                filteredEmployeeTasks = employeeTasks.filter(task =>
+                    (task.title?.toLowerCase() ?? "").includes(search) ||
+                    (task.description?.toLowerCase() ?? "").includes(search)
+                );
+                break;
+
+            default:
+                filteredTasks = { ...allTasks };
+        }
+    }
+
+    function filterByDept() {
+        if (selectedDepartments.length === 0) {
+            filteredTasks = allTasks;
+            return;
+        }
+
+        filteredTasks = Object.fromEntries(
+            Object.entries(allTasks).filter(([office]) => selectedDepartments.includes(office))
+        );
+    }
+
+    function updateSelection(department: string) {
+        if (selectedDepartments.includes(department)) {
+            selectedDepartments = selectedDepartments.filter((dep: string) => dep !== department);
+        } else {
+            selectedDepartments = [...selectedDepartments, department];
+        }
+        filterByDept();
+    }
+
+    function resetSearch(){
+        searchQuery = "";
+        showFilters = false;
+
+        const currentUser = get(user);
+        switch (currentUser?.role) {
+            case "Admin":
+                filteredTasks = { ...allTasks }
+                break;
+            
+            case "Manager":
+            
+                break;
+            
+            case "Employee":
+                
+                break;
+        
+            default:
+                break;
+        }
+    }
+
     function getStatusColor(status: any){
         switch(status.toLowerCase()) {
             case 'pending':
@@ -254,7 +349,21 @@
             <div class="header">
                 <div class="control-btn">
                     {#if $userRole === 'Admin'}
-                        <button class="filter-btn" on:click={() => showForm = false}><img width="22" height="22" src="https://img.icons8.com/ios-filled/50/FFFFFF/filter--v1.png" alt="filter--v1"/></button>
+                        <button class="filter-btn" on:click={toggleFilter}><img width="22" height="22" src="https://img.icons8.com/ios-filled/50/FFFFFF/filter--v1.png" alt="filter--v1"/></button>
+                        {#if showFilters}
+                            <div class="filter-container">
+                                <div class="filter-header">Filter by Department</div>
+                                <div class="checkbox-group">
+                                    {#each Object.keys(allTasks ?? {}) as office}
+                                        <label>
+                                            <input type="checkbox" checked={selectedDepartments.includes(office)} on:change={() => updateSelection(office)} />
+                                            {office}
+                                        </label>
+                                    {/each}
+                                </div>
+                            </div>
+                        {/if}
+                        
                         <h3><u>Task Viewing</u></h3>
                     {/if}        
                     {#if $userRole === 'Manager'}
@@ -265,39 +374,47 @@
                         <button class="add-btn" style="padding-bottom: 2.25px;" on:click={() => showForm = true}><img width="30" height="30" style="padding-bottom: 2.25px;" src="https://img.icons8.com/ios-glyphs/30/FFFFFF/add--v1.png" alt="add--v1"/><span>Add Task</span></button>
                     {/if}
 
-                    {#if showFilters}
+                    <!-- {#if showFilters}
                         <div class="filter-container">
                             <div class="filter-header">Filter by Department</div>
                             <div class="checkbox-group">
                                 
                             </div>
                         </div>
-                    {/if}
+                    {/if} -->
                 </div>
                 <div class="search">
                     <div class="search-input-container">
-                        <input type="text" class="search-bar" placeholder="Search" on:keydown={ (e) => { if (e.key === "Enter")e.preventDefault(); }} >
-                        <button class="search-icon" on:click={() => showForm = false}>🔍</button>
-                        {#if showFilters}
-                            <button class="reset-icon" on:click={() => showForm = false}>❌</button>
+                        <input type="text" class="search-bar" placeholder="Search tasks..." bind:value={searchQuery} on:input={filterTasks} on:keydown={ (e) => { if (e.key === "Enter")e.preventDefault(); }} >
+                        <button class="search-icon" on:click={filterTasks}>🔍</button>
+                        {#if searchQuery !== ""}
+                            <button class="reset-icon" on:click={resetSearch}>❌</button>
                         {/if}
                     </div>
                 </div>
             </div>
             {#if $userRole === 'Admin'}
-                {#each Object.entries(allTasks ?? {}) as [office, tasks]}
-                    <h3>{office}</h3>
-                    <div class="task-holder">
-                        {#each tasks as task}
-                            <div class="task-card">
-                                <div class="task-header">{task.title}</div>
-                                <!-- <p>{task.description}</p> -->
-                                <p>Assigned To: <strong>{task.assignedToName}</strong></p>
-                                <span class="task-status {task.status.toLowerCase()}"><p>{task.status}</p></span>
+            <div class="all-task-container">
+                {#if Object.keys(filteredTasks).length > 0}
+                    {#each Object.entries(filteredTasks ?? {}) as [office, tasks]}
+                        <h3 class="office-name">{office}</h3>
+                        <div class="task-holder-container" >
+                            <div class="task-holder">
+                                {#each tasks as task}
+                                    <div class="task-card">
+                                        <div class="task-header">{task.title}</div>
+                                        <!-- <p>{task.description}</p> -->
+                                        <p>Assigned To: <strong>{task.assignedToName}</strong></p>
+                                        <!-- <span class="task-status {task.status.toLowerCase()}"><p>{task.status}</p></span> -->
+                                    </div>
+                                {/each}
                             </div>
-                        {/each}
-                    </div>
-                {/each}
+                        </div>
+                    {/each}
+                {:else}
+                        <p style="text-align: center; color: red;">No Tasks Found!</p>
+                {/if}
+            </div>
             {/if}
 
             {#if $userRole === 'Manager' || $userRole === 'Employee'}
@@ -694,7 +811,7 @@
 
     .filter-container {
         position: absolute;
-        top: 120%;
+        top: 80%;
         left: 0;
         background-color: white;
         padding: 10px;
@@ -702,6 +819,7 @@
         box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.2);
         width: 335px;
         z-index: 10;
+        cursor: pointer;
     }
 
     .filter-header {
@@ -715,12 +833,13 @@
         flex-wrap: wrap;
     }
 
-    /* .checkbox-group label {
+    .checkbox-group label {
         display: flex;
         align-items: center;
         width: 50%;
         margin-bottom: 5px;
-    } */
+        cursor: pointer;
+    }
 
     /* Add user styles */
     .add-btn {
@@ -932,31 +1051,40 @@
     }
 
     /* Admin All Task View */
+    .task-holder-container{
+        /* border: 1px solid black; */
+        max-width: 1300px;
+        white-space: nowrap;
+        position: relative;
+        scroll-behavior: smooth;
+        overflow-x: auto;
+    }
+
     .task-holder {
         display: flex;
         overflow-x: auto;
         gap: 20px;
         padding: 20px;
         white-space: nowrap;
+        scroll-snap-type: x mandatory;
     }
 
-    .task-holder::-webkit-scrollbar {
-        height: 5px;
+    .task-holder-container::-webkit-scrollbar {
+        height: 8px;
     }
 
-    .task-holder::-webkit-scrollbar-track {
-        background: none;
-        border-radius: 4px;
+    .task-holder-container::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
     }
 
-    .task-holder::-webkit-scrollbar-thumb {
+    .task-holder-container::-webkit-scrollbar-thumb {
         background: #888;
-        border-radius: 4px;
+        border-radius: 10px;
     }
 
-    .task-holder::-webkit-scrollbar-thumb:hover {
-        background: #555; 
-        cursor: pointer;
+    .task-holder-container::-webkit-scrollbar-thumb:hover {
+        background: #555;
     }
 
     .task-card{
@@ -970,11 +1098,18 @@
         display: inline-block;
         vertical-align: top;
         min-width: 250px;
+        scroll-snap-align: start;
+    }
+
+    .office-name{
+        margin-left: 25px;
+        margin-bottom: 0px;
     }
 
     .task-card:hover{
         transform: translateY(-5px);
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        cursor: default;
     }
 
     .task-header{
@@ -993,7 +1128,17 @@
         color: white;
     }
 
-    .task-status{
+    .all-task-container {
+        max-height: 495px; 
+        overflow-y: auto;
+    }
+    
+    :global(.all-task-container::-webkit-scrollbar){
+        width: 0;
+        background: transparent;
+    }
+
+    /* .task-status{
         right: 0;
         display: inline-block;
         border-radius: 5px;
@@ -1001,5 +1146,5 @@
         font-weight: bold;
         text-transform: uppercase;
         color: white;
-    }
+    } */
 </style>
