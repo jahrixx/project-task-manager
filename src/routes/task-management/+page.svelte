@@ -8,7 +8,6 @@
     import UserProfile from "../../components/UserProfile.svelte";
     import Login from '../login/+page.svelte';
     import { derived, get } from "svelte/store";
-    import { all } from "axios";
 
     export const userRole = derived(user, ($user: User | null) => $user?.role || "");
 
@@ -16,9 +15,12 @@
     let showForm = false;
     let showFilters = false;
 
+    let filteredManagerTasks: any;
+    let filteredEmployeeTasks: any;
     let managerTasks: TaskData[] = [];
     let employeeTasks: TaskData[] = [];
     let selectedDepartments: any = [];
+    let selectedStatuses: any = [];
     let allTasks: Record<string, TaskData[]> = {}; 
     let filteredTasks: Record<string, TaskData[]> = {};
     let employeesInOffice: { id: number; name: string; role: string; office: string }[] = [];
@@ -45,14 +47,17 @@
 
     $ : if ($tasks && get(user) && Array.isArray($tasks)){
             console.log("Reactive statement tasks:", $tasks);
-        
-        if(currentUser?.role === "Manager"){
-            managerTasks = $tasks.filter(task => task.createdBy === currentUser.id || task.assignedTo === currentUser.id);
-            employeeTasks = $tasks.filter(task => task.createdBy !== currentUser.id);
-            // employeeTasks = $tasks.filter(task => task.assignedTo !== currentUser.id);
-        } else {
-            employeeTasks = $tasks.filter(task => task.assignedTo === currentUser?.id);
-        }
+
+            if(currentUser?.role === "Manager"){
+                managerTasks = $tasks.filter(task => task.createdBy === currentUser.id || task.assignedTo === currentUser.id);
+                filteredManagerTasks = [ ...managerTasks ];
+
+                employeeTasks = $tasks.filter(task => task.createdBy !== currentUser.id);
+                filteredEmployeeTasks = [ ...employeeTasks ];
+            } else {
+                employeeTasks = $tasks.filter(task => task.assignedTo === currentUser?.id);
+                filteredEmployeeTasks = [ ...employeeTasks ];
+            }
     }
 
     onMount(async () => {
@@ -88,7 +93,6 @@
         } 
     });
 
-    //Update and Create
     async function handleSubmit() {
         if(!taskData.title || !taskData.description || !taskData.startDate || !taskData.endDate || !taskData.status){
             alert("Title, Description, Start and End Date, Status are Required!");
@@ -152,7 +156,6 @@
             }
     }
 
-    //new 
     function editTask(task: TaskData) {
         taskData = { 
             id: task.id || null,
@@ -172,7 +175,6 @@
 
     function clearForm(){
         showForm = false;
-
         taskData = {
             id: null,
             title: '',
@@ -239,23 +241,31 @@
                 break;
 
             case "Manager" :
-                let filteredManagerTasks = managerTasks.filter(task =>
-                    (task.title?.toLowerCase() ?? "").includes(search) ||
-                    (task.description?.toLowerCase() ?? "").includes(search) ||
-                    (task.assignedToName?.toLowerCase() ?? "").includes(search)
-                );
+                if(search){
+                    filteredManagerTasks = managerTasks.filter(task =>
+                        (task.title?.toLowerCase() ?? "").includes(search) ||
+                        (task.description?.toLowerCase() ?? "").includes(search) ||
+                        (task.assignedToName?.toLowerCase() ?? "").includes(search)
+                    );
 
-                let filteredEmployeeTasks = employeeTasks.filter(task =>
-                    (task.title?.toLowerCase() ?? "").includes(search) ||
-                    (task.description?.toLowerCase() ?? "").includes(search) ||
-                    (task.assignedToName?.toLowerCase() ?? "").includes(search)
-                );
+                    filteredEmployeeTasks = employeeTasks.filter(task =>
+                        (task.title?.toLowerCase() ?? "").includes(search) ||
+                        (task.description?.toLowerCase() ?? "").includes(search) ||
+                        (task.createdByName?.toLowerCase() ?? "").includes(search)
+                    );
+
+                } else {
+                    filteredManagerTasks = [ ...managerTasks ];
+                    filteredEmployeeTasks = [ ...employeeTasks ];
+                }
                 break;
 
             case "Employee" : 
                 filteredEmployeeTasks = employeeTasks.filter(task =>
                     (task.title?.toLowerCase() ?? "").includes(search) ||
-                    (task.description?.toLowerCase() ?? "").includes(search)
+                    (task.description?.toLowerCase() ?? "").includes(search) ||
+                    (task.createdByName?.toLowerCase() ?? "").includes(search) ||
+                    (task.status?.toLowerCase() ?? "").includes(search)
                 );
                 break;
 
@@ -269,10 +279,23 @@
             filteredTasks = allTasks;
             return;
         }
-
         filteredTasks = Object.fromEntries(
             Object.entries(allTasks).filter(([office]) => selectedDepartments.includes(office))
         );
+    }
+
+    function filterByStatus(){   
+        if(selectedStatuses.length === 0){
+            filteredManagerTasks = [ ...managerTasks ];
+            filteredEmployeeTasks = [ ...employeeTasks ];
+            return;
+        }
+
+        if (currentView === "own") {
+            filteredManagerTasks = managerTasks.filter(task => selectedStatuses.includes(task.status));
+        } else if (currentView === "employee") {
+            filteredEmployeeTasks = employeeTasks.filter(task => selectedStatuses.includes(task.status));
+        }         
     }
 
     function updateSelection(department: string) {
@@ -284,6 +307,15 @@
         filterByDept();
     }
 
+    function updateStatusFilter(status: string){
+        if(selectedStatuses.includes(status)){
+            selectedStatuses = selectedStatuses.filter((s: string) => s !== status);
+        } else {
+            selectedStatuses = [ ...selectedStatuses, status ]
+        }
+        filterByStatus();
+    }
+
     function resetSearch(){
         searchQuery = "";
         showFilters = false;
@@ -291,18 +323,20 @@
         const currentUser = get(user);
         switch (currentUser?.role) {
             case "Admin":
-                filteredTasks = { ...allTasks }
+                filteredTasks = { ...allTasks };
                 break;
             
             case "Manager":
-            
+                filteredManagerTasks = [ ...managerTasks ];
+                filteredEmployeeTasks = [ ...employeeTasks ];
                 break;
             
             case "Employee":
-                
+                filteredEmployeeTasks = [ ...employeeTasks ];
                 break;
         
             default:
+                filteredTasks = { ...allTasks };
                 break;
         }
     }
@@ -311,19 +345,14 @@
         switch(status.toLowerCase()) {
             case 'pending':
                 return 'orange';
-
             case 'in progress':
                 return 'blue';
-
             case 'completed':
                 return 'green';
-
             case 'cancelled':
                 return 'red';
-
             case 'overdue':
                 return 'red';
-            
             default:
                 return 'lightgray';
         }
@@ -363,11 +392,25 @@
                                 </div>
                             </div>
                         {/if}
-                        
                         <h3><u>Task Viewing</u></h3>
                     {/if}        
                     {#if $userRole === 'Manager'}
-                        <button class="filter-btn" on:click={() => showForm = false}><img width="22" height="22" src="https://img.icons8.com/ios-filled/50/FFFFFF/filter--v1.png" alt="filter--v1"/></button>
+                        <button class="filter-btn" on:click={toggleFilter}><img width="22" height="22" src="https://img.icons8.com/ios-filled/50/FFFFFF/filter--v1.png" alt="filter--v1"/></button>
+                        {#if showFilters}
+                            <div class="filter-container">
+                                <div class="filter-header">Filter by Status</div>
+                                <div class="checkbox-group">
+                                    {#each Array.from(new Set([...managerTasks, ...employeeTasks].map(task => task.status))) as status}
+                                        <label>
+                                            <input type="checkbox" 
+                                                   checked = {selectedStatuses.includes(status)}
+                                                   on:change={() => updateStatusFilter(status)} />
+                                            {status}
+                                        </label>
+                                    {/each}
+                                </div>
+                            </div>
+                        {/if}
                         <button class="add-btn" on:click={() => showForm = true}><img width="30" height="30" src="https://img.icons8.com/ios-glyphs/30/FFFFFF/add--v1.png" alt="add--v1"/><span>Add Task</span></button>
                     {/if}
                     {#if $userRole === 'Employee'}
@@ -497,8 +540,8 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                {#if managerTasks.length > 0}
-                                    {#each managerTasks as task}
+                                {#if filteredManagerTasks.length > 0}
+                                    {#each filteredManagerTasks as task}
                                         <tr>
                                             <td>
                                                 <div class="task">
@@ -548,13 +591,19 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                {#if employeeTasks.length > 0}
-                                    {#each employeeTasks as task}
+                                {#if filteredEmployeeTasks.length > 0}
+                                    {#each filteredEmployeeTasks as task}
                                         <tr>
                                             <td>
                                                 <div class="task">
                                                     <b>{task.title}</b><br>
                                                     {task.description}
+
+                                                    {#if task.createdBy === task.createdBy}
+                                                        <br><br><span><i><b>Task Created By Employee: </b> {task.createdByName}</i></span>
+                                                    {:else}
+                                                        <span></span>
+                                                    {/if}
                                                 </div>
                                             </td>
                                             <td>
@@ -597,8 +646,8 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {#if employeeTasks.length > 0}
-                                {#each employeeTasks as task}
+                            {#if filteredEmployeeTasks.length > 0}
+                                {#each filteredEmployeeTasks as task}
                                     <tr>
                                         <td>
                                             <div class="task">
