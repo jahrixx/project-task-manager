@@ -108,7 +108,6 @@
             try {
                 if(editId) {
                     await updateTask(editId, taskData);
-                    console.log("This is the data being updated: ",taskData);
                     alert("Task Updated Successfully!");
                 } else {
                     await createTask(taskData);
@@ -182,6 +181,7 @@
     }
 
     function clearForm(){
+        editId = null;  
         showForm = false;
         taskData = {
             id: null,
@@ -387,8 +387,7 @@
     function handleTaskDetails(task: any, office: any){
         selectedTask = task;
         selectedOffice = office;
-        computedAssignedTo = task.createdByName === task.assignedToName ? 'N/A' : `${task.assignedToName} - Manager, ${selectedOffice}`;
-        // computedAssignedTo = task.createdByName === task.assignedToName ? 'N/A' : task.assignedToName;
+        computedAssignedTo = task.createdByName === task.assignedToName ? 'N/A' : task.assignedToName;
         showForm = true;
     }
 </script>
@@ -472,7 +471,7 @@
                                 {#each tasks as task}
                                     <button class="task-card" on:click={() => handleTaskDetails(task, office)} on:keydown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleTaskDetails(task, office); }} aria-label={`Task: ${task.title}`}>
                                         <div class="task-header">{task.title}</div>
-                                        <p>Assigned To: <strong>{task.assignedToName}</strong></p>
+                                        <p>Tasked By: <strong>{task.assignedToName}</strong></p>
                                     </button>
                                 {/each}
                             </div>

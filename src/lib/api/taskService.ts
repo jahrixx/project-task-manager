@@ -6,8 +6,19 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 export const tasks = writable<TaskData[]>([]);
 
-// Function to create a new task
-export async function createTask(taskData: TaskData): Promise<TaskResponse> {
+export async function createTask(taskData: TaskData): Promise<TaskResponse> {    
+    // Convert dates to Date objects for validation
+    const startDate = new Date(taskData.startDate);
+    const endDate = new Date(taskData.endDate);
+
+    if(endDate.getTime() < startDate.getTime()){
+        alert("End Date Cannot Be Earlier Than The Start Date!");
+        return Promise.reject("End Date Validation Failed!")
+    } else if(endDate.getTime() === startDate.getTime()){
+        alert("Start Date Cannot Be Equal To End Date!");
+        return Promise.reject("End Date Validation Failed!")
+    }
+    
     try {
         const response = await fetch(`${API_URL}/tasks`, {
             method: "POST",

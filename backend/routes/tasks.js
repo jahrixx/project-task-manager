@@ -19,8 +19,8 @@ router.get("/", async (req, res) => {
                tasks.status,
                tasks.createdBy,
                tasks.assignedTo, 
-               u1.firstName AS assignedToName, 
-               u2.firstName AS createdByName, 
+               CONCAT(u1.firstName, ' ', u1.lastName) AS assignedToName, 
+               CONCAT(u2.firstName, ' ', u2.lastName) AS createdByName, 
                u2.role AS creatorRole, 
                u2.office AS creatorOffice
         FROM tasks
