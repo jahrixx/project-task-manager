@@ -14,8 +14,8 @@ router.get("/", async (req, res) => {
         SELECT tasks.id, 
                tasks.title, 
                tasks.description, 
-               tasks.startDate, 
-               tasks.endDate, 
+               DATE_FORMAT(tasks.startDate, '%Y-%m-%d') AS startDate, 
+               DATE_FORMAT(tasks.endDate, '%Y-%m-%d') AS endDate, 
                tasks.status,
                tasks.createdBy,
                tasks.assignedTo, 
@@ -151,11 +151,17 @@ router.post("/", async (req, res) => {
             }
         }
 
+        const formattedStartDate = new Date(startDate).toISOString().split("T")[0];
+        const formattedEndDate = new Date(endDate).toISOString().split("T")[0];
+        
         // Insert new task
         const [result] = await pool.query(
             "INSERT INTO tasks (title, description, startDate, endDate, status, assignedTo, createdBy) VALUES (?, ?, ?, ?, ?, ?, ?)",
-            [title, description, startDate, endDate, status, assignedUserId, createdBy]
+            [title, description, formattedStartDate, formattedEndDate, status, assignedUserId, createdBy]
         );
+
+        console.log("Created Task Start Date", formattedStartDate)
+        console.log("Created Task End Date", formattedEndDate)
 
         const taskId = result.insertId;
 
@@ -172,12 +178,13 @@ router.post("/", async (req, res) => {
     }
 });
 
-
 // PUT: Update an existing task
 router.put("/:id", async (req, res) => {
     const { id } = req.params;
-    const { title, description, startDate, endDate, status, createdBy, assignedTo } = req.body;
+    let { title, description, startDate, endDate, status, createdBy, assignedTo } = req.body;
     const completedBy = createdBy || assignedTo;
+
+    console.log(startDate, endDate);
 
     if (!title || !description || !startDate || !endDate || !status) {
         return res.status(400).json({ message: "Missing required fields in update request." });
@@ -185,16 +192,30 @@ router.put("/:id", async (req, res) => {
 
     try {
         const pool = getPool();
+
         const [taskExists] = await pool.query("SELECT * FROM tasks WHERE id = ?", [id]);
         if (taskExists.length === 0) {
             return res.status(404).json({ message: "Task not found." });
         }
+
+        // Convert dates to MySQL-friendly format
+        const formattedStartDate = new Date(startDate).toISOString().split("T")[0];
+        const formattedEndDate = new Date(endDate).toISOString().split("T")[0];
+        const today = new Date().toISOString().split("T")[0];
+
+        if(formattedEndDate < today && status !== "Completed"){
+            status = "Overdue";
+        };
+
         const [result] = await pool.query(
-            "UPDATE tasks SET title = ?, description = ?, startDate = ?, endDate = ?, status = ?, assignedTo = ? WHERE id = ?",
-            [title, description, startDate, endDate, status, assignedTo, id]
+            "UPDATE tasks SET title = ?, description = ?, startDate = ?, endDate = ?, status = ?, assignedTo = ? WHERE id = ?", 
+            [title, description, formattedStartDate, formattedEndDate, status, assignedTo, req.params.id]
         );
-                
-        // insert into activity table
+        
+        console.log("Updated Task Start Date", formattedStartDate)
+        console.log("Updated Task End Date", formattedEndDate)
+
+        // insert activity table
         await pool.query(`
             INSERT INTO activities (message, createdBy, assignedTo, taskId) VALUES (?,?,?,?)`,
             [`updated task ${title} with status ${status.toLowerCase()}`, completedBy, null, id]);

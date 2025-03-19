@@ -15,6 +15,9 @@
     let showForm = false;
     let showFilters = false;
 
+    let selectedTask: any;
+    let selectedOffice: any;
+    let computedAssignedTo: any;
     let filteredManagerTasks: any;
     let filteredEmployeeTasks: any;
     let managerTasks: TaskData[] = [];
@@ -42,7 +45,11 @@
         assignedToName: null,
         createdByName: null
     };
-    
+    let formattedEndDate = formatDateToInput(taskData.endDate);
+    $: formattedEndDate = formatDateToInput(taskData.endDate);
+    let formattedStartDate = formatDateToInput(taskData.startDate);
+    $: formattedStartDate = formatDateToInput(taskData.startDate);
+
     $: currentUser = get(user);
 
     $ : if ($tasks && get(user) && Array.isArray($tasks)){
@@ -101,6 +108,7 @@
             try {
                 if(editId) {
                     await updateTask(editId, taskData);
+                    console.log("This is the data being updated: ",taskData);
                     alert("Task Updated Successfully!");
                 } else {
                     await createTask(taskData);
@@ -190,27 +198,46 @@
     }
 
     function formatDate(dateString: string | null) {
-        if (!dateString) return 'N/A';
+        if (!dateString) return "N/A";
 
         const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', {
-            weekday: 'long',
-            month: 'short',
-            day: '2-digit',
-            year: 'numeric'
-        });
+        if (isNaN(date.getTime())) return "Invalid Date";
+
+        return date.toLocaleDateString("en-US", {
+                weekday: "long",
+                month: "short",
+                day: "2-digit",
+                year: "numeric",
+            });
     }
 
-    function isOverdue(endDate: string, status: string) {   
-        const dueDate = new Date(endDate);
-        const today = new Date();
+    function formatDateToInput(dateString: string){
+        if(!dateString) return "";
+        return new Date(dateString).toISOString().split("T")[0];
+    }
 
-        if(!endDate){
-            return false;
-        } else if (status === 'Completed'){
-            return 'green'
-        } else {
-            return dueDate < today;
+    function handleDateInput(event: Event, key: keyof TaskData) {
+        const target = event.target as HTMLInputElement | null;
+        if (!target) return;
+        
+        const selectedDate = target.value; // YYYY-MM-DD
+        
+        const localDate = new Date(selectedDate);
+        localDate.setMinutes(localDate.getMinutes() - localDate.getTimezoneOffset());
+
+        // Ensure the key is treated as a valid TaskData key
+        (taskData as Record<string, any>)[key] = new Date(selectedDate + "T00:00:00.000Z").toISOString();
+    }
+
+
+    async function isOverdue(task: TaskData) {
+        switch(task.status){
+            case 'Completed':
+                return 'text-green-500';
+            case 'Overdue':
+                return 'text-red-500';
+            default:
+                return '';
         }
     }
 
@@ -357,6 +384,13 @@
                 return 'lightgray';
         }
     }
+    function handleTaskDetails(task: any, office: any){
+        selectedTask = task;
+        selectedOffice = office;
+        computedAssignedTo = task.createdByName === task.assignedToName ? 'N/A' : `${task.assignedToName} - Manager, ${selectedOffice}`;
+        // computedAssignedTo = task.createdByName === task.assignedToName ? 'N/A' : task.assignedToName;
+        showForm = true;
+    }
 </script>
 
 <title>Task Management</title>
@@ -397,7 +431,7 @@
                     {#if $userRole === 'Manager'}
                         <button class="filter-btn" on:click={toggleFilter}><img width="22" height="22" src="https://img.icons8.com/ios-filled/50/FFFFFF/filter--v1.png" alt="filter--v1"/></button>
                         {#if showFilters}
-                            <div class="filter-container">
+                            <div class="filter-container" style="top: 110%;">
                                 <div class="filter-header">Filter by Status</div>
                                 <div class="checkbox-group">
                                     {#each Array.from(new Set([...managerTasks, ...employeeTasks].map(task => task.status))) as status}
@@ -416,15 +450,6 @@
                     {#if $userRole === 'Employee'}
                         <button class="add-btn" style="padding-bottom: 2.25px;" on:click={() => showForm = true}><img width="30" height="30" style="padding-bottom: 2.25px;" src="https://img.icons8.com/ios-glyphs/30/FFFFFF/add--v1.png" alt="add--v1"/><span>Add Task</span></button>
                     {/if}
-
-                    <!-- {#if showFilters}
-                        <div class="filter-container">
-                            <div class="filter-header">Filter by Department</div>
-                            <div class="checkbox-group">
-                                
-                            </div>
-                        </div>
-                    {/if} -->
                 </div>
                 <div class="search">
                     <div class="search-input-container">
@@ -436,6 +461,7 @@
                     </div>
                 </div>
             </div>
+            
             {#if $userRole === 'Admin'}
             <div class="all-task-container">
                 {#if Object.keys(filteredTasks).length > 0}
@@ -444,12 +470,10 @@
                         <div class="task-holder-container" >
                             <div class="task-holder">
                                 {#each tasks as task}
-                                    <div class="task-card">
+                                    <button class="task-card" on:click={() => handleTaskDetails(task, office)} on:keydown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleTaskDetails(task, office); }} aria-label={`Task: ${task.title}`}>
                                         <div class="task-header">{task.title}</div>
-                                        <!-- <p>{task.description}</p> -->
                                         <p>Assigned To: <strong>{task.assignedToName}</strong></p>
-                                        <!-- <span class="task-status {task.status.toLowerCase()}"><p>{task.status}</p></span> -->
-                                    </div>
+                                    </button>
                                 {/each}
                             </div>
                         </div>
@@ -458,6 +482,37 @@
                         <p style="text-align: center; color: red;">No Tasks Found!</p>
                 {/if}
             </div>
+                {#if showForm && selectedTask}
+                    <div class="overlay">
+                        <div class="form-container">
+                            <button class="close-btn" on:click={clearForm}>&times;</button>
+                            <h4>{selectedOffice}: Task Information</h4>
+                            <div class="form-inputs">
+                                <div class="form-group">
+                                    <label for="title">Title</label>
+                                    <input bind:value={selectedTask.title} style="cursor: default;" readonly/>    
+                                </div>
+                                <div class="form-group">
+                                    <label for="description">Description</label>
+                                    <textarea bind:value={selectedTask.description} style="cursor: default;" readonly></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label for="start-date">Created By</label>
+                                    <input bind:value={selectedTask.createdByName} style="cursor: default;" readonly/>    
+                                </div>
+                                <div class="form-group">
+                                    <label for="end-date">Assigned To</label>
+                                    <input bind:value={computedAssignedTo} style="cursor: default;" readonly/>    
+                                </div>
+        
+                                <div class="form-group">
+                                    <label for="status">Status</label>
+                                    <input bind:value={selectedTask.status} style="cursor: default;" readonly required/>  
+                                </div>                                    
+                            </div>
+                        </div>
+                    </div>
+                {/if}
             {/if}
 
             {#if $userRole === 'Manager' || $userRole === 'Employee'}
@@ -478,15 +533,15 @@
                                         <label for="description">Description</label>
                                         <textarea bind:value={taskData.description} placeholder="Enter text here..." required></textarea>
                                     </div>
-            
+
                                     <div class="form-group">
                                         <label for="start-date">Start Date</label>
-                                        <input bind:value={taskData.startDate} type="date" required />    
+                                        <input type="date" bind:value={formattedStartDate} on:input={(e) => handleDateInput(e, "startDate")} required />
                                     </div>
             
                                     <div class="form-group">
                                         <label for="end-date">End Date</label>
-                                        <input bind:value={taskData.endDate} type="date" required />    
+                                        <input type="date" bind:value={formattedEndDate} on:input={(e) => handleDateInput(e, "endDate")} required />
                                     </div>
             
                                     <div class="form-group">
@@ -562,7 +617,7 @@
                                                 </div>
                                             </td>
                                             <td>
-                                                <span style="color: {isOverdue(task.endDate, task.status) === 'green' ? 'green' : isOverdue(task.endDate, task.status) ? 'red' : 'black'};">{formatDate(task.endDate)}</span>
+                                                <span class="{isOverdue(task)}">{formatDate(task.endDate)}</span>
                                             </td>
                                             <td class="actions">
                                                 <button class="btn edit" on:click={() => editTask(task)}>Update</button>
@@ -613,7 +668,7 @@
                                                 </div>
                                             </td>
                                             <td>
-                                                <span style="color: {isOverdue(task.endDate, task.status) === 'green' ? 'green' : isOverdue(task.endDate, task.status) ? 'red' : 'black'};">{formatDate(task.endDate)}</span>
+                                                <span class="{isOverdue(task)}">{formatDate(task.endDate)}</span>
                                             </td>
                                             <!-- <td class="actions">
                                                 <button class="btn edit">Update</button>
@@ -668,7 +723,7 @@
                                             </div>
                                         </td>
                                         <td>
-                                            <span style="color: {isOverdue(task.endDate, task.status) === 'green' ? 'green' : isOverdue(task.endDate, task.status) ? 'red' : 'black'};">{formatDate(task.endDate)}</span>
+                                            <span class="{isOverdue(task)}">{formatDate(task.endDate)}</span>
                                         </td>
                                         <td class="actions">
                                             <button class="btn edit" on:click={() => editTask(task)}>Update</button>
@@ -702,6 +757,15 @@
         margin-top: 7px;
         margin-left: 5px;
         font-size: 1.4rem;
+        font-weight: bold;
+        font-family: Arial, Helvetica, sans-serif;
+        color: #175e88;
+    }
+
+    h4{
+        margin-top: 7px;
+        margin-left: 5px;
+        font-size: 1.3rem;
         font-weight: bold;
         font-family: Arial, Helvetica, sans-serif;
         color: #175e88;
@@ -1101,40 +1165,46 @@
 
     /* Admin All Task View */
     .task-holder-container{
-        /* border: 1px solid black; */
-        max-width: 1300px;
+        max-width: 97%;
+        margin: auto;
         white-space: nowrap;
         position: relative;
         scroll-behavior: smooth;
         overflow-x: auto;
+        cursor: pointer;
     }
 
     .task-holder {
         display: flex;
-        overflow-x: auto;
         gap: 20px;
         padding: 20px;
         white-space: nowrap;
-        scroll-snap-type: x mandatory;
+        scroll-snap-type: x proximity;
+    }
+
+    .task-holder > * {
+        scroll-snap-align: start;
     }
 
     .task-holder-container::-webkit-scrollbar {
-        height: 8px;
+        height: 6px;
+        cursor: pointer;
     }
 
     .task-holder-container::-webkit-scrollbar-track {
-        background: #f1f1f1;
-        border-radius: 10px;
+        background: lightgray;
+        border-radius: 20px;
     }
 
     .task-holder-container::-webkit-scrollbar-thumb {
-        background: #888;
-        border-radius: 10px;
+        background: darkgrey;
+        border-radius: 20px;
     }
 
     .task-holder-container::-webkit-scrollbar-thumb:hover {
-        background: #555;
+        background: #23BEDA;
     }
+    
 
     .task-card{
         background: #175e88;
@@ -1153,6 +1223,10 @@
     .office-name{
         margin-left: 25px;
         margin-bottom: 0px;
+    }
+
+    .office-name:not(:first-child){
+        margin-top: 25px;
     }
 
     .task-card:hover{
@@ -1196,4 +1270,11 @@
         text-transform: uppercase;
         color: white;
     } */
+
+    .text-green-500 {
+        color: green;
+    }
+    .text-red-500 {
+        color: red;
+    }
 </style>
