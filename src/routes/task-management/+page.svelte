@@ -230,15 +230,15 @@
     }
 
 
-    async function isOverdue(task: TaskData) {
-        switch(task.status){
-            case 'Completed':
-                return 'text-green-500';
-            case 'Overdue':
-                return 'text-red-500';
-            default:
-                return '';
-        }
+    function isOverdue(task: TaskData) {
+        let className = "";
+        
+        if (task.status === "Completed") {
+            className = "text-green-500";
+        } else if (task.status === "Overdue" || new Date(task.endDate) < new Date()) {
+            className = "text-red-500";
+        } 
+        return className;
     }
 
     function setView(view: 'own' | 'employee'){

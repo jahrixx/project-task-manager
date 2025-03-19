@@ -79,6 +79,15 @@ function transformGroupedTasks(data: any){
 //Update Task
 export async function updateTask(id: number | undefined, taskData: TaskData): Promise<TaskResponse> {
     console.log("Updating Task with ID :", id);
+    
+    // Convert dates to Date objects for validation
+    const startDate = new Date(taskData.startDate);
+    const endDate = new Date(taskData.endDate);
+
+    if(endDate < startDate){
+        alert("End Date Cannot Be Earlier Than The Start Date!");
+        return Promise.reject("End Date Validation Failed!")
+    }
 
     try {
         const response = await fetch(`${API_URL}/tasks/${id}`, {

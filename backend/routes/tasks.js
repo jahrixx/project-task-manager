@@ -203,7 +203,7 @@ router.put("/:id", async (req, res) => {
         const formattedEndDate = new Date(endDate).toISOString().split("T")[0];
         const today = new Date().toISOString().split("T")[0];
 
-        if(formattedEndDate < today && status !== "Completed"){
+        if(endDate < today){
             status = "Overdue";
         };
 
