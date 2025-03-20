@@ -1,10 +1,12 @@
 import { writable } from "svelte/store";
 import type { TaskData, TaskResponse } from "$lib/stores/task";
+import { isAuthenticated, user, type User } from "$lib/stores/user";
+import { derived, get } from "svelte/store";
 import { json } from "@sveltejs/kit";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
-
 export const tasks = writable<TaskData[]>([]);
+export let allTasks: Record<string, TaskData[]> = {}; 
 
 export async function createTask(taskData: TaskData): Promise<TaskResponse> {    
     // Convert dates to Date objects for validation
@@ -81,6 +83,27 @@ export async function fetchTasks(userId: number | null, role: string | null, off
     } catch (error) {
         console.error("Failed to fetch tasks:", error);
     }
+}
+
+export async function refreshTasks() {
+    const currentUser = get(user);
+    if(!currentUser){
+        return;
+    }
+    const fetchedTasks = await fetchTasks(
+                currentUser?.id ?? 0, 
+                currentUser?.role ?? '', 
+                currentUser?.office ?? ''
+            );
+            console.log("Fetched tasks after execution:", fetchedTasks);
+
+        if (currentUser?.role === "Admin") {
+            allTasks = fetchedTasks
+                ? Object.fromEntries(fetchedTasks.map(group => [group.officeName, group.tasks]))
+                : {};
+        } else {
+            tasks.set(fetchedTasks ? fetchedTasks.flatMap(group => group.tasks) : []);
+        }
 }
 
 function transformGroupedTasks(data: any){
