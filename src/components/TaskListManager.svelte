@@ -2,69 +2,20 @@
     import type { TaskData } from "$lib/stores/task";
     import { user, type User } from "$lib/stores/user";
     import { derived, get } from "svelte/store";
-    import { createTask, deleteTask, fetchEmployees, fetchTasks, tasks, refreshTasks } from "$lib/api/taskService";
+    import { createTask, deleteTask, removeTask, fetchEmployees, fetchTasks, tasks, refreshTasks } from "$lib/api/taskService";
+    
+    let managerTasks: TaskData[] = [];
+    let employeeTasks: TaskData[] = [];
 
     export const userRole = derived(user, ($user: User | null) => $user?.role || "");
-
-    export const managerTasks: TaskData[] = [];
-    export const employeeTasks: TaskData[] = [];
     export const allTasks: Record<string, TaskData[]> = {}; 
-    export let filteredManagerTasks: any;
-    export let filteredEmployeeTasks: any;
+    export let filteredManagerTasks: any = managerTasks;
+    export let filteredEmployeeTasks: any = employeeTasks;
     export let currentView = 'own';  
-
-    let errorMessage = '';
-    export let showForm: boolean = false;
-    export let editId: any = null;
-        export let taskData: TaskData = {
-        id: null,
-        title: '',
-        description: '',
-        startDate: '',
-        endDate: '',
-        status: 'Pending',
-        assignedTo: null,
-        createdBy: get(user)?.id ?? null,
-        assignedToName: null,
-        createdByName: null
-    };
+    export let openTaskForm;
     
-    function setView(view: 'own' | 'employee'){
+    export function setView(view: 'own' | 'employee'){
         currentView = view;
-    }
-
-    function editTask(task: TaskData) {
-        taskData = { 
-            id: task.id || null,
-            title: task.title || "", 
-            description: task.description || "", 
-            status: task.status || "",
-            startDate: task.startDate ? task.startDate.split("T")[0] : "", 
-            endDate: task.endDate ? task.endDate.split("T")[0] : "",
-            assignedTo: task.assignedTo || null,
-            createdBy: task.createdBy || null,
-            assignedToName: task.assignedToName || null,
-            createdByName: task.createdByName || null
-        };
-        editId = task.id;
-        showForm = true;
-    }
-
-    async function removeTask(taskId: number | null) {
-        if(!taskId) {
-            console.error("Cannot delete task id: ID is undefined");
-            return;
-        } else if(!confirm("Are you sure you want to delete this task?")) {
-            return;
-        } 
-            try {
-                await deleteTask(taskId);
-                alert("Task deleted successfully");
-                await refreshTasks();
-            } catch (error) {
-                console.error("Error deleting task :", error);
-                errorMessage = "Failed to delete task. Please try again later!";
-            }
     }
 
     function isOverdue(task: TaskData) {
@@ -155,7 +106,7 @@
                                     <span class="{isOverdue(task)}">{formatDate(task.endDate)}</span>
                                 </td>
                                 <td class="actions">
-                                    <button class="btn edit" on:click={() => editTask(task)}>Update</button>
+                                    <button class="btn edit" on:click={() => openTaskForm(task)}>Update</button>
                                     <button class="btn delete" on:click={() => removeTask(task.id)}>Delete</button>
                                 </td>
                             </tr>
@@ -177,7 +128,6 @@
                         <th>Task</th>
                         <th>Status</th>
                         <th>Due Date</th>
-                        <!-- <th style="text-align: center;">Actions</th> -->
                     </tr>
                 </thead>
                 <tbody>
@@ -257,7 +207,7 @@
                                 <span class="{isOverdue(task)}">{formatDate(task.endDate)}</span>
                             </td>
                             <td class="actions">
-                                <button class="btn edit" on:click={() => editTask(task)}>Update</button>
+                                <button class="btn edit" on:click={() => openTaskForm(task)}>Update</button>
                                 <button class="btn delete" on:click={() => removeTask(task.id)}>Delete</button>
                             </td>
                         </tr>

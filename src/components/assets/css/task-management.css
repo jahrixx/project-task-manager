@@ -35,6 +35,8 @@ h4{
 
 .main-container {
     margin-left: 250px;
+    overflow: hidden;
+    /* border: 2px solid black; */
 }
 
 /* Table styles */
@@ -505,14 +507,19 @@ button[type="button"]:hover {
 }
 
 .all-task-container {
-    max-height: 495px; 
+    max-height: 472px; 
     overflow-y: auto;
 }
 
-:global(.all-task-container::-webkit-scrollbar){
+.all-task-container::-webkit-scrollbar{
     width: 0;
     background: transparent;
 }
+
+/* :global(.all-task-container::-webkit-scrollbar){
+    width: 0;
+    background: transparent;
+} */
 
 /* .task-status{
     right: 0;

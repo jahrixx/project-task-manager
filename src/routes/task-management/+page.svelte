@@ -8,7 +8,10 @@
     import UserProfile from "../../components/UserProfile.svelte";
     import Login from '../login/+page.svelte';
     import TaskForm from "../../components/TaskForm.svelte";
-    import { derived, get } from "svelte/store";
+    import { derived, get, writable } from "svelte/store";
+    import TaskListManager from "../../components/TaskListManager.svelte";
+    import { selectedStatuses } from "$lib/stores/task";
+
 
     export const userRole = derived(user, ($user: User | null) => $user?.role || "");
 
@@ -16,22 +19,22 @@
     let showFilters = false;
     let editId: any = null;
 
-    let selectedTask: any;
-    let selectedOffice: any;
-    let computedAssignedTo: any;
-    let filteredManagerTasks: any;
-    let filteredEmployeeTasks: any;
+    let filteredManagerTasks: TaskData[] = [];
+    let filteredEmployeeTasks: TaskData[] = [];
     let managerTasks: TaskData[] = [];
     let employeeTasks: TaskData[] = [];
     let selectedDepartments: any = [];
-    let selectedStatuses: any = [];
+
+    let selectedTask: any;
+    let selectedOffice: any;
+    let computedAssignedTo: any;
+
     let allTasks: Record<string, TaskData[]> = {}; 
     let filteredTasks: Record<string, TaskData[]> = {};
     let employeesInOffice: { id: number; name: string; role: string; office: string }[] = [];
     
     let errorMessage = '';
-    let successMessage = '';
-    let currentView = 'own';   
+    let successMessage = ''; 
     let searchQuery = "";
     let currentUser;
       
@@ -50,8 +53,6 @@
 
     $: currentUser = get(user);
     $ : if ($tasks && get(user) && Array.isArray($tasks)){
-            console.log("Reactive statement tasks:", $tasks);
-
             if(currentUser?.role === "Manager"){
                 managerTasks = $tasks.filter(task => task.createdBy === currentUser.id || task.assignedTo === currentUser.id);
                 filteredManagerTasks = [ ...managerTasks ];
@@ -97,97 +98,21 @@
         } 
     });
 
-    async function removeTask(taskId: number | null) {
-        if(!taskId) {
-            console.error("Cannot delete task id: ID is undefined");
-            return;
-        } else if(!confirm("Are you sure you want to delete this task?")) {
-            return;
-        } 
-            try {
-                await deleteTask(taskId);
-                alert("Task deleted successfully");
-                await refreshTasks();
-            } catch (error) {
-                console.error("Error deleting task :", error);
-                errorMessage = "Failed to delete task. Please try again later!";
-            }
-    }
-
-    async function refreshTasks() {
-        const currentUser = get(user);
-        if(!currentUser){
-            return;
-        }
-        const fetchedTasks = await fetchTasks(
-                    currentUser?.id ?? 0, 
-                    currentUser?.role ?? '', 
-                    currentUser?.office ?? ''
-                );
-                console.log("Fetched tasks after execution:", fetchedTasks);
-
-            if (currentUser?.role === "Admin") {
-                allTasks = fetchedTasks
-                    ? Object.fromEntries(fetchedTasks.map(group => [group.officeName, group.tasks]))
-                    : {};
-            } else {
-                $tasks = fetchedTasks ? fetchedTasks.flatMap(group => group.tasks) : [];
-            }
-    }
-
-    function openForm(task: TaskData | null = null) {
-        if (task) {
-            // Edit Mode: Prefill the form with task data
-            taskData = { ...task };
-            editId = task.id;
-        } else {
-            // Create Mode: Reset form fields
-            taskData = { 
-                id: null,
-                title: "", 
-                description: "", 
-                status: "To Do",
-                startDate: "", 
-                endDate: "",
-                assignedTo: null,
-                createdBy: null,
-                assignedToName: null,
-                createdByName: null
-            };
-            editId = null;
-        }
-        showForm = true;
-    }
-
-    function editTask(task: TaskData) {
-        taskData = { 
-            id: task.id || null,
-            title: task.title || "", 
-            description: task.description || "", 
-            status: task.status || "",
-            startDate: task.startDate ? task.startDate.split("T")[0] : "", 
-            endDate: task.endDate ? task.endDate.split("T")[0] : "",
-            assignedTo: task.assignedTo || null,
-            createdBy: task.createdBy || null,
-            assignedToName: task.assignedToName || null,
-            createdByName: task.createdByName || null
+    function openTaskForm(task: TaskData | null = null) {
+        taskData = {
+            id: task?.id ?? null,
+            title: task?.title ?? "",
+            description: task?.description ?? "",
+            status: task?.status ?? "Pending",
+            startDate: task?.startDate ? task.startDate.split("T")[0] : "",
+            endDate: task?.endDate ? task.endDate.split("T")[0] : "",
+            assignedTo: task?.assignedTo ?? null,
+            createdBy: task?.createdBy ?? get(user)?.id ?? null,
+            assignedToName: task?.assignedToName ?? null,
+            createdByName: task?.createdByName ?? null
         };
-        editId = task.id;
+        editId = task?.id ?? null;
         showForm = true;
-    }
-
-    function formatDate(dateString: string | null) {
-        if (!dateString) return "N/A";
-
-        const date = new Date(dateString);
-        if (isNaN(date.getTime())) return "Invalid Date";
-
-        return date.toLocaleDateString("en-US", {
-                weekday: "long",
-                month: "short",
-                day: "2-digit",
-                year: "numeric",
-            });
     }
 
     function clearForm(){
@@ -205,21 +130,6 @@
             assignedToName: null,
             createdByName: null
         };
-    }
-
-    function isOverdue(task: TaskData) {
-        let className = "";
-        
-        if (task.status === "Completed") {
-            className = "text-green-500";
-        } else if (task.status === "Overdue" || new Date(task.endDate) < new Date()) {
-            className = "text-red-500";
-        } 
-        return className;
-    }
-
-    function setView(view: 'own' | 'employee'){
-        currentView = view;
     }
 
     function toggleFilter(){
@@ -288,18 +198,30 @@
         );
     }
 
+    function updateStatusFilter(status: string) {
+        selectedStatuses.update(current => {
+            return current.includes(status) 
+                ? current.filter(s => s !== status) 
+                : [...current, status];
+        });
+
+        filterByStatus(); 
+    }
+
     function filterByStatus(){   
-        if(selectedStatuses.length === 0){
+        if($selectedStatuses.length === 0){
             filteredManagerTasks = [ ...managerTasks ];
             filteredEmployeeTasks = [ ...employeeTasks ];
             return;
         }
 
-        if (currentView === "own") {
-            filteredManagerTasks = managerTasks.filter(task => selectedStatuses.includes(task.status));
-        } else if (currentView === "employee") {
-            filteredEmployeeTasks = employeeTasks.filter(task => selectedStatuses.includes(task.status));
-        }         
+        filteredManagerTasks = managerTasks.filter(task =>
+            $selectedStatuses.includes(task.status)
+        );
+
+        filteredEmployeeTasks = employeeTasks.filter(task =>
+            $selectedStatuses.includes(task.status)
+        );        
     }
 
     function updateSelection(department: string) {
@@ -309,15 +231,6 @@
             selectedDepartments = [...selectedDepartments, department];
         }
         filterByDept();
-    }
-
-    function updateStatusFilter(status: string){
-        if(selectedStatuses.includes(status)){
-            selectedStatuses = selectedStatuses.filter((s: string) => s !== status);
-        } else {
-            selectedStatuses = [ ...selectedStatuses, status ]
-        }
-        filterByStatus();
     }
 
     function resetSearch(){
@@ -345,22 +258,6 @@
         }
     }
 
-    function getStatusColor(status: any){
-        switch(status.toLowerCase()) {
-            case 'pending':
-                return 'orange';
-            case 'in progress':
-                return 'blue';
-            case 'completed':
-                return 'green';
-            case 'cancelled':
-                return 'red';
-            case 'overdue':
-                return 'red';
-            default:
-                return 'lightgray';
-        }
-    }
     function handleTaskDetails(task: any, office: any){
         selectedTask = task;
         selectedOffice = office;
@@ -416,7 +313,7 @@
                                     {#each Array.from(new Set([...managerTasks, ...employeeTasks].map(task => task.status))) as status}
                                         <label>
                                             <input type="checkbox" 
-                                                   checked = {selectedStatuses.includes(status)}
+                                                   checked = {$selectedStatuses.includes(status)}
                                                    on:change={() => updateStatusFilter(status)} />
                                             {status}
                                         </label>
@@ -424,10 +321,10 @@
                                 </div>
                             </div>
                         {/if}
-                        <button class="add-btn" on:click={() => showForm = true}><img width="30" height="30" src="https://img.icons8.com/ios-glyphs/30/FFFFFF/add--v1.png" alt="add--v1"/><span>Add Task</span></button>
+                        <button class="add-btn" on:click={() => openTaskForm()}><img width="30" height="30" src="https://img.icons8.com/ios-glyphs/30/FFFFFF/add--v1.png" alt="add--v1"/><span>Add Task</span></button>
                     {/if}
                     {#if $userRole === 'Employee'}
-                        <button class="add-btn" style="padding-bottom: 2.25px;" on:click={() => openForm()}><img width="30" height="30" style="padding-bottom: 2.25px;" src="https://img.icons8.com/ios-glyphs/30/FFFFFF/add--v1.png" alt="add--v1"/><span>Add Task</span></button>
+                        <button class="add-btn" style="padding-bottom: 2.25px;" on:click={() => openTaskForm()}><img width="30" height="30" style="padding-bottom: 2.25px;" src="https://img.icons8.com/ios-glyphs/30/FFFFFF/add--v1.png" alt="add--v1"/><span>Add Task</span></button>
                     {/if}
                 </div>
                 <div class="search">
@@ -501,164 +398,7 @@
                     </div>
                 {/if}
             {/if}
-            {#if $userRole === 'Manager'}
-                <div class="task-view-btns">
-                    <button on:click={() => setView('own')} class:active={currentView === 'own'}>Personal Tasks</button>
-                    <button on:click={() => setView('employee')} class:active={currentView === 'employee'}>Employees Tasks</button>
-                </div>
-                {#if currentView === 'own'}
-                    <div class="table-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Task</th>
-                                    <th>Status</th>
-                                    <th>Due Date</th>
-                                    <th style="text-align: center;">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {#if filteredManagerTasks.length > 0}
-                                    {#each filteredManagerTasks as task}
-                                        <tr>
-                                            <td>
-                                                <div class="task">
-                                                    <b>{task.title}</b><br>
-                                                    {task.description}
-                                                    
-                                                    {#if task.assignedTo !== task.createdBy}
-                                                        <br><br><span><i><b>Task Assigned To: </b> {task.assignedToName}</i></span>
-                                                    {:else}
-                                                        <span></span>
-                                                    {/if}
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <div class="status-container">
-                                                    <div class="status-circle" style="background-color: {getStatusColor(task.status)};"></div>
-                                                    {task.status}
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <span class="{isOverdue(task)}">{formatDate(task.endDate)}</span>
-                                            </td>
-                                            <td class="actions">
-                                                <button class="btn edit" on:click={() => editTask(task)}>Update</button>
-                                                <button class="btn delete" on:click={() => removeTask(task.id)}>Delete</button>
-                                            </td>
-                                        </tr>
-                                    {/each}
-                                    {:else}
-                                        <tr>
-                                            <td colspan="4" style="padding-top: 30px; text-align: center; color: red;">No Personal Tasks Found!</td>
-                                        </tr>
-                                {/if}
-                            </tbody>
-                        </table>
-                    </div>
-                {/if}
-                {#if currentView === 'employee'}
-                    <div class="table-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Task</th>
-                                    <th>Status</th>
-                                    <th>Due Date</th>
-                                    <!-- <th style="text-align: center;">Actions</th> -->
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {#if filteredEmployeeTasks.length > 0}
-                                    {#each filteredEmployeeTasks as task}
-                                        <tr>
-                                            <td>
-                                                <div class="task">
-                                                    <b>{task.title}</b><br>
-                                                    {task.description}
-
-                                                    {#if task.createdBy === task.createdBy}
-                                                        <br><br><span><i><b>Task Created By Employee: </b> {task.createdByName}</i></span>
-                                                    {:else}
-                                                        <span></span>
-                                                    {/if}
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <div class="status-container">
-                                                    <div class="status-circle" style="background-color: {getStatusColor(task.status)};"></div>
-                                                    {task.status}
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <span class="{isOverdue(task)}">{formatDate(task.endDate)}</span>
-                                            </td>
-                                        </tr>
-                                    {/each}
-                                    {:else}
-                                        <tr>
-                                            <td colspan="4" style="padding-top: 30px; text-align: center; color: red;">No Employees Task Found!</td>
-                                        </tr>
-                                {/if}
-                            </tbody>
-                        </table>
-                    </div>
-                {/if}
-            {/if}        
-            {#if $userRole === 'Employee'}
-                <div class="task-view-btns">
-                    <button on:click={() => setView('own')} class:active={currentView === 'own'} disabled>All Tasks</button>
-                </div>
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Task</th>
-                                <th>Status</th>
-                                <th>Due Date</th>
-                                <th style="text-align: center;">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {#if filteredEmployeeTasks.length > 0}
-                                {#each filteredEmployeeTasks as task}
-                                    <tr>
-                                        <td>
-                                            <div class="task">
-                                                <b>{task.title}</b><br>
-                                                {task.description}
-                                                
-                                                {#if task.assignedTo !== task.createdBy}
-                                                    <br><br><span><i><b>Task Assigned By Manager: </b> {task.createdByName}</i></span>
-                                                {:else}
-                                                    <span></span>
-                                                {/if}
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div class="status-container">
-                                                <div class="status-circle" style="background-color: {getStatusColor(task.status)};"></div>
-                                                {task.status}
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <span class="{isOverdue(task)}">{formatDate(task.endDate)}</span>
-                                        </td>
-                                        <td class="actions">
-                                            <button class="btn edit" on:click={() => editTask(task)}>Update</button>
-                                            <button class="btn delete" on:click={() => removeTask(task.id)}>Delete</button>
-                                        </td>
-                                    </tr>
-                                {/each}
-                                {:else}
-                                    <tr>
-                                        <td colspan="4" style="padding-top: 30px; text-align: center; color: red;">No Tasks Found!</td>
-                                    </tr>
-                            {/if}
-                        </tbody>
-                    </table>
-                </div>
-            {/if}
+                <TaskListManager {filteredEmployeeTasks} {filteredManagerTasks} {openTaskForm}/>        
         </div>
     </div>
 {/if}

@@ -3,15 +3,15 @@ import type { TaskData } from "$lib/stores/task";
 import { onMount } from "svelte";
 import { userRole, user, type User } from "$lib/stores/user";
 import { derived, get } from "svelte/store";
-import { createTask, deleteTask, fetchEmployees, fetchTasks, tasks, updateTask } from "$lib/api/taskService";
+import { createTask, deleteTask, fetchEmployees, refreshTasks, fetchTasks, tasks, updateTask } from "$lib/api/taskService";
+
+let errorMessage = '';
+let employeesInOffice: { id: number; name: string; role: string; office: string }[] = [];
+// let allTasks: Record<string, TaskData[]> = {}; 
 
 export let showForm: boolean = false;
+export const openTaskForm: boolean = false;
 export let editId: any = null;
-let errorMessage = '';
-
-let employeesInOffice: { id: number; name: string; role: string; office: string }[] = [];
-let allTasks: Record<string, TaskData[]> = {}; 
-
 export let taskData: TaskData = {
     id: null,
     title: '',
@@ -32,13 +32,30 @@ $: formattedStartDate = formatDateToInput(taskData.startDate);
 
 $: currentUser = get(user);
 
+const closeForm = () => {
+    editId = null;  
+    showForm = false;
+    taskData = {
+        id: null,
+        title: '',
+        description: '',
+        startDate: '',
+        endDate: '',
+        status: 'Pending',
+        assignedTo: null,
+        createdBy: get(user)?.id || null,
+        assignedToName: null,
+        createdByName: null
+    };
+};
+
 onMount(async () => {
     if(currentUser){
-        const fetchedTasks = await fetchTasks(
-                                        currentUser?.id ?? 0, 
-                                        currentUser?.role ?? '', 
-                                        currentUser?.office ?? ''
-                                    );
+        await fetchTasks(
+            currentUser?.id ?? 0, 
+            currentUser?.role ?? '', 
+            currentUser?.office ?? ''
+        );
 
         if (currentUser?.role === 'Manager') {
             try {
@@ -60,31 +77,13 @@ function handleDateInput(event: Event, key: keyof TaskData) {
     const target = event.target as HTMLInputElement | null;
     if (!target) return;
     
-    const selectedDate = target.value; // YYYY-MM-DD
-    
+    const selectedDate = target.value;
     const localDate = new Date(selectedDate);
+
     localDate.setMinutes(localDate.getMinutes() - localDate.getTimezoneOffset());
 
-    // Ensure the key is treated as a valid TaskData key
     (taskData as Record<string, any>)[key] = new Date(selectedDate + "T00:00:00.000Z").toISOString();
 }
-
-const closeForm = () => {
-    editId = null;  
-    showForm = false;
-    taskData = {
-        id: null,
-        title: '',
-        description: '',
-        startDate: '',
-        endDate: '',
-        status: 'Pending',
-        assignedTo: null,
-        createdBy: get(user)?.id || null,
-        assignedToName: null,
-        createdByName: null
-    };
-};
 
 async function handleSubmit() {
     if(!taskData.title || !taskData.description || !taskData.startDate || !taskData.endDate || !taskData.status){
@@ -109,27 +108,6 @@ async function handleSubmit() {
             showForm = false;
         }
     }
-}
-
-async function refreshTasks() {
-    const currentUser = get(user);
-    if(!currentUser){
-        return;
-    }
-    const fetchedTasks = await fetchTasks(
-                currentUser?.id ?? 0, 
-                currentUser?.role ?? '', 
-                currentUser?.office ?? ''
-            );
-            console.log("Fetched tasks after execution:", fetchedTasks);
-
-        if (currentUser?.role === "Admin") {
-            allTasks = fetchedTasks
-                ? Object.fromEntries(fetchedTasks.map(group => [group.officeName, group.tasks]))
-                : {};
-        } else {
-            $tasks = fetchedTasks ? fetchedTasks.flatMap(group => group.tasks) : [];
-        }
 }
 </script>
 {#if $userRole === 'Manager' || $userRole === 'Employee'}

@@ -7,6 +7,7 @@ import { json } from "@sveltejs/kit";
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 export const tasks = writable<TaskData[]>([]);
 export let allTasks: Record<string, TaskData[]> = {}; 
+export let errorMessage= '';
 
 export async function createTask(taskData: TaskData): Promise<TaskResponse> {    
     // Convert dates to Date objects for validation
@@ -103,6 +104,23 @@ export async function refreshTasks() {
                 : {};
         } else {
             tasks.set(fetchedTasks ? fetchedTasks.flatMap(group => group.tasks) : []);
+        }
+}
+
+export async function removeTask(taskId: number | null) {
+    if(!taskId) {
+        console.error("Cannot delete task id: ID is undefined");
+        return;
+    } else if(!confirm("Are you sure you want to delete this task?")) {
+        return;
+    } 
+        try {
+            await deleteTask(taskId);
+            alert("Task deleted successfully");
+            await refreshTasks();
+        } catch (error) {
+            console.error("Error deleting task :", error);
+            errorMessage = "Failed to delete task. Please try again later!";
         }
 }
 

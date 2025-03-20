@@ -18,3 +18,5 @@ export interface TaskResponse {
     message?: string;
     taskId?: number;
 }
+
+export const selectedStatuses = writable<string[]>([]);
