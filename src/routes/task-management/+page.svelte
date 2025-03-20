@@ -492,10 +492,9 @@
                                     <label for="end-date">Assigned To</label>
                                     <input bind:value={computedAssignedTo} style="cursor: default;" readonly/>    
                                 </div>
-        
                                 <div class="form-group">
                                     <label for="status">Status</label>
-                                    <input bind:value={selectedTask.status} style="cursor: default;" readonly required/>  
+                                    <input bind:value={selectedTask.status} style="cursor: default;" readonly/>  
                                 </div>                                    
                             </div>
                         </div>
