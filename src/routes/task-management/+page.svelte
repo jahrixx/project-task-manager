@@ -1,6 +1,6 @@
 <script lang="ts">
     import type { TaskData } from "$lib/stores/task";
-    import { createTask, deleteTask, fetchEmployees, fetchTasks, tasks, updateTask } from "$lib/api/taskService";
+    import { createTask, deleteTask, fetchEmployees, fetchTasks, tasks } from "$lib/api/taskService";
     import { goto } from "$app/navigation";
     import { isAuthenticated, user, type User } from "$lib/stores/user";
     import { onMount } from "svelte";
@@ -12,9 +12,9 @@
     import TaskListManager from "../../components/TaskListManager.svelte";
     import { selectedStatuses } from "$lib/stores/task";
 
-
     export const userRole = derived(user, ($user: User | null) => $user?.role || "");
-
+    
+    let employeesInOffice: { id: number; name: string; role: string; office: string }[] = [];
     let showForm = false;
     let showFilters = false;
     let editId: any = null;
@@ -31,7 +31,6 @@
 
     let allTasks: Record<string, TaskData[]> = {}; 
     let filteredTasks: Record<string, TaskData[]> = {};
-    let employeesInOffice: { id: number; name: string; role: string; office: string }[] = [];
     
     let errorMessage = '';
     let successMessage = ''; 
@@ -66,7 +65,7 @@
     }
 
     onMount(async () => {
-        if (!get(isAuthenticated)) {
+        if (!isAuthenticated) {
             goto('/login');
             return;
         }
@@ -307,7 +306,7 @@
                     {#if $userRole === 'Manager'}
                         <button class="filter-btn" on:click={toggleFilter}><img width="22" height="22" src="https://img.icons8.com/ios-filled/50/FFFFFF/filter--v1.png" alt="filter--v1"/></button>
                         {#if showFilters}
-                            <div class="filter-container" style="top: 110%;">
+                            <div class="filter-container">
                                 <div class="filter-header">Filter by Status</div>
                                 <div class="checkbox-group">
                                     {#each Array.from(new Set([...managerTasks, ...employeeTasks].map(task => task.status))) as status}
@@ -348,25 +347,25 @@
         </div>
         <div class="task-view">
             {#if $userRole === 'Admin'}
-            <div class="all-task-container">
-                {#if Object.keys(filteredTasks).length > 0}
-                    {#each Object.entries(filteredTasks ?? {}) as [office, tasks]}
-                        <h3 class="office-name">{office}</h3>
-                        <div class="task-holder-container" >
-                            <div class="task-holder">
-                                {#each tasks as task}
-                                    <button class="task-card" on:click={() => handleTaskDetails(task, office)} on:keydown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleTaskDetails(task, office); }} aria-label={`Task: ${task.title}`}>
-                                        <div class="task-header">{task.title}</div>
-                                        <p>Tasked By: <strong>{task.assignedToName}</strong></p>
-                                    </button>
-                                {/each}
+                <div class="all-task-container">
+                    {#if Object.keys(filteredTasks).length > 0}
+                        {#each Object.entries(filteredTasks ?? {}) as [office, tasks]}
+                            <h3 class="office-name">{office}</h3>
+                            <div class="task-holder-container" >
+                                <div class="task-holder">
+                                    {#each tasks as task}
+                                        <button class="task-card" on:click={() => handleTaskDetails(task, office)} on:keydown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleTaskDetails(task, office); }} aria-label={`Task: ${task.title}`}>
+                                            <div class="task-header">{task.title}</div>
+                                            <p>Tasked By: <strong>{task.assignedToName}</strong></p>
+                                        </button>
+                                    {/each}
+                                </div>
                             </div>
-                        </div>
-                    {/each}
-                {:else}
-                        <p style="text-align: center; color: red;">No Tasks Found!</p>
-                {/if}
-            </div>
+                        {/each}
+                    {:else}
+                            <p style="text-align: center; color: red;">No Tasks Found!</p>
+                    {/if}
+                </div>
                 {#if showForm && selectedTask}
                     <div class="overlay">
                         <div class="form-container">
@@ -398,7 +397,11 @@
                     </div>
                 {/if}
             {/if}
-                <TaskListManager {filteredEmployeeTasks} {filteredManagerTasks} {openTaskForm}/>        
+            {#if filteredEmployeeTasks || filteredManagerTasks}
+                <TaskListManager {filteredEmployeeTasks} {filteredManagerTasks} {openTaskForm}/>
+                {:else}
+                    <p>Loading tasks...</p>
+            {/if}      
         </div>
     </div>
 {/if}

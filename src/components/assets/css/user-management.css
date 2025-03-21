@@ -200,11 +200,15 @@ tbody {
 }
 
 /* Scrollbar Styles */
-:global(tbody::-webkit-scrollbar){
+tbody::-webkit-scrollbar{
     width: 0;
     background: transparent;
 }
 
+/* :global(tbody::-webkit-scrollbar){
+    width: 0;
+    background: transparent;
+} */
 /* overlay and form styles */
 .form-btns {
     display: flex;

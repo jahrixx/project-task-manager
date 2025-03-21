@@ -52,7 +52,9 @@
             case 'completed':
                 return 'green';
             case 'cancelled':
-                return 'red';
+                return '#DC143C';
+            case 'due today':
+                return '#FF3131';
             case 'overdue':
                 return 'red';
             default:
@@ -61,9 +63,6 @@
     }
 </script>
 
-<head>
-    <link rel="stylesheet" href="src/components/assets/css/task-management.css">
-</head>
 {#if $userRole === 'Manager'}
 <div class="task-view-btns">
     <button on:click={() => setView('own')} class:active={currentView === 'own'}>Personal Tasks</button>
@@ -82,7 +81,7 @@
                 </thead>
                 <tbody>
                     {#if filteredManagerTasks.length > 0}
-                        {#each filteredManagerTasks as task}
+                        {#each filteredManagerTasks as task (task.id)}
                             <tr>
                                 <td>
                                     <div class="task">
@@ -132,7 +131,7 @@
                 </thead>
                 <tbody>
                     {#if filteredEmployeeTasks.length > 0}
-                        {#each filteredEmployeeTasks as task}
+                        {#each filteredEmployeeTasks as task (task.id)}
                             <tr>
                                 <td>
                                     <div class="task">
@@ -183,7 +182,7 @@
             </thead>
             <tbody>
                 {#if filteredEmployeeTasks.length > 0}
-                    {#each filteredEmployeeTasks as task}
+                    {#each filteredEmployeeTasks as task (task.id)}
                         <tr>
                             <td>
                                 <div class="task">

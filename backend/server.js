@@ -14,6 +14,7 @@ const userRoutes = require("./routes/users");
 const taskRoutes = require("./routes/tasks");
 const officeRoutes = require("./routes/offices");
 const activitiesRoutes = require("./routes/activities");
+const reportsRoutes = require("./routes/reports");
 const dashboardRoutes = require("./routes/dashboard");
 // const reportRoutes = require("./routes/reports");
 
@@ -24,6 +25,7 @@ app.use("/users", userRoutes);
 app.use("/tasks", taskRoutes);
 app.use("/offices", officeRoutes);
 app.use("/activities", activitiesRoutes);
+app.use("/reports", reportsRoutes);
 app.use("/dashboard", dashboardRoutes);
 app.use('/uploads', express.static('uploads'));
 // app.use("/api/reports", reportRoutes);
