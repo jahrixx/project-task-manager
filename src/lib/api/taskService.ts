@@ -66,29 +66,33 @@ export async function fetchTasks(userId: number | null, role: string | null, off
         const userIdParam = userId ?? 0;
         const roleParam = role ?? "";
         const officeParam = office ?? "";
-   
+        // let response: any = [];
+           
         const response = await fetch(`${API_URL}/tasks?userId=${userIdParam}&role=${roleParam}&office=${officeParam}`);
-       
+    
         if (!response.ok) {
             const errorData = await response.json();
             throw new Error(errorData.message || "Failed to fetch tasks.");
         }
 
         const data = await response.json();
-        const now = new Date();
-        
-        data.forEach((task: TaskData) => {
-            const endDate = new Date(task.endDate);
+        console.log("Data Fetched: ", data);
 
-            if(task.status !== "Completed"){
-                if(endDate.toDateString() === now.toDateString()){
-                    task.status = "Due Today";
-                } else if(endDate < now){
-                    task.status = "Overdue";
+        if(role !== "Admin"){
+            data.forEach((task: TaskData) => {
+                const now = new Date();
+                const endDate = new Date(task.endDate);
+    
+                if(task.status !== "Completed"){
+                    if(endDate.toDateString() === now.toDateString()){
+                        task.status = "Due Today";
+                    } else if(endDate < now){
+                        task.status = "Overdue";
+                    }
                 }
-            }
-        });
-
+            });
+        }
+        
         return role === "Admin"
             ? transformGroupedTasks(data)
             : [{ officeName: "My Tasks", tasks: data }];
