@@ -71,7 +71,7 @@ router.get("/", async (req, res) => {
                 return acc;
             }, {});
 
-            console.log("Tasks Retrieved (Grouped By Office):", groupedTasks);
+            // console.log("Tasks Retrieved (Grouped By Office):", groupedTasks);
             res.json(groupedTasks);
         } else {
             console.log("Tasks Retrieved: ", tasks);
@@ -80,6 +80,27 @@ router.get("/", async (req, res) => {
     } catch (error) {
         console.error("Error fetching tasks from MySQL:", error);
         res.status(500).json({ message: "Server error while fetching tasks." });
+    }
+});
+
+router.get("/status-count/:assignedTo", async (req, res) => {
+    const counts = {};
+    const userId = req.params.assignedTo;
+    const pool = getPool();
+
+    try {
+        const [pendingRows] = await pool.query('SELECT COUNT(*) AS pendingCount FROM tasks WHERE status = "Pending" AND assignedTo = ?', [userId]);
+        const [inProgressRows] = await pool.query('SELECT COUNT(*) AS inProgressCount FROM tasks WHERE status = "In Progress" AND assignedTo = ?', [userId]);
+        const [completedRows] = await pool.query('SELECT COUNT(*) AS completedCount FROM tasks WHERE status = "Completed" AND assignedTo = ?', [userId]);
+        
+        counts.pendingCount = pendingRows[0].pendingCount;
+        counts.inProgressCount = inProgressRows[0].inProgressCount;
+        counts.completedCount = completedRows[0].completedCount;
+
+        res.json(counts);
+    } catch (error) {
+        console.error('Error Fetching Task Counts', error);
+        res.status(500).json({ error: 'Internal Sever Error' });
     }
 });
 

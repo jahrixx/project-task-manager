@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
-const PDFDocument = require('pdfkit');
+const { PDFDocument, rgb } = require('pdf-lib');
+const fontkit = require('@pdf-lib/fontkit');
 const express = require("express");
 const { getPool } = require("../db");
 
@@ -62,26 +63,44 @@ router.post('/generate', async (req, res) => {
     try {
         const [tasks] = await pool.query(`
             SELECT 
-                id, 
-                title, 
-                description, 
-                startDate, 
-                endDate, 
-                status,
-                assignedTo,
-                createdBy
-            FROM tasks 
-            WHERE (createdBy = ? OR assignedTo = ?) 
+                t.id, 
+                t.title, 
+                t.description, 
+                t.startDate, 
+                t.endDate, 
+                t.status,
+                t.assignedTo,
+                t.createdBy,
+                u1.firstName as assignedToFirstName,
+                u1.lastName as assignedToLastName,
+                u1.office as assignedToOffice,
+                u2.firstName as createdByFirstName,
+                u2.lastName as createdByLastName,
+                u2.office as createdByOffice
+            FROM tasks t
+            LEFT JOIN users u1 ON t.assignedTo = u1.id
+            LEFT JOIN users u2 ON t.createdBy = u2.id
+            WHERE (t.createdBy = ? OR t.assignedTo = ?) 
             AND (
-                (startDate BETWEEN ? AND ?) OR 
-                (endDate BETWEEN ? AND ?) OR 
-                (startDate <= ? AND endDate >= ?)
+                (t.startDate BETWEEN ? AND ?) OR 
+                (t.endDate BETWEEN ? AND ?) OR 
+                (t.startDate <= ? AND t.endDate >= ?)
             )
         `, [userId, userId, startDate, endDate, startDate, endDate, startDate, endDate]);
 
         if (tasks.length === 0) {
             return res.status(404).json({ message: "No tasks found for the selected range." });
         }
+
+        /// Format the tasks with the additional name fields
+        const formattedTasks = tasks.map(task => ({
+            ...task,
+            assignedToName: `${task.assignedToFirstName} ${task.assignedToLastName}`,
+            createdByName: `${task.createdByFirstName} ${task.createdByLastName}`,
+            office: task.assignedToOffice || task.createdByOffice || 'No office specified'
+        }));
+
+        // console.log("Formatted Tasks: ", formattedTasks);
 
         const report = {
             title: `Task Report ${startDate} - ${endDate}`,
@@ -95,35 +114,46 @@ router.post('/generate', async (req, res) => {
         res.json({ 
             message: "Report generated successfully", 
             reportId: result.insertId,
-            tasks 
+            tasks: formattedTasks
         });
     } catch (error) {
-        res.status(500).json({ message: "Error generating report", error });
+        console.error("Error generating report:", error);
+        res.status(500).json({ 
+            message: "Error generating report", 
+            error: error.message,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        });
     }
 });
 
 router.post("/download", async (req, res) => {
     console.log("Download report called");
     const pool = getPool();
-    const { reportId, startDate, endDate } = req.body;
+    const { reportId, startDate, endDate, downloaderId } = req.body;
 
-    if (!startDate || !endDate) {
-        return res.status(400).json({ message: "Start date and end date are required." });
+    if (!startDate || !endDate || !downloaderId) {
+        return res.status(400).json({ 
+            message: "Start date, end date, and downloader ID are required." 
+        });
     }
 
     try {
-        const reportsDir = path.join(__dirname, "../reports");
-        if (!fs.existsSync(reportsDir)) {
-            fs.mkdirSync(reportsDir, { recursive: true });
-        }
-
         // Fetch report and user data
         const [reportData] = await pool.query(`
-            SELECT r.*, u.firstName, u.lastName, u.role, u.office
+            SELECT 
+                r.*, 
+                creator.firstName as creatorFirstName,
+                creator.lastName as creatorLastName,
+                creator.role as creatorRole,
+                creator.office as creatorOffice,
+                downloader.firstName as downloaderFirstName,
+                downloader.lastName as downloaderLastName,
+                downloader.role as downloaderRole
             FROM reports r
-            JOIN users u ON r.userId = u.id
+            JOIN users creator ON r.userId = creator.id
+            JOIN users downloader ON downloader.id = ?
             WHERE r.id = ?
-        `, [reportId]);
+        `, [downloaderId, reportId]);
 
         if (reportData.length === 0) {
             return res.status(404).json({ message: "Report not found." });
@@ -132,14 +162,25 @@ router.post("/download", async (req, res) => {
 
         // Fetch tasks
         const [tasks] = await pool.query(
-            `SELECT id, title, description, status, startDate, endDate 
-             FROM tasks 
-             WHERE (createdBy = ? OR assignedTo = ?) 
-             AND (
-                 (startDate BETWEEN ? AND ?) OR 
-                 (endDate BETWEEN ? AND ?) OR 
-                 (startDate <= ? AND endDate >= ?)
-             )
+            `SELECT 
+                t.id, 
+                t.title, 
+                t.description, 
+                t.status, 
+                t.startDate, 
+                t.endDate,
+                CONCAT(u1.firstName, ' ', u1.lastName) as assignedToName,
+                CONCAT(u2.firstName, ' ', u2.lastName) as createdByName,
+                u1.office as office
+            FROM tasks t
+            LEFT JOIN users u1 ON t.assignedTo = u1.id
+            LEFT JOIN users u2 ON t.createdBy = u2.id
+            WHERE (t.createdBy = ? OR t.assignedTo = ?) 
+            AND (
+                (t.startDate BETWEEN ? AND ?) OR 
+                (t.endDate BETWEEN ? AND ?) OR 
+                (t.startDate <= ? AND t.endDate >= ?)
+            )
              ORDER BY startDate ASC`,
             [report.userId, report.userId, startDate, endDate, startDate, endDate, startDate, endDate]
         );
@@ -148,85 +189,147 @@ router.post("/download", async (req, res) => {
             return res.status(404).json({ message: "No tasks found in the selected date range." });
         }
 
-        // Create PDF document with better styling
-        const doc = new PDFDocument({ margin: 50, size: 'A4' });
-        const filePath = path.join(reportsDir, `${reportId}_${Date.now()}.pdf`);
-        const stream = fs.createWriteStream(filePath);
-        doc.pipe(stream);
+        // Create PDF document
+        const pdfDoc = await PDFDocument.create();
+        pdfDoc.registerFontkit(fontkit);
 
-         // ===== HEADER =====
-        doc.fillColor('#2c3e50') // Darker color for header
-        .fontSize(24)
-        .font('Helvetica-Bold')
-        .text('TASK COMPLETION REPORT', { align: 'center' })
-        .moveDown(0.5);
+        // Load font (using built-in Helvetica for simplicity)
+        const font = pdfDoc.embedStandardFont('Helvetica');
+        const fontBold = pdfDoc.embedStandardFont('Helvetica-Bold');
 
-        // ===== REPORT METADATA =====
-        doc.fillColor('#34495e') // Darker color for metadata
-        .fontSize(12)
-        .font('Helvetica')
-        .text(`Report By: ${report.firstName} ${report.lastName} - (${report.role})`, { align: 'left' })
-        .text(`Office: ${report.office}`, { align: 'left' })
-        .text(`Report Period: ${new Date(startDate).toLocaleDateString()} to ${new Date(endDate).toLocaleDateString()}`, { align: 'left' })
-        .text(`Generated On: ${new Date().toLocaleDateString()}`, { align: 'left' })
-        .moveDown(0.5);
+        // Add a page
+        const page = pdfDoc.addPage([595, 842]); // A4 size in points
 
-        // ===== TASK TABLE =====
-        const tableTop = doc.y + 10; // Start table below the metadata
-        const tableWidth = 500;
-        const columnWidths = [40, 100, 180, 100, 80]; // Adjusted column widths
-        const columnHeaders = ['ID', 'TITLE', 'DESCRIPTION', 'DATES', 'STATUS'];
-        const headerHeight = 25;
-        const rowHeight = 22;
+        // Define table parameters
+        const tableWidth = 540;
+        const columnWidths = [30, 70, 75, 75, 130, 80, 50]; 
+        const columnHeaders = ['ID', 'TITLE', 'ASSIGNED TO', 'CREATED BY', 'DESCRIPTION', 'DURATION', 'STATUS'];
+        const rowHeight = 25;
 
-        // Table Header
-        doc.font('Helvetica-Bold')
-        .fontSize(11)
-        .fillColor('#ffffff')
-        .rect(50, tableTop, tableWidth, headerHeight)
-        .fill('#3498db'); // Blue header
+        // Set up initial coordinates
+        let y = 800; // Start near the top of the page
+        const margin = 20;
+        const lineHeight = 15;
 
-        let x = 50;
-        columnHeaders.forEach((header, index) => {
-        doc.fillColor('#ffffff')
-            .text(header, x + 5, tableTop + 10, { width: columnWidths[index], align: 'left' });
-        x += columnWidths[index];
+        // Add title
+        const title = 'TASK COMPLETION REPORT';
+        const titleWidth = font.widthOfTextAtSize(title, 20);
+        const centerX = margin + (tableWidth / 2) - (titleWidth / 2);
+
+        page.drawText(title, {
+            x: centerX,
+            y,
+            size: 20,
+            font: fontBold,
         });
+        y -= lineHeight * 2;
 
-        // Task Rows
-        let y = tableTop + headerHeight;
-        tasks.forEach((task, i) => {
-        x = 50;
-        doc.font('Helvetica')
-            .fontSize(10)
-            .fillColor(i % 2 ? '#ecf0f1' : '#ffffff') // Light gray or white rows
-            .rect(50, y, tableWidth, rowHeight)
-            .fill();
-
-        const taskData = [
-            task.id.toString(),
-            task.title,
-            task.description,
-            `${new Date(task.startDate).toLocaleDateString()} - ${new Date(task.endDate).toLocaleDateString()}`,
-            task.status.toUpperCase(),
+        const metadata = [
+            { label: 'Report By:', value: `${report.creatorFirstName} ${report.creatorLastName} - ${report.creatorRole}` },
+            { label: 'Office:', value: report.creatorOffice },
+            { label: 'Report Generated By:', value: `${report.downloaderFirstName} ${report.downloaderLastName} - ${report.downloaderRole}` },
+            { label: 'Report Period:', value: `${new Date(startDate).toLocaleDateString()} to ${new Date(endDate).toLocaleDateString()}` },
+            { label: 'Generated On:', value: new Date().toLocaleDateString() },
         ];
 
-        taskData.forEach((data, index) => {
-            doc.fillColor('#333')
-            .text(data, x + 5, y + 8, { width: columnWidths[index], align: 'left' });
-            x += columnWidths[index];
+        metadata.forEach((data) => {
+            page.drawText(data.label, {
+                x: margin,
+                y,
+                size: 10,
+                font: fontBold, // Bold label
+            });
+        
+            page.drawText(data.value, {
+                x: margin + 120, // Adjusted spacing for alignment
+                y,
+                size: 10,
+                font, // Regular font for values
+            });
+        
+            y -= lineHeight; // Move to the next line
         });
 
-        y += rowHeight;
+        let x = margin;
+        columnHeaders.forEach((header, i) => {
+            page.drawText(header, {
+                x: x + 5,
+                y: y - 12,
+                size: 9,
+                font: fontBold,
+                maxWidth: columnWidths[i],
+            });
+            x += columnWidths[i];
+        });
+        y -= rowHeight;
+
+        // Draw horizontal line under header
+        page.drawLine({
+            start: { x: margin, y: y + 5 },
+            end: { x: margin + tableWidth, y: y + 5 },
+            thickness: 0.5,
         });
 
-        doc.end();
+        y -= 5;
 
-        // Wait for stream to finish writing
-        await new Promise((resolve) => stream.on('finish', resolve));
+        // Draw task rows
+        tasks.forEach((task, i) => {
+            if (y < 100) { // Add new page if running out of space
+                page = pdfDoc.addPage([595, 842]);
+                y = 800;
+            }
 
-        // Send file
-        res.download(filePath, `TaskReport_${report.firstName}_${report.lastName}.pdf`, (err) => {
+            // Draw cell content
+            x = margin;
+            const cellContent = [
+                task.id.toString(),
+                task.title,
+                task.assignedToName || 'Unassigned',
+                task.createdByName || 'Unknown',
+                task.description || 'No description',
+                `${new Date(task.startDate).toLocaleDateString()} - ${new Date(task.endDate).toLocaleDateString()}` || 'No date range',
+                task.status.toUpperCase()
+            ];
+
+            let maxLineCount = 1;
+
+            cellContent.forEach((content, colIndex) => {
+                const lines = splitTextIntoLines(content, columnWidths[colIndex] - 10, font, 9);
+                maxLineCount = Math.max(maxLineCount, lines.length);
+                
+                lines.forEach((line, lineIndex) => {
+                    page.drawText(line, {
+                        x: x + 5,
+                        y: y - 10 - (lineIndex * 10),
+                        size: 9,
+                        font,
+                        maxWidth: columnWidths[colIndex] - 10,
+                    });
+                });
+                
+                x += columnWidths[colIndex];
+            });
+
+            y -= rowHeight + (maxLineCount - 1) * 10; 
+
+            // Draw horizontal line between rows
+            page.drawLine({
+                start: { x: margin, y: y + 5 }, // Moved closer to text
+                end: { x: margin + tableWidth, y: y + 5 },
+                thickness: 0.5,
+            });
+        });
+
+        // Save PDF to file
+        const pdfBytes = await pdfDoc.save();
+        const reportsDir = path.join(__dirname, "../reports");
+        if (!fs.existsSync(reportsDir)) {
+            fs.mkdirSync(reportsDir, { recursive: true });
+        }
+        const filePath = path.join(reportsDir, `${reportId}_${Date.now()}.pdf`);
+        fs.writeFileSync(filePath, pdfBytes);
+
+        res.download(filePath, `TaskReport_${report.creatorFirstName}_${report.creatorLastName}.pdf`, (err) => {
             if (err) {
                 console.error("Error sending file:", err);
                 res.status(500).json({ message: "Error downloading file" });
@@ -237,9 +340,38 @@ router.post("/download", async (req, res) => {
 
     } catch (error) {
         console.error("Error generating report:", error);
-        res.status(500).json({ message: "Error generating report", error });
+        res.status(500).json({ 
+            message: "Error generating report", 
+            error: error.message,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        });
     }
 });
+
+function splitTextIntoLines(text, maxWidth, font, fontSize) {
+    if (!text) return [''];
+    
+    const words = text.split(' ');
+    const lines = [];
+    let currentLine = words[0] || '';
+
+    for (let i = 1; i < words.length; i++) {
+        const word = words[i];
+        const testLine = currentLine + ' ' + word;
+        const testWidth = font.widthOfTextAtSize(testLine, fontSize);
+        
+        if (testWidth <= maxWidth) {
+            currentLine = testLine;
+        } else {
+            lines.push(currentLine);
+            currentLine = word;
+        }
+    }
+    lines.push(currentLine);
+    
+    // Ensure we don't return empty lines
+    return lines.filter(line => line.trim().length > 0);
+}
 
 router.get("/tasks", async (req, res) => {
     const pool = getPool();

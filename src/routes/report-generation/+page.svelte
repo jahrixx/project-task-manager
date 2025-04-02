@@ -10,7 +10,6 @@
     import type { TaskData } from "$lib/stores/task";
     import flatpickr from "flatpickr";
     import type { Instance } from "flatpickr/dist/types/instance";
-    import { createUser } from "$lib/api/userService";
 
     const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
     const currentDate = new Date();
@@ -24,32 +23,17 @@
         filePath: string;
     };
 
-    let activeReport = writable<{
-        id: number;
-        title: string;
-        startDate: string;
-        endDate: string;
-        generatedDate: string;
-        tasks: TaskData[];
-    } | null>(null);
-
     let reports = writable<Report[]>([]);
     let userList = writable<User[]>([]);
     let officeList = writable<{ id: number, officeName: string }[]>([]);
     let taskDates = writable<{ startDate: string, endDate: string }[]>([]);
-
+    let activeReport = writable<{ id: number, title: string, startDate: string, endDate: string, generatedDate: string, tasks: TaskData[]} | null>(null);
     let selectedUser = "";
-    let selectedEmployee = "";
     let selectedOffice = "";
     let startDate = "";
     let endDate = "";
     let searchQuery = "";
     let calendarInstance: Instance | null = null;
-
-    // const formatDate = (dateString: string) => {
-    //     const date = new Date(dateString + "T00:00:00"); // Force local time
-    //     return date.toLocaleDateString("en-CA"); // Ensures YYYY-MM-DD format without timezone shifts
-    // };
 
     onMount(async () => {
         if (!isAuthenticated) {
@@ -65,7 +49,6 @@
         }
     });
 
-    // If the Manager selects an employee, fetch their tasks dynamically
     $: if ($userRole === "Manager" && selectedUser) {
         fetchTaskDates(selectedUser);
     }
@@ -73,8 +56,12 @@
     async function fetchUsers() {
         const res = await fetch(`${API_URL}/users`);
         const allUsers = await res.json();
-
         const currentUser = get(user);
+
+        if(selectedOffice === ""){
+            userList.set(allUsers);
+        }
+
         if(currentUser?.role === "Admin"){
             userList.set(allUsers);
         } else if(currentUser?.role === "Manager"){
@@ -110,7 +97,7 @@
 
             if (!tasks || tasks.length === 0) {
                 taskDates.set([]);
-                initializeCalendar([]); // Reset calendar if no tasks
+                initializeCalendar([]);
                 return;
             }
 
@@ -132,6 +119,14 @@
 
     function initializeCalendar(taskDateRanges: { startDate: string, endDate: string }[]) {
         let highlightedDates: string[] = [];
+        console.log("Task Dates: ", taskDateRanges);
+        
+        let allStartDates = taskDateRanges.map(task => new Date(task.startDate));
+        let allEndDates = taskDateRanges.map(task => new Date(task.endDate));
+        
+        let minDate = new Date(Math.min(...allStartDates.map(date => date.getTime())));
+        let maxDate = new Date(Math.max(...allEndDates.map(date => date.getTime())));
+        
         taskDateRanges.forEach(({ startDate, endDate }) => {
             let currentDate = new Date(startDate);
             let end = new Date(endDate);
@@ -142,7 +137,6 @@
             }
         });
 
-        // Destroy previous instance if it exists
         if (calendarInstance) {
             calendarInstance.destroy();
             calendarInstance = null;
@@ -152,25 +146,38 @@
             mode: "range",
             dateFormat: "Y-m-d",
             disableMobile: true,
-            enable: highlightedDates, // Only allow selecting task dates
+            minDate: minDate,
+            maxDate: maxDate,
             onChange: (selectedDates) => {
                 if (selectedDates.length === 2) {
                     startDate = selectedDates[0].toLocaleDateString("en-CA");
                     endDate = selectedDates[1].toLocaleDateString("en-CA");
-
                     console.log("Selected Date Range:", startDate, "to", endDate);
+
+                    const selectedRangeHasGaps = !selectedDates.every(date => 
+                        highlightedDates.includes(date.toLocaleDateString("en-CA"))
+                    );
+
+                    if(selectedRangeHasGaps){
+                        alert("Selection Includes Date With No Tasks!");
+                        calendarInstance?.clear();
+                        return;
+                    }
                 }
             },
             onDayCreate: function(_, __, ___, dayElem) {
                 const dateStr = dayElem.dateObj.toLocaleDateString("en-CA");
                 if (highlightedDates.includes(dateStr)) {
-                    dayElem.style.backgroundColor = "lightgreen"; // Task dates
+                    dayElem.style.backgroundColor = "lightgreen";
+                    dayElem.style.color = "black";
                     dayElem.style.borderRadius = "50%";
                     dayElem.style.fontSize = "12px";
                 } else {
-                    dayElem.style.backgroundColor = "#FF7F7F"; // No task dates
+                    dayElem.style.backgroundColor = "#FF7F7F";
                     dayElem.style.color = "black";
+                    dayElem.style.borderRadius = "50%";
                     dayElem.style.fontSize = "12px";
+                    dayElem.style.cursor = "not-allowed";
                 }
             }
         });
@@ -222,7 +229,7 @@
         const res = await fetch(`${API_URL}/reports/download`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ reportId, startDate, endDate }),
+            body: JSON.stringify({ reportId, startDate, endDate, downloaderId: $user?.id  }),
         });
 
         if (res.ok) {
@@ -251,9 +258,10 @@
                         <style>
                             body { font-family: Arial, sans-serif; margin: 20px; }
                             .report-header { margin-bottom: 20px; }
+                            .report-meta { display: flex; justify-content: space-between; padding-bottom: 20px; border-bottom: 1px solid #ddd; }
                             .report-logo { display: flex; justify-content: space-between; margin-bottom: 20px; }
                             .logo { font-size: 24px; font-weight: bold; }
-                            .user-info { text-align: right; }
+                            .user-info { text-align: left; }
                             .task-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
                             .task-table th, .task-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
                             .task-table th { background-color: #f2f2f2; }
@@ -279,12 +287,7 @@
     }
     
     function clearInputs() {
-        selectedOffice = "";
-        selectedUser = "";
-        const datePicker = document.getElementById("datePicker") as HTMLInputElement | null;
-        if (datePicker) {
-            datePicker.value = "";
-        }
+        window.location.reload();
     }
 </script>
 
@@ -299,14 +302,15 @@
         <Sidebar />
         <div class="main-container">
             <UserProfile />
-            <h2 class="h2">Generate Report</h2>
+            <h2 class="h2"><u>Generate Report</u></h2>
             <div class="report-container">
                 <div class="report-fields">
                     {#if $userRole === "Admin"}
                         <div class="form-group">
                             <label for="office">Select Office</label>
                             <select bind:value={selectedOffice} on:change={fetchUsers}>
-                                <option value="">All Offices</option>
+                                <option value="" disabled selected>Select an office...</option>
+                                <!-- <option>All Offices</option> -->
                                 {#each $officeList as office}
                                     <option value={office.officeName}>{office.officeName}</option>
                                 {/each}
@@ -325,7 +329,7 @@
                         </div>
                         <div class="form-group">
                             <label for="datePicker">Select Date Range</label>
-                            <input id="datePicker" type="text" placeholder="Select Date Range" readonly />
+                            <input id="datePicker" type="text" placeholder="Select Date Range" required />
                         </div>
                 
                     {:else if $userRole === "Manager"}
@@ -336,7 +340,6 @@
                         <div class="form-group">
                             <label for="search">Select Employee</label>
                             <select bind:value={selectedUser} on:change={() => fetchTaskDates(selectedUser)}>
-                                <!-- Include manager first -->
                                 <option value={$user?.id}>
                                     {$user?.firstName} {$user?.lastName} (Manager)
                                 </option>
@@ -348,9 +351,8 @@
                         </div>
                         <div class="form-group">
                             <label for="datePicker">Select Date Range</label>
-                            <input id="datePicker" type="text" placeholder="Select Date Range" readonly />
+                            <input id="datePicker" type="text" placeholder="Select Date Range" required />
                         </div>
-                
                     {:else} 
                         <div class="form-group">
                             <label for="employee">Employee</label>
@@ -358,18 +360,17 @@
                         </div>
                         <div class="form-group">
                             <label for="datePicker">Select Date Range</label>
-                            <input id="datePicker" type="text" placeholder="Select Date Range" readonly />
+                            <input id="datePicker" type="text" placeholder="Select Date Range" required />
                         </div>
                     {/if}
                 </div>
                 <div class="report-actions">
-                    {#if selectedUser && $taskDates.length === 0}
-                        <span><p>No tasks assigned for this user.</p></span>
-                    {/if}
-        
+                        {#if selectedUser && $taskDates.length === 0}
+                            <span><p style="color: red;">No Tasks Assigned For This User.</p></span>
+                        {/if}
                     <div class="buttons">
                         <button class="generate-btn" on:click={generateReport}>Generate Report</button>
-                        <button class="clear-btn" on:click={clearInputs}>Clear Inputs</button>
+                        <button class="clear-btn" on:click={clearInputs}>Reset</button>
                     </div>
                 </div>
             </div>
@@ -389,6 +390,7 @@
                 {/if}
             </div>
             <div class="report-display">
+                <div class="report-content print-area">
                 <div class="report-header">
                     <h2>
                         {#if $activeReport}
@@ -416,7 +418,7 @@
                         </span>
                     </div>
                 </div>
-                <div class="report-content print-area">
+                <!-- <div class="report-content print-area"> -->
                     <div class="report-logo">
                         <div class="logo">Report Generated By:</div>
                         <div class="user-info">
@@ -437,13 +439,15 @@
                         </div>  
                     </div>
                     {#if $activeReport}
-                        <!-- Actual Report Data -->
                         {#if $activeReport.tasks && $activeReport.tasks.length > 0}
                             <table class="task-table">
                                 <thead>
                                     <tr>
                                         <th>Task ID</th>
                                         <th>Title</th>
+                                        <th>Assigned To</th>
+                                        <th>Created By</th>
+                                        <th>Office</th>
                                         <th>Description</th>
                                         <th>Start Date</th>
                                         <th>End Date</th>
@@ -455,6 +459,9 @@
                                         <tr>
                                             <td>{task.id}</td>
                                             <td>{task.title}</td>
+                                            <td>{task.assignedToName}</td>
+                                            <td>{task.createdByName}</td>
+                                            <td>{task.office}</td>
                                             <td>{task.description}</td>
                                             <td>{new Date(task.startDate).toLocaleDateString()}</td>
                                             <td>{new Date(task.endDate).toLocaleDateString()}</td>
@@ -464,10 +471,9 @@
                                 </tbody>
                             </table>
                         {:else}
-                            <div class="no-tasks">No tasks found for this date range</div>
+                            <div class="no-tasks">No Tasks Found For This Date Range.</div>
                         {/if}
                     {:else}
-                        <!-- Placeholder Content -->
                         <div class="placeholder-content">
                             <div class="placeholder-text">Generated Report Will Appear Here!</div>
                             <div class="placeholder-table">
@@ -476,6 +482,9 @@
                                         <tr>
                                             <th>Task ID</th>
                                             <th>Title</th>
+                                            <th>Assigned To</th>
+                                            <th>Created By</th>
+                                            <th>Office</th>
                                             <th>Description</th>
                                             <th>Start Date</th>
                                             <th>End Date</th>
@@ -484,6 +493,9 @@
                                     </thead>
                                     <tbody>
                                         <tr>
+                                            <td>--</td>
+                                            <td>--</td>
+                                            <td>--</td>
                                             <td>--</td>
                                             <td>--</td>
                                             <td>--</td>

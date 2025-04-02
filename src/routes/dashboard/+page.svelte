@@ -10,6 +10,12 @@
     import { get } from 'svelte/store';
     import { fetchActivities } from '$lib/api/activityService';
 
+    let pendingCount = 0;
+    let inProgressCount = 0;
+    let completedCount = 0;
+    let archivedCount = 0;
+    let error = null;
+    
     let activeModal = '';
     let activities: any = [];
     let role = '';
@@ -22,6 +28,7 @@
         
         const currentUser = get(user);
         const userId = currentUser?.id ?? 0;
+        console.log("Current User ID: ", userId);
         role = currentUser?.role || '';
 
         try {
@@ -33,11 +40,32 @@
         }
             if ($userRole === 'Admin') {
                 fetchDashboardStats();
+            } else if ($userRole === 'Manager' || $userRole === 'Employee'){
+                fetchTaskCounts(userId);
             }
     });
 
     function toggleModal(type: string) {
         activeModal = activeModal === type ? '' : type;
+    }
+
+    async function fetchTaskCounts(userId: number) {
+        try {
+            const response = await fetch(`http://localhost:3000/tasks/status-count/${userId}`);
+        
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+        const data = await response.json();
+            pendingCount = data.pendingCount;
+            inProgressCount = data.inProgressCount;
+            completedCount = data.completedCount;
+            error = null;
+        } catch (err) {
+            console.error('Error fetching task counts:', err);
+            error = err instanceof Error ? err.message : 'An unexpected error occurred.';
+        }
     }
 </script>
 
@@ -121,20 +149,25 @@
             <div class="main-container">
                 <UserProfile />
                 <div class="dash-controls">
-                    <div class="task-card">
+                    <div class="task-card emp">
                         <!-- <span class="circle"></span> -->
-                        <span class="task-text">Lorem Ipsum</span>
-                        <button class="add-btn">+</button>
+                        <span class="empTxt">No. Of Pending Tasks</span>
+                        <button class="add-btn-emp">{pendingCount}</button>
                     </div>
-                    <div class="task-card">
+                    <div class="task-card emp">
                         <!-- <span class="circle"></span> -->
-                        <span class="task-text">Lorem Ipsum</span>
-                        <button class="add-btn" on:click={() => toggleModal('Employees')}>+</button>
+                        <span class="empTxt">No. Of Ongoing Tasks</span>
+                        <button class="add-btn-emp">{pendingCount}</button>
                     </div>
-                    <div class="task-card">
+                    <div class="task-card emp">
                         <!-- <span class="circle"></span> -->
-                        <span class="task-text">Lorem Ipsum</span>
-                        <button class="add-btn">+</button>
+                        <span class="empTxt">No. Of Completed Tasks</span>
+                        <button class="add-btn-emp">{completedCount}</button>
+                    </div>
+                    <div class="task-card emp">
+                        <!-- <span class="circle"></span> -->
+                        <span class="empTxt">No. Of Archived Tasks</span>
+                        <button class="add-btn-emp">{archivedCount}</button>
                     </div>
                 </div>
                 <div class="activities">
@@ -174,6 +207,40 @@
         padding: 12px 20px;
         border-radius: 10px;
         font-weight: bold;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+
+    .emp {
+        width: 250px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        background: #23BEDA;
+        color: black;
+        padding: 12px 15px;
+        border-radius: 10px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+
+    .empTxt {
+        margin-left: 10px;
+        flex: 1;
+        font-size: 1.10rem;
+        color: white;
+    }
+
+    .add-btn-emp {
+        margin-right: 10px;
+        background: white;
+        color: #23BEDA;
+        border: none;
+        font-size: 1.2rem;
+        font-weight: bold;
+        padding: 5px 10px;
+        border-radius: 50%;
         cursor: pointer;
         transition: 0.3s;
     }
