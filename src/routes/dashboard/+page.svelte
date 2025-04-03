@@ -15,10 +15,17 @@
     let completedCount = 0;
     let archivedCount = 0;
     let error = null;
+    let lastUpdated: string | null = null;
     
     let activeModal = '';
     let activities: any = [];
     let role = '';
+    const currentUser = get(user);
+    const userId = currentUser?.id ?? 0;
+
+    $: if (get(isAuthenticated) && ($userRole === 'Manager' || $userRole === 'Employee')){
+            fetchTaskCounts(userId);
+        }
 
     onMount(async () => {  
         if(!isAuthenticated){
@@ -38,11 +45,10 @@
         } catch (error) {
             console.error("Error fetching activities: ", error);
         }
-            if ($userRole === 'Admin') {
-                fetchDashboardStats();
-            } else if ($userRole === 'Manager' || $userRole === 'Employee'){
-                fetchTaskCounts(userId);
-            }
+        
+        if ($userRole === 'Admin') {
+            fetchDashboardStats();
+        }
     });
 
     function toggleModal(type: string) {
@@ -51,16 +57,21 @@
 
     async function fetchTaskCounts(userId: number) {
         try {
-            const response = await fetch(`http://localhost:3000/tasks/status-count/${userId}`);
+            const url = lastUpdated ? `http://localhost:3000/tasks/status-count/${userId}?since=${encodeURIComponent(lastUpdated)}` : `http://localhost:3000/tasks/status-count/${userId}`;
+            const response = await fetch(url);
         
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
+            if (!response.ok) { throw new Error(`HTTP error! status: ${response.status}`); }
 
-        const data = await response.json();
+            const data = await response.json();
+            
             pendingCount = data.pendingCount;
             inProgressCount = data.inProgressCount;
             completedCount = data.completedCount;
+
+            if (data.lastUpdated) {
+                lastUpdated = data.lastUpdated;
+            }
+
             error = null;
         } catch (err) {
             console.error('Error fetching task counts:', err);
@@ -151,22 +162,22 @@
                 <div class="dash-controls">
                     <div class="task-card emp">
                         <!-- <span class="circle"></span> -->
-                        <span class="empTxt">No. Of Pending Tasks</span>
+                        <span class="empTxt">Pending Tasks</span>
                         <button class="add-btn-emp">{pendingCount}</button>
                     </div>
                     <div class="task-card emp">
                         <!-- <span class="circle"></span> -->
-                        <span class="empTxt">No. Of Ongoing Tasks</span>
-                        <button class="add-btn-emp">{pendingCount}</button>
+                        <span class="empTxt">In Progress Tasks</span>
+                        <button class="add-btn-emp">{inProgressCount}</button>
                     </div>
                     <div class="task-card emp">
                         <!-- <span class="circle"></span> -->
-                        <span class="empTxt">No. Of Completed Tasks</span>
+                        <span class="empTxt">Completed Tasks</span>
                         <button class="add-btn-emp">{completedCount}</button>
                     </div>
                     <div class="task-card emp">
                         <!-- <span class="circle"></span> -->
-                        <span class="empTxt">No. Of Archived Tasks</span>
+                        <span class="empTxt">Archived Tasks</span>
                         <button class="add-btn-emp">{archivedCount}</button>
                     </div>
                 </div>
@@ -228,7 +239,7 @@
     .empTxt {
         margin-left: 10px;
         flex: 1;
-        font-size: 1.10rem;
+        font-size: 1.5rem;
         color: white;
     }
 

@@ -1,6 +1,7 @@
 const express = require("express");
-const { getPool } = require("../db");
 const router = express.Router();
+const { updateTaskStatuses } = require("./services/taskService");
+const { getPool } = require("../db");
 
 // GET: Fetch tasks with filtering based on the requester
 router.get("/", async (req, res) => {
@@ -59,6 +60,8 @@ router.get("/", async (req, res) => {
     console.log("With Parameters:", queryParams);
 
     try {
+        await updateTaskStatuses();
+
         const [tasks] = await pool.query(baseQuery, queryParams);
         console.log("Tasks Retrieved:", tasks);
 
@@ -84,20 +87,31 @@ router.get("/", async (req, res) => {
 });
 
 router.get("/status-count/:assignedTo", async (req, res) => {
-    const counts = {};
+    // const counts = {};
     const userId = req.params.assignedTo;
+    const since = req.params.since;
     const pool = getPool();
 
     try {
-        const [pendingRows] = await pool.query('SELECT COUNT(*) AS pendingCount FROM tasks WHERE status = "Pending" AND assignedTo = ?', [userId]);
-        const [inProgressRows] = await pool.query('SELECT COUNT(*) AS inProgressCount FROM tasks WHERE status = "In Progress" AND assignedTo = ?', [userId]);
-        const [completedRows] = await pool.query('SELECT COUNT(*) AS completedCount FROM tasks WHERE status = "Completed" AND assignedTo = ?', [userId]);
-        
-        counts.pendingCount = pendingRows[0].pendingCount;
-        counts.inProgressCount = inProgressRows[0].inProgressCount;
-        counts.completedCount = completedRows[0].completedCount;
+        let query = `
+            SELECT 
+                SUM(status = 'Pending') AS pendingCount,
+                SUM(status = 'In Progress') AS inProgressCount,
+                SUM(status = 'Completed') AS completedCount
+            FROM tasks
+            WHERE assignedTo = ?
+        `;
 
-        res.json(counts);
+        const params = [userId];
+
+        if(since){
+            query += ' AND updated_at > ? ';
+            params.push(new Date(since));
+        }
+
+        const [rows] = await pool.query(query, params);
+            res.json({ ...rows[0], lastUpdated: new Date().toISOString() });
+
     } catch (error) {
         console.error('Error Fetching Task Counts', error);
         res.status(500).json({ error: 'Internal Sever Error' });
@@ -138,7 +152,6 @@ router.get("/employees/:office", async (req, res) => {
     }
 });
 
-
 // POST: Create a new task (Managers can only assign to employees in the same office)
 router.post("/", async (req, res) => {
     const { title, description, startDate, endDate, status = "Pending", assignedTo, createdBy } = req.body;
@@ -175,9 +188,9 @@ router.post("/", async (req, res) => {
         const formattedStartDate = new Date(startDate).toISOString().split("T")[0];
         const formattedEndDate = new Date(endDate).toISOString().split("T")[0];
         
-        // Insert new task
+        // Insert new task (insert timestamps)
         const [result] = await pool.query(
-            "INSERT INTO tasks (title, description, startDate, endDate, status, assignedTo, createdBy) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO tasks (title, description, startDate, endDate, status, assignedTo, createdBy, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
             [title, description, formattedStartDate, formattedEndDate, status, assignedUserId, createdBy]
         );
 
@@ -224,19 +237,23 @@ router.put("/:id", async (req, res) => {
         const formattedEndDate = new Date(endDate).toISOString().split("T")[0];
         const today = new Date().toISOString().split("T")[0];
 
-        if(endDate < today){
-            status = "Overdue";
-        };
+        // if(formattedEndDate === today){
+        //     status = "Due Date";
+        // } else if(formattedEndDate < today){
+        //     status = "Overdue";
+        // };
 
+        //(insert timestamps)
         const [result] = await pool.query(
-            "UPDATE tasks SET title = ?, description = ?, startDate = ?, endDate = ?, status = ?, assignedTo = ? WHERE id = ?", 
-            [title, description, formattedStartDate, formattedEndDate, status, assignedTo, req.params.id]
+            "UPDATE tasks SET title = ?, description = ?, startDate = ?, endDate = ?, status = ?, assignedTo = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?", 
+            [title, description, formattedStartDate, formattedEndDate, status, assignedTo, id]
         );
         
         console.log("Updated Task Start Date", formattedStartDate)
         console.log("Updated Task End Date", formattedEndDate)
+        console.log("Updated Task Status", status)
 
-        // insert activity table
+        // insert activity table 
         await pool.query(`
             INSERT INTO activities (message, createdBy, assignedTo, taskId) VALUES (?,?,?,?)`,
             [`updated task ${title} with status ${status.toLowerCase()}`, completedBy, null, id]);

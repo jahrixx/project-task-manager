@@ -8,7 +8,7 @@ const dbConfig = {
     database: "project_tasks_manager",
 };
 
-let pool;
+const pool = mysql.createPool(dbConfig);
 
 async function createAndConnect() {
     if (!pool) {

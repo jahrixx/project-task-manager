@@ -152,9 +152,9 @@ export async function updateTask(id: number | undefined, taskData: TaskData): Pr
     const startDate = new Date(taskData.startDate);
     const endDate = new Date(taskData.endDate);
 
-    if(endDate < startDate){
+    if (endDate < startDate){
         alert("End Date Cannot Be Earlier Than The Start Date!");
-        return Promise.reject("End Date Validation Failed!")
+        return Promise.reject("End Date Validation Failed!");
     }
     
     try {

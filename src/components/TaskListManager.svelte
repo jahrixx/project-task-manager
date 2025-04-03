@@ -23,7 +23,7 @@
         
         if (task.status === "Completed") {
             className = "text-green-500";
-        } else if (task.status === "Overdue" || new Date(task.endDate) < new Date()) {
+        } else if (task.status === "Overdue" || task.status === "Due Today") {
             className = "text-red-500";
         } 
         return className;
