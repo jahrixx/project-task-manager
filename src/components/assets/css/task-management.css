@@ -434,7 +434,7 @@ button[type="button"]:hover {
     position: relative;
     scroll-behavior: smooth;
     overflow-x: auto;
-    cursor: pointer;
+    cursor: default;
 }
 
 .task-holder {
@@ -494,7 +494,7 @@ button[type="button"]:hover {
 .task-card:hover{
     transform: translateY(-5px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-    cursor: default;
+    cursor: pointer;
 }
 
 .task-header{
@@ -539,8 +539,14 @@ button[type="button"]:hover {
 } */
 
 .text-green-500 {
+    font-weight: bolder;
     color: green;
 }
+.text-black-500 {
+    font-weight: bolder;
+    color: black;
+}
 .text-red-500 {
+    font-weight: bolder;
     color: red;
 }

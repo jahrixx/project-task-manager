@@ -23,9 +23,15 @@
         
         if (task.status === "Completed") {
             className = "text-green-500";
-        } else if (task.status === "Overdue" || task.status === "Due Today") {
+        } else if (task.status === "Overdue") {
             className = "text-red-500";
-        } 
+        } else if (task.status === "Pending"){
+            className = "text-black-500";
+        } else if (task.status === "In Progress") {
+            className = "text-black-500";
+        } else if (task.status === "Cancelled") {
+            className = "text-red-500";
+        }
         return className;
     }
 

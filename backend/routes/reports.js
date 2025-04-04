@@ -212,7 +212,7 @@ router.post("/download", async (req, res) => {
         const lineHeight = 15;
 
         // Add title
-        const title = 'TASK COMPLETION REPORT';
+        const title = `TASK REPORT - ${new Date(startDate).toLocaleDateString('en-CA')} to ${new Date(endDate).toLocaleDateString('en-CA')}`;
         const titleWidth = font.widthOfTextAtSize(title, 20);
         const centerX = margin + (tableWidth / 2) - (titleWidth / 2);
 

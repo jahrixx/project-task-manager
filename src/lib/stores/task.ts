@@ -12,6 +12,7 @@ export interface TaskData {
     assignedToName: string | null;
     createdByName: string | null;
     office?: string;
+    creatorRole?: string | null;
 }
 
 export interface TaskResponse {

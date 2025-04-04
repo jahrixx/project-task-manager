@@ -159,7 +159,7 @@
             <Sidebar />
             <div class="main-container">
                 <UserProfile />
-                <div class="dash-controls">
+                <div class="dash-controls-emp">
                     <div class="task-card emp">
                         <!-- <span class="circle"></span> -->
                         <span class="empTxt">Pending Tasks</span>
@@ -178,6 +178,16 @@
                     <div class="task-card emp">
                         <!-- <span class="circle"></span> -->
                         <span class="empTxt">Archived Tasks</span>
+                        <button class="add-btn-emp">{archivedCount}</button>
+                    </div>
+                    <div class="task-card emp">
+                        <!-- <span class="circle"></span> -->
+                        <span class="empTxt">Cancelled Tasks</span>
+                        <button class="add-btn-emp">{archivedCount}</button>
+                    </div>
+                    <div class="task-card emp">
+                        <!-- <span class="circle"></span> -->
+                        <span class="empTxt">Overdue Tasks</span>
                         <button class="add-btn-emp">{archivedCount}</button>
                     </div>
                 </div>
@@ -206,6 +216,16 @@
         justify-content: space-evenly;
         margin-bottom: 20px;
         margin-top: 20px;
+    }
+
+    .dash-controls-emp {
+        display: grid;
+        grid-template-columns: repeat(3,2fr);
+        column-gap: 10px;
+        margin-left: 110px;
+        margin-bottom: 10px;
+        /* justify-content: space-evenly;
+        margin-top: 20px; */
     }
 
     .task-card {

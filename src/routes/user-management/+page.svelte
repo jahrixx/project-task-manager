@@ -168,11 +168,12 @@
         if (id === undefined) {
             console.error("Cannot delete user: ID is undefined.");
             return;
+        } else if (!confirm("Are you sure you want to delete this User?")) {
+            return;
         }
-        await deleteUser(id);
-        await refreshUsers();
+            await deleteUser(id);
+            await refreshUsers();
     }
-
 </script>
 
 <title>User Management</title>

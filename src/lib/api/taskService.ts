@@ -83,13 +83,16 @@ export async function fetchTasks(userId: number | null, role: string | null, off
                 const now = new Date();
                 const endDate = new Date(task.endDate);
     
-                if(task.status !== "Completed"){
-                    if(endDate.toDateString() === now.toDateString()){
-                        task.status = "Due Today";
-                    } else if(endDate < now){
-                        task.status = "Overdue";
-                    }
-                }
+                // if(task.status !== "Completed"){
+                //     if (endDate < now) {
+                //         task.status = "Overdue";
+                //     }
+                //     if(endDate.toDateString() === now.toDateString()){
+                //         task.status = "Due Today";
+                //     } else if(endDate < now){
+                //         task.status = "Overdue";
+                //     }
+                // }
             });
         }
         

@@ -151,7 +151,7 @@ async function handleSubmit() {
                         <div class="form-group">
                             <label for="assigned-to">Assign To Employee</label>
                             <select bind:value={taskData.assignedTo}    >
-                                <option value="" disabled selected>Select Employee: (Optional)</option>
+                                <option value={$user?.id} selected>Select Employee: (Optional)</option>
                                 {#each employeesInOffice as employee}
                                     <option value={employee.id}>
                                         {employee.name} ({employee.role} - {employee.office})

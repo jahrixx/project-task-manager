@@ -6,24 +6,24 @@ const updateTaskStatuses = async () => {
         const today = new Date().toISOString().split("T")[0];
         
         console.log("Running automatic status update check. Today's Date: ", today);
-        const [dueTodayResult] = await pool.query(`
-                UPDATE tasks 
-                SET status = 'Due Today', updated_at = CURRENT_TIMESTAMP
-                WHERE DATE(endDate) = ?
-                AND status NOT IN ('Completed', 'Cancelled')`, [today] );
+        // const [dueTodayResult] = await pool.query(`
+        //         UPDATE tasks 
+        //         SET status = 'Due Today', updated_at = CURRENT_TIMESTAMP
+        //         WHERE DATE(endDate) = ?
+        //         AND status NOT IN ('Completed', 'Cancelled')`, [today] );
 
-        console.log(`Updated ${dueTodayResult.affectedRows} tasks to "Due Today" status`);
+        // console.log(`Updated ${dueTodayResult.affectedRows} tasks to "Due Today" status`);
         
         const [overdueResult] = await pool.query(`
             UPDATE tasks 
             SET status = 'Overdue', updated_at = CURRENT_TIMESTAMP
             WHERE DATE(endDate) < ?
-            AND status NOT IN ('Completed', 'Cancelled')`, [today] );
+            AND status NOT IN ('Completed', 'Cancelled', 'Pending', 'In Progress')`, [today] );
 
-        console.log(`Updated ${overdueResult.affectedRows} tasks to "Due Today" status`);
+        console.log(`Updated ${overdueResult.affectedRows} tasks to "Overdue" status`);
         
         return {
-            dueTodayCount: dueTodayResult.affectedRows,
+            // dueTodayCount: dueTodayResult.affectedRows,
             overdueCount: overdueResult.affectedRows
         };
     } catch (error) {

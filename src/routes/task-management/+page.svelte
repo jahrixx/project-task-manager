@@ -36,7 +36,7 @@
     let successMessage = ''; 
     let searchQuery = "";
     let currentUser;
-      
+
     let taskData: TaskData = {
         id: null,
         title: '',
@@ -47,7 +47,8 @@
         assignedTo: null,
         createdBy: get(user)?.id ?? null,
         assignedToName: null,
-        createdByName: null
+        createdByName: null,
+        creatorRole: null
     };
 
     $: currentUser = get(user);
@@ -256,13 +257,27 @@
                 break;
         }
     }
-
+    let statusClass = '';
     function handleTaskDetails(task: any, office: any){
         selectedTask = task;
         selectedOffice = office;
         computedAssignedTo = task.createdByName === task.assignedToName ? 'N/A' : task.assignedToName;
         showForm = true;
+
+        statusClass = getStatusClass(task.status);
+        return statusClass;
     }
+
+    function getStatusClass(status: any){
+        switch (status) {
+            case "Completed": return "text-green-500";
+            case "Overdue":
+            case "Cancelled": return "text-red-500";
+            case "Pending":
+            case "In Progress": return "text-black-500";
+        default: return "";
+        }
+    }   
 </script>
 
 <title>Task Management</title>
@@ -357,6 +372,7 @@
                                         <button class="task-card" on:click={() => handleTaskDetails(task, office)} on:keydown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleTaskDetails(task, office); }} aria-label={`Task: ${task.title}`}>
                                             <div class="task-header">{task.title}</div>
                                             <p>Tasked By: <strong>{task.assignedToName}</strong></p>
+                                            <p>Role: <strong>{task.creatorRole}</strong></p>
                                         </button>
                                     {/each}
                                 </div>
@@ -390,7 +406,7 @@
                                 </div>
                                 <div class="form-group">
                                     <label for="status">Status</label>
-                                    <input bind:value={selectedTask.status} style="cursor: default;" readonly/>  
+                                    <input bind:value={selectedTask.status} class={statusClass} style="cursor: default;" readonly/>  
                                 </div>                                    
                             </div>
                         </div>
