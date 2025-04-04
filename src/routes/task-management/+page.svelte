@@ -48,7 +48,8 @@
         createdBy: get(user)?.id ?? null,
         assignedToName: null,
         createdByName: null,
-        creatorRole: null
+        creatorRole: null,
+        assigneeRole: null
     };
 
     $: currentUser = get(user);
@@ -372,7 +373,7 @@
                                         <button class="task-card" on:click={() => handleTaskDetails(task, office)} on:keydown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleTaskDetails(task, office); }} aria-label={`Task: ${task.title}`}>
                                             <div class="task-header">{task.title}</div>
                                             <p>Tasked By: <strong>{task.assignedToName}</strong></p>
-                                            <p>Role: <strong>{task.creatorRole}</strong></p>
+                                            <p>Role: <strong>{task.assigneeRole}</strong></p>
                                         </button>
                                     {/each}
                                 </div>

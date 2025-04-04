@@ -7,6 +7,7 @@
     import Sidebar from '../../components/Sidebar.svelte';
     import UserProfile from '../../components/UserProfile.svelte';
     import RecentActivities from '../../components/RecentActivities.svelte';
+    import CurrentTasks from "../../components/CurrentTasks.svelte";
     import { get } from 'svelte/store';
     import { fetchActivities } from '$lib/api/activityService';
 
@@ -14,6 +15,9 @@
     let inProgressCount = 0;
     let completedCount = 0;
     let archivedCount = 0;
+    let overdueCount = 0;
+    let cancelledCount = 0;
+
     let error = null;
     let lastUpdated: string | null = null;
     
@@ -67,6 +71,8 @@
             pendingCount = data.pendingCount;
             inProgressCount = data.inProgressCount;
             completedCount = data.completedCount;
+            cancelledCount = data.cancelledCount;
+            overdueCount = data.overdueCount;
 
             if (data.lastUpdated) {
                 lastUpdated = data.lastUpdated;
@@ -151,6 +157,11 @@
                         <RecentActivities {activities} {role}/>
                     </div>
                 </div>
+                <div class="current-task-and-notifications">
+                    <div class="current-task-list">
+                        <CurrentTasks />
+                    </div>
+                </div>
             </div>
         </div>            
     {/if}
@@ -160,35 +171,35 @@
             <div class="main-container">
                 <UserProfile />
                 <div class="dash-controls-emp">
-                    <div class="task-card emp">
+                    <div class="task-card-emp">
                         <!-- <span class="circle"></span> -->
                         <span class="empTxt">Pending Tasks</span>
-                        <button class="add-btn-emp">{pendingCount}</button>
+                        <button class="add-btn-emp">{pendingCount ?? 0}</button>
                     </div>
-                    <div class="task-card emp">
+                    <div class="task-card-emp">
                         <!-- <span class="circle"></span> -->
                         <span class="empTxt">In Progress Tasks</span>
-                        <button class="add-btn-emp">{inProgressCount}</button>
+                        <button class="add-btn-emp">{inProgressCount ?? 0}</button>
                     </div>
-                    <div class="task-card emp">
+                    <div class="task-card-emp">
                         <!-- <span class="circle"></span> -->
                         <span class="empTxt">Completed Tasks</span>
-                        <button class="add-btn-emp">{completedCount}</button>
+                        <button class="add-btn-emp">{completedCount ?? 0}</button>
                     </div>
-                    <div class="task-card emp">
+                    <div class="task-card-emp">
                         <!-- <span class="circle"></span> -->
                         <span class="empTxt">Archived Tasks</span>
-                        <button class="add-btn-emp">{archivedCount}</button>
+                        <button class="add-btn-emp">{archivedCount ?? 0}</button>
                     </div>
-                    <div class="task-card emp">
+                    <div class="task-card-emp">
                         <!-- <span class="circle"></span> -->
                         <span class="empTxt">Cancelled Tasks</span>
-                        <button class="add-btn-emp">{archivedCount}</button>
+                        <button class="add-btn-emp">{cancelledCount ?? 0}</button>
                     </div>
-                    <div class="task-card emp">
+                    <div class="task-card-emp">
                         <!-- <span class="circle"></span> -->
                         <span class="empTxt">Overdue Tasks</span>
-                        <button class="add-btn-emp">{archivedCount}</button>
+                        <button class="add-btn-emp">{overdueCount ?? 0}</button>
                     </div>
                 </div>
                 <div class="activities">
@@ -197,8 +208,12 @@
                         <RecentActivities {activities} {role}/>
                     </div>
                 </div>
+                <br>
                 <div class="current-task-and-notifications">
-                    
+                    <h2 style="margin: auto; width: 92%;">Current Tasks<hr style="height: 3px; background-color: lightgray;"></h2>
+                    <div class="current-task-list"style="margin: auto; width: 90%;">
+                        <CurrentTasks />
+                    </div>
                 </div>
             </div>
         </div>
@@ -220,36 +235,22 @@
 
     .dash-controls-emp {
         display: grid;
-        grid-template-columns: repeat(3,2fr);
+        grid-template-columns: repeat(3,1fr);
         column-gap: 10px;
-        margin-left: 110px;
-        margin-bottom: 10px;
+        margin-left: 47px;
+        margin-bottom: 5px;
         /* justify-content: space-evenly;
         margin-top: 20px; */
     }
 
-    .task-card {
-        width: 318px;
+    .task-card-emp {
+        width: 345px;
         display: flex;
         align-items: center;
-        gap: 20px;
         background: #23BEDA;
         color: black;
-        padding: 12px 20px;
-        border-radius: 10px;
-        font-weight: bold;
-        cursor: pointer;
-        transition: 0.3s;
-    }
-
-    .emp {
-        width: 250px;
-        display: flex;
-        align-items: center;
-        gap: 15px;
-        background: #23BEDA;
-        color: black;
-        padding: 12px 15px;
+        padding: 6px 6px;
+        margin-bottom: 10px;
         border-radius: 10px;
         font-weight: bold;
         cursor: pointer;
@@ -257,18 +258,18 @@
     }
 
     .empTxt {
-        margin-left: 10px;
+        margin-left: 20px;
         flex: 1;
-        font-size: 1.5rem;
+        font-size: 1rem;
         color: white;
     }
 
     .add-btn-emp {
-        margin-right: 10px;
+        margin-right: 20px;
         background: white;
         color: #23BEDA;
         border: none;
-        font-size: 1.2rem;
+        font-size: 1rem;
         font-weight: bold;
         padding: 5px 10px;
         border-radius: 50%;
@@ -276,7 +277,8 @@
         transition: 0.3s;
     }
 
-    .task-card:hover {
+    .task-card:hover,
+    .task-card-emp:hover {
         background: #1CA0C3;
     }
 
@@ -292,6 +294,20 @@
         font-size: 1.5rem;
         border-radius: 50%;
     } */
+
+    .task-card {
+        width: 318px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        background: #23BEDA;
+        color: black;
+        padding: 12px 20px;
+        border-radius: 10px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: 0.3s;
+    }
 
     .task-text {
         margin-left: 30px;

@@ -13,6 +13,7 @@ export interface TaskData {
     createdByName: string | null;
     office?: string;
     creatorRole?: string | null;
+    assigneeRole?: string | null;
 }
 
 export interface TaskResponse {

@@ -22,6 +22,7 @@ router.get("/", async (req, res) => {
                tasks.assignedTo, 
                CONCAT(u1.firstName, ' ', u1.lastName) AS assignedToName, 
                CONCAT(u2.firstName, ' ', u2.lastName) AS createdByName, 
+               u1.role AS assigneeRole,
                u2.role AS creatorRole, 
                u2.office AS creatorOffice
         FROM tasks
@@ -97,7 +98,9 @@ router.get("/status-count/:assignedTo", async (req, res) => {
             SELECT 
                 SUM(status = 'Pending') AS pendingCount,
                 SUM(status = 'In Progress') AS inProgressCount,
-                SUM(status = 'Completed') AS completedCount
+                SUM(status = 'Completed') AS completedCount,
+                SUM(status = 'Overdue') AS overdueCount,
+                SUM(status = 'Cancelled') AS cancelledCount
             FROM tasks
             WHERE assignedTo = ?
         `;

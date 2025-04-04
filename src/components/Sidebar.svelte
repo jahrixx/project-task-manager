@@ -7,7 +7,7 @@
 
     export const activePage = derived(page, ($page) => $page.url.pathname);
     export const userRole = derived(user, ($user: User | null) => $user?.role || "");
-    
+
     function logoutUser() {
         user.set(null);
         localStorage.removeItem("user");
@@ -22,7 +22,7 @@
             }
         });
 
-        return () => unsubscribe(); // Cleanup subscription
+        return () => unsubscribe();
     });
 </script>
 
@@ -163,7 +163,7 @@
     .sidebar button {
         width: 100%;
         display: block;
-        /* padding: 10px 20px; */
+        padding: 5px 8px;
         font-weight: bold;
         color: black;
         background-color: transparent;
@@ -171,6 +171,12 @@
         cursor: pointer;
         border: none;
         border-bottom: 1px solid black;
+        transition: all 0.3s ease;
+    }
+
+    .sidebar button.active{
+        background-color: #23BEDA;
+        color: white;
     }
 
     .sidebar button:hover {
@@ -228,6 +234,4 @@
         margin: 0;
         color: #333;
     }
-
-
 </style>
