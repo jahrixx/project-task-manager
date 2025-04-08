@@ -94,10 +94,12 @@
         background-color: transparent;
         color: black;
         border-radius: 8px;
-        padding: 15px;
-        max-height: 100px;
+        padding: 10px;
+        margin-bottom: 5px;
+        max-height: 80px;
         overflow-y: auto;
         scrollbar-width: none;
+        /* border: 2px solid black; */
     }
 
     .recent-activities::-webkit-scrollbar{

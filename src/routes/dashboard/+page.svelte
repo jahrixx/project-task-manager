@@ -84,9 +84,22 @@
             error = err instanceof Error ? err.message : 'An unexpected error occurred.';
         }
     }
+
+    // console.log(Notification.permission);
+
+    // if(Notification.permission === 'granted'){
+    //     alert("We have permission");
+    // } else if (Notification.permission !== 'denied'){
+    //     Notification.requestPermission().then(Permissions => {
+    //         console.log(Permissions);
+    //     });
+    // }
 </script>
 
 <title>Dashboard</title>
+<head>
+    <link rel="stylesheet" href="src/components/assets/css/dashboard.css">
+</head>
 {#if !isAuthenticated}
     <Login />
 {:else}
@@ -157,9 +170,18 @@
                         <RecentActivities {activities} {role}/>
                     </div>
                 </div>
-                <div class="current-task-and-notifications">
-                    <div class="current-task-list">
-                        <CurrentTasks />
+                <div class="section">
+                    <div class="current-task-and-notifications">
+                        <h2 style="margin: auto; width: 100%;">All Offices Current Tasks<hr style="height: 3px; background-color: lightgray;"></h2>
+                        <div class="current-task-list">
+                            <CurrentTasks />
+                        </div>
+                    </div>
+                    <div class="notification">
+                        <h2 style="margin: auto; width: 100%;">Notifications<hr style="height: 3px; background-color: lightgray;"></h2>
+                        <div class="notification-list">
+
+                        </div>
                     </div>
                 </div>
             </div>
@@ -204,164 +226,31 @@
                 </div>
                 <div class="activities">
                     <h2 style="margin: auto; width: 92%;">Recent Activities<hr style="height: 3px; background-color: lightgray;"></h2>
-                    <div class="container-recent-activities" style="margin: auto; width: 90%;">
+                    <div class="container-recent-activities" style="margin: auto; width: 92%;">
                         <RecentActivities {activities} {role}/>
                     </div>
                 </div>
-                <br>
-                <div class="current-task-and-notifications">
-                    <h2 style="margin: auto; width: 92%;">Current Tasks<hr style="height: 3px; background-color: lightgray;"></h2>
-                    <div class="current-task-list"style="margin: auto; width: 90%;">
+                <!-- <div class="current-task-and-notifications">
+                    <h2 style="margin: auto; width: 100%;">Current Tasks<hr style="height: 3px; background-color: lightgray;"></h2>
+                    <div class="current-task-list-emp"style="margin: auto; width: 100%;">
                         <CurrentTasks />
+                    </div>
+                </div> -->
+                <div class="section">
+                    <div class="current-task-and-notifications">
+                        <h2 style="margin: auto; width: 100%;">Current Tasks<hr style="height: 3px; background-color: lightgray;"></h2>
+                        <div class="current-task-list-emp">
+                            <CurrentTasks />
+                        </div>
+                    </div>
+                    <div class="notification">
+                        <h2 style="margin: auto; width: 100%;">Notifications<hr style="height: 3px; background-color: lightgray;"></h2>
+                        <div class="notification-list">
+
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     {/if}
 {/if}
-
-<style>
-    .main-container {
-        margin-left: 250px;
-    }
-
-    .dash-controls {
-        display: flex;
-        gap: 10px;
-        justify-content: space-evenly;
-        margin-bottom: 20px;
-        margin-top: 20px;
-    }
-
-    .dash-controls-emp {
-        display: grid;
-        grid-template-columns: repeat(3,1fr);
-        column-gap: 10px;
-        margin-left: 47px;
-        margin-bottom: 5px;
-        /* justify-content: space-evenly;
-        margin-top: 20px; */
-    }
-
-    .task-card-emp {
-        width: 345px;
-        display: flex;
-        align-items: center;
-        background: #23BEDA;
-        color: black;
-        padding: 6px 6px;
-        margin-bottom: 10px;
-        border-radius: 10px;
-        font-weight: bold;
-        cursor: pointer;
-        transition: 0.3s;
-    }
-
-    .empTxt {
-        margin-left: 20px;
-        flex: 1;
-        font-size: 1rem;
-        color: white;
-    }
-
-    .add-btn-emp {
-        margin-right: 20px;
-        background: white;
-        color: #23BEDA;
-        border: none;
-        font-size: 1rem;
-        font-weight: bold;
-        padding: 5px 10px;
-        border-radius: 50%;
-        cursor: pointer;
-        transition: 0.3s;
-    }
-
-    .task-card:hover,
-    .task-card-emp:hover {
-        background: #1CA0C3;
-    }
-
-    /* .circle {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 30px;
-        height: 30px;
-        background: white;
-        color: black;
-        font-weight: bold;
-        font-size: 1.5rem;
-        border-radius: 50%;
-    } */
-
-    .task-card {
-        width: 318px;
-        display: flex;
-        align-items: center;
-        gap: 20px;
-        background: #23BEDA;
-        color: black;
-        padding: 12px 20px;
-        border-radius: 10px;
-        font-weight: bold;
-        cursor: pointer;
-        transition: 0.3s;
-    }
-
-    .task-text {
-        margin-left: 30px;
-        flex: 1;
-        font-size: 1.5rem;
-        color: white;
-    }
-
-    .add-btn {
-        margin-right: 30px;
-        background: white;
-        color: #23BEDA;
-        border: none;
-        font-size: 1.2rem;
-        font-weight: bold;
-        padding: 5px 10px;
-        border-radius: 50%;
-        cursor: pointer;
-        transition: 0.3s;
-    }
-
-    .overlay {
-        background-color: #fff;
-        border: 1px solid #ccc;
-        padding: 10px;
-        border-radius: 5px;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        position: absolute;
-        z-index: 999;
-        top: 172.5px;
-        width: auto;
-    }
-
-    .overlay p {
-        font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
-        margin: 8px 0;
-        font-size: .7rem;
-    }
-
-    .add-btn:has(span.x-icon) {
-        font-size: 1rem;
-        color: white;
-        width: 30px;
-        height: 30px;
-        padding: 0;
-        border-radius: 50%;
-    }
-
-    .add-btn:hover {
-        background: #e0e0e0;
-        transform: scale(1.1);
-    }
-
-    .add-btn:active {
-        transform: scale(0.9);
-    }
-</style>

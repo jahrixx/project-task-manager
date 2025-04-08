@@ -81,7 +81,7 @@ h4{
     border-collapse: collapse;
     padding: 5px;
     margin: auto;
-    overflow-y: auto;
+    /* overflow-y: auto; */
     max-height: 60vh;
 }
 
@@ -114,6 +114,26 @@ th:nth-child(1), td:nth-child(1) { width: 45%; }
 th:nth-child(2), td:nth-child(2) { width: 20%; }
 th:nth-child(3), td:nth-child(3) { width: 20%; }
 th:nth-child(4), td:nth-child(4) { width: 15%; }
+
+/* newly added styles */
+thead, tbody tr {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+}
+
+.table-container tbody {
+    display: block;
+    max-height: 400px;
+    overflow-y: auto;
+    /* border: 2px solid black; */
+}
+
+.table-container tbody::-webkit-scrollbar {
+    width: 0;
+    background: transparent;
+}
+/* newly added styles */
 
 .actions{
     text-align: center;

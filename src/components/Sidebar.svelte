@@ -9,6 +9,15 @@
     export const userRole = derived(user, ($user: User | null) => $user?.role || "");
 
     function logoutUser() {
+        if (!user) {
+            console.error("No user is currently logged in!");
+            return;
+        } 
+        
+        if (!confirm("Are you sure you want to logout?")) {
+            return;
+        }
+
         user.set(null);
         localStorage.removeItem("user");
         isAuthenticated.set(false);

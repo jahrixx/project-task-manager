@@ -18,6 +18,7 @@ const officeRoutes = require("./routes/offices");
 const activitiesRoutes = require("./routes/activities");
 const reportsRoutes = require("./routes/reports");
 const dashboardRoutes = require("./routes/dashboard");
+const archiveRoutes = require("./routes/archive");
 // const updateTaskStatuses = require("./routes/services/taskService");
 // const reportRoutes = require("./routes/reports");
 
@@ -30,6 +31,7 @@ app.use("/offices", officeRoutes);
 app.use("/activities", activitiesRoutes);
 app.use("/reports", reportsRoutes);
 app.use("/dashboard", dashboardRoutes);
+app.use("/archive", archiveRoutes);
 app.use('/uploads', express.static('uploads'));
 // app.use("/api/reports", reportRoutes);
 
