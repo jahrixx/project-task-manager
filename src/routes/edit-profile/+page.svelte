@@ -92,12 +92,10 @@
                 if (!response.ok) throw new Error('Failed to upload profile picture');
 
                 const data = await response.json();
-                const newProfilePicUrl = `http://localhost:3000${data.profilePicUrl}`;
+                const newProfilePicUrl = `http://localhost:3000${data.profilePicUrl}?t=${Date.now()}`;
                 
-                // Update profile picture URL dynamically
                 profilePic = newProfilePicUrl;
                                 
-                // Update the user store and localStorage
                 user.update((u) => {
                     if (u) {
                         const updatedUser = { ...u, profilePic: newProfilePicUrl };
@@ -115,6 +113,9 @@
 </script>
 
 <title>Edit Profile</title>
+<head>
+    <link rel="stylesheet" href="src/components/assets/css/edit-profile.css">
+</head>
 {#if loading}
     <p style="text-align: center;">Loading Profile...</p>
 {:else}
@@ -151,113 +152,7 @@
         </div>
 
         <div style="display: flex; justify-content: center; text-align: center;">
-            <button on:click={updatePassword}>Change Password</button>
+            <button class="update-btn" on:click={updatePassword}>Change Password</button>
         </div>
     </div>    
 {/if}
-
-<style>
-    .edit-profile {
-        max-width: 450px;
-        margin: auto;
-        background: transparent;
-        padding: 1rem;
-        text-align: center;
-        margin-top: 20px;
-        margin-left: 600px;
-    }
-
-    .profile-section {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        margin-bottom: 5px;
-    }
-
-    .profile-pic {
-        width: 85px;
-        height: 85px;
-        border-radius: 50%;
-        object-fit: cover;
-        border: 3px solid #23BEDA;
-        margin-bottom: 10px;
-        transition: transform 0.3s ease-in-out;
-    }
-
-    .profile-pic:hover {
-        transform: scale(1.05);
-    }
-
-    .custom-file-upload {
-        background: #23BEDA;
-        color: white;
-        padding: 7px;
-        border-radius: 20px;
-        cursor: pointer;
-        font-size: 0.9rem;
-        transition: background 0.3s;
-    }
-
-    .custom-file-upload:hover {
-        background: #1CA1C1;
-    }
-
-    .custom-file-upload input {
-        display: none;
-    }
-
-    .password-section {
-        text-align: left;
-        padding: 10px;
-        border-radius: 8px;
-    }
-
-    .form-group {
-        margin-bottom: 10px;
-    }
-
-    label {
-        display: block;
-        font-weight: 600;
-        margin-bottom: 5px;
-        color: #444;
-    }
-
-    input {
-        width: 100%;
-        padding: 10px;
-        border: 1px solid #ccc;
-        border-radius: 6px;
-        font-size: 1rem;
-        transition: border 0.3s;
-    }
-
-    input:focus {
-        border-color: #23BEDA;
-        outline: none;
-    }
-
-    button {
-        width: 80%;
-        padding: 12px;
-        background-color: #23BEDA;
-        color: white;
-        border: none;
-        border-radius: 25px;
-        cursor: pointer;
-        font-size: 1rem;
-        transition: background 0.3s, transform 0.2s;
-        margin-top: 10px;
-    }
-
-    button:hover {
-        background-color: #1CA1C1;
-        transform: scale(1.02);
-    }
-
-    @media (max-width: 600px) {
-        .edit-profile {
-            margin-left: auto;
-        }
-    }
-</style>

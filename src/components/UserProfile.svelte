@@ -3,9 +3,10 @@
     import { isAuthenticated, user, type User } from '$lib/stores/user';
     import { onMount } from 'svelte';
 
-    let currentUser: User | null = null;
+    let currentUser = $user;
     let loading = true;
-
+    
+    $: currentUser = $user;
     $: {
         if($user){
             currentUser = $user;
@@ -23,17 +24,21 @@
 
 {#if loading}
 <p style="text-align: center; color: red;">loading user...</p>
-    {:else if currentUser}
+    {:else if $user}
         <div class="user-header">
-            <img src="{currentUser.profilePic ? `http://localhost:3000${currentUser.profilePic}` : '/src/components/assets/default-avatar.png'}" alt="Profile" class="profile-pic" />
+            <img src="{currentUser?.profilePic
+            ? currentUser.profilePic.startsWith('http')
+            ? currentUser.profilePic
+            : `http://localhost:3000${currentUser.profilePic}`
+            : '/src/components/assets/default-avatar.png'}" alt="Profile" class="profile-pic" />
             <div class="user-info">
                 <button class="user-name" 
                     on:click={() => goto('/edit-profile')} 
                     on:keydown={(event) => event.key === 'Enter' && goto('/edit-profile')} 
                     aria-label="View Profile">
-                    {currentUser.firstName} {currentUser.lastName}
+                    {$user.firstName} {$user.lastName}
                 </button><br>
-                <span class="user-role">{currentUser.role} - {currentUser.office}</span>
+                <span class="user-role">{$user.role} - {$user.office}</span>
             </div>
         </div>
 {/if}
