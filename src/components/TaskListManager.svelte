@@ -4,16 +4,17 @@
     import { derived, get, writable } from "svelte/store";
     import { createTask, deleteTask, removeTask, fetchEmployees, fetchTasks, tasks, refreshTasks } from "$lib/api/taskService";
     import { archiveTask as apiArchiveTasks, unarchiveTask as apiUnarchiveTasks, fetchArchivedTasks } from "$lib/api/archive";
-    
+
     let managerTasks: TaskData[] = [];
     let employeeTasks: TaskData[] = [];
-    const archivedTasks = writable<TaskData[]>([]);
+    let archivedTasks = writable<TaskData[]>([]);
 
     export const userRole = derived(user, ($user: User | null) => $user?.role || "");
     export const allTasks: Record<string, TaskData[]> = {}; 
     export let filteredManagerTasks: any = managerTasks;
     export let filteredEmployeeTasks: any = employeeTasks;
-
+    export const filteredArchivedTasks: any = archivedTasks;
+    
     export let currentView = 'own';  
     export let openTaskForm;
     

@@ -159,7 +159,7 @@
         height: 14px;
         border-radius: 50%;
         margin-right: 8px;
-        margin-left: 5px;
+        margin-left: 7px;
     }
 
     .task-description {
@@ -176,14 +176,14 @@
     }
 
     .status-container {
-        width: 120px;
+        width: 145px;
         height: 20px;
         padding: 3px 5px;
         display: flex;
         align-items: center;
         border: 2px solid lightgray;
         border-radius: 20px;
-        font-size: 13px;
+        font-size: 15px;
         font-weight: 500;
     }
 </style>

@@ -121,7 +121,7 @@ router.post('/generate', async (req, res) => {
         res.status(500).json({ 
             message: "Error generating report", 
             error: error.message,
-            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+            // stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
         });
     }
 });

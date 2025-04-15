@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { onMount, afterUpdate, tick } from "svelte";
+    import { onMount, afterUpdate, onDestroy, tick } from "svelte";
     import { writable, get } from "svelte/store";
     import { isAuthenticated, user, userRole, type User } from '$lib/stores/user';
     import { goto } from "$app/navigation";
@@ -34,6 +34,8 @@
     let endDate = "";
     let searchQuery = "";
     let calendarInstance: Instance | null = null;
+    let now = new Date();
+    let timeInterval: NodeJS.Timeout;
 
     onMount(async () => {
         if (!isAuthenticated) {
@@ -47,6 +49,15 @@
         if ($user) {
             fetchTaskDates(String($user?.id));
         }
+
+        timeInterval = setInterval(() =>  {
+            now = new Date();
+
+        }, 1000);
+    });
+
+    onDestroy(() => {
+        clearInterval(timeInterval);
     });
 
     $: if ($userRole === "Manager" && selectedUser) {
@@ -423,7 +434,7 @@
                             {#if $activeReport}
                                 {$activeReport.generatedDate}
                             {:else}
-                                {formattedDate}
+                                {formattedDate} at {now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                             {/if}
                         </span>
                         <span>

@@ -22,8 +22,12 @@
 
     let filteredManagerTasks: TaskData[] = [];
     let filteredEmployeeTasks: TaskData[] = [];
+    let filteredArchivedTasks: TaskData[] = [];
+    
     let managerTasks: TaskData[] = [];
     let employeeTasks: TaskData[] = [];
+    let archivedTasks: TaskData[] = [];
+
     let selectedDepartments: any = [];
 
     let selectedTask: any;
@@ -37,6 +41,7 @@
     let successMessage = ''; 
     let searchQuery = "";
     let currentUser;
+    let statusClass = '';
 
     let taskData: TaskData = {
         id: null,
@@ -69,6 +74,8 @@
                 employeeTasks = $tasks.filter(task => (task.assignedTo === currentUser?.id) && !task.isArchived);
                 filteredEmployeeTasks = [ ...employeeTasks ];
             }
+            
+            // loadArchiveTasks();
     }
 
     onMount(async () => {
@@ -174,14 +181,28 @@
                         (task.createdByName?.toLowerCase() ?? "").includes(search)
                     );
 
+                    filteredArchivedTasks = archivedTasks.filter(task =>
+                        (task.title?.toLowerCase() ?? "").includes(search) ||
+                        (task.description?.toLowerCase() ?? "").includes(search) ||
+                        (task.createdByName?.toLowerCase() ?? "").includes(search)
+                    );
+
                 } else {
                     filteredManagerTasks = [ ...managerTasks ];
                     filteredEmployeeTasks = [ ...employeeTasks ];
+                    filteredArchivedTasks = [ ...archivedTasks ];
                 }
                 break;
 
             case "Employee" : 
                 filteredEmployeeTasks = employeeTasks.filter(task =>
+                    (task.title?.toLowerCase() ?? "").includes(search) ||
+                    (task.description?.toLowerCase() ?? "").includes(search) ||
+                    (task.createdByName?.toLowerCase() ?? "").includes(search) ||
+                    (task.status?.toLowerCase() ?? "").includes(search)
+                );
+
+                filteredArchivedTasks = archivedTasks.filter(task =>
                     (task.title?.toLowerCase() ?? "").includes(search) ||
                     (task.description?.toLowerCase() ?? "").includes(search) ||
                     (task.createdByName?.toLowerCase() ?? "").includes(search) ||
@@ -263,7 +284,7 @@
                 break;
         }
     }
-    let statusClass = '';
+
     function handleTaskDetails(task: any, office: any){
         selectedTask = task;
         selectedOffice = office;
@@ -419,8 +440,8 @@
                     </div>
                 {/if}
             {/if}
-            {#if filteredEmployeeTasks || filteredManagerTasks}
-                <TaskListManager {filteredEmployeeTasks} {filteredManagerTasks} {openTaskForm}/>
+            {#if filteredEmployeeTasks || filteredManagerTasks || filteredArchivedTasks}
+                <TaskListManager {filteredEmployeeTasks} {filteredManagerTasks} {filteredArchivedTasks} {openTaskForm}/>
                 {:else}
                     <p>Loading tasks...</p>
             {/if}      
