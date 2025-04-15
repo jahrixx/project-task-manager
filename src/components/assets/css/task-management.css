@@ -140,22 +140,47 @@ thead, tbody tr {
 }
 
 .actions .btn {
-    background-color: #23BEDA;
-    color: white;
+    /* background-color: #23BEDA;
+    color: white; */
     border: none;
-    padding: 6px;
+    padding: 5px;
     border-radius: 5px;
     cursor: pointer;
 }
 
-.actions .edit:hover {
+.actions .archive {
+    border: 1px solid #175e88;
+    background-color: #FAF9F6;
+    color: #175e88;
+}
+
+.actions .archive:hover {
     background-color: #175e88;
-    color: white;
+    color: #FFFFFF;
+}
+
+.actions .edit {
+    border: 1px solid #4169E1;
+    background-color: #FAF9F6;
+    color: #4169E1;
+}
+
+.actions .edit:hover {
+    border: none;
+    background-color: #4169E1;
+    color: #FFFFFF;
+}
+
+.actions .delete {
+    border: 1px solid #C41E3A;
+    background-color: #FAF9F6;
+    color: #C41E3A;
 }
 
 .actions .delete:hover {
-    background-color: red;
-    color: white;
+    border: none;
+    background-color: #C41E3A;
+    color: #FFFFFF;
 }
 
 /* header section */

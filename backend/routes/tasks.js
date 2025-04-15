@@ -101,10 +101,12 @@ router.get("/archived", async (req, res) => {
                 t.assignedTo,
                 t.createdBy,
                 t.isArchived,
-                u.office,
-                CONCAT(u.firstName, ' ', u.lastName) AS createdByName
+                u2.office,
+                CONCAT(u1.firstName, ' ', u1.lastName) AS assignedToName, 
+                CONCAT(u2.firstName, ' ', u2.lastName) AS createdByName
         FROM tasks t
-        JOIN users u ON t.createdBy = u.id
+        LEFT JOIN users u1 ON t.assignedTo = u1.id
+        LEFT JOIN users u2 ON t.createdBy = u2.id
         WHERE t.isArchived = 1
         ORDER BY t.endDate DESC
     `;

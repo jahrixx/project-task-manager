@@ -70,7 +70,7 @@
         }
     }
 
-    // $: currentUser = get(user);
+    $: currentUser = get(user);
 
     function isOverdue(task: TaskData) {
         let className = "";
@@ -153,7 +153,7 @@
                                         {#if task.assignedTo !== task.createdBy}
                                             <br><br><span><i><b>Task Assigned To: </b> {task.assignedToName}</i></span>
                                         {:else}
-                                            <span></span>
+                                            <br><br><span><i><b>Personal Task By: </b> {task.createdByName}</i></span>
                                         {/if}
                                     </div>
                                 </td>
@@ -169,7 +169,7 @@
                                 <td class="actions">
                                     <button class="btn edit" on:click={() => openTaskForm(task)}>Update</button>
                                     <button class="btn delete" on:click={() => removeTask(task.id)}>Delete</button>
-                                    <button class="btn edit" on:click={() => archiveTask(task.id)}>Archive</button>
+                                    <button class="btn archive" on:click={() => archiveTask(task.id)}>Archive</button>
                                 </td>
                             </tr>
                         {/each}
@@ -250,9 +250,13 @@
                                         {task.description}
                                         
                                         {#if task.assignedTo !== task.createdBy}
-                                            <br><br><span><i><b>Task Assigned By Manager: </b> {task.createdByName}</i></span>
+                                            <br><br><span><i><b>Task Assigned To Employee: </b> {task.assignedToName}</i></span>
+                                            <br><span><i><b>Task Created By Manager: </b> {task.createdByName}</i></span>
+                                        {:else if task.assignedTo === task.createdBy && task.createdBy !== currentUser?.id}
+                                            <br><br><span><i><b>Task Created By Employee: </b> {task.createdByName}</i></span>
                                         {:else}
-                                            <span></span>
+                                            <br><br><span><i><b>Task Created By Manager: </b> {task.createdByName}</i></span>
+                                            <!-- <span></span> -->
                                         {/if}
                                     </div>
                                 </td>
@@ -268,7 +272,7 @@
                                 <td class="actions">
                                     <!-- <button class="btn edit" on:click={() => openTaskForm(task)}>Update</button>
                                     <button class="btn delete" on:click={() => removeTask(task.id)}>Delete</button> -->
-                                    <button class="btn edit" on:click={() => task.id != null && unarchiveTask(task.id)}>Unarchive</button>
+                                    <button class="btn archive" on:click={() => task.id != null && unarchiveTask(task.id)}>Unarchive</button>
                                 </td>
                             </tr>
                         {/each}
@@ -327,7 +331,7 @@
                                 <td class="actions">
                                     <button class="btn edit" on:click={() => openTaskForm(task)}>Update</button>
                                     <button class="btn delete" on:click={() => removeTask(task.id)}>Delete</button>
-                                    <button class="btn edit" on:click={() => archiveTask(task.id)}>Archive</button>
+                                    <button class="btn archive" on:click={() => archiveTask(task.id)}>Archive</button>
                                 </td>
                             </tr>
                         {/each}
@@ -379,7 +383,7 @@
                                 <td class="actions">
                                     <!-- <button class="btn edit" on:click={() => openTaskForm(task)}>Update</button>
                                     <button class="btn delete" on:click={() => removeTask(task.id)}>Delete</button> -->
-                                    <button class="btn edit" on:click={() => task.id != null && unarchiveTask(task.id)}>Unarchive</button>
+                                    <button class="btn archive" on:click={() => task.id != null && unarchiveTask(task.id)}>Unarchive</button>
                                 </td>
                             </tr>
                         {/each}
