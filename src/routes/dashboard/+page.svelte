@@ -73,6 +73,7 @@
             completedCount = data.completedCount;
             cancelledCount = data.cancelledCount;
             overdueCount = data.overdueCount;
+            archivedCount = data.archivedCount;
 
             if (data.lastUpdated) {
                 lastUpdated = data.lastUpdated;

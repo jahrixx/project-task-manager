@@ -86,7 +86,6 @@
         margin: 0; 
         padding: 0; 
         line-height: normal;
-        height: 15vh;
     }
 
     .activity-item p {

@@ -315,7 +315,8 @@
                                         {#if task.assignedTo !== task.createdBy}
                                             <br><br><span><i><b>Task Assigned By Manager: </b> {task.createdByName}</i></span>
                                         {:else}
-                                            <span></span>
+                                            <br><br><span><i><b>Personal Task Created By: </b> {task.createdByName}</i></span>
+                                            <!-- <span></span> -->
                                         {/if}
                                     </div>
                                 </td>
@@ -367,7 +368,7 @@
                                         {#if task.assignedTo !== task.createdBy}
                                             <br><br><span><i><b>Task Assigned By Manager: </b> {task.createdByName}</i></span>
                                         {:else}
-                                            <span></span>
+                                            <br><br><span><i><b>Personal Task Created By: </b> {task.createdByName}</i></span>
                                         {/if}
                                     </div>
                                 </td>

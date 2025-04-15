@@ -9,7 +9,7 @@
 
     $: currentUser = get(user);
 
-    $: filteredCurrentTasks = $tasks.filter(task => ['Pending', 'In Progress', 'Overdue'].includes(task.status));
+    $: filteredCurrentTasks = $tasks.filter(task => ['Pending', 'In Progress', 'Overdue'].includes(task.status) && !task.isArchived);
 
     $: statusFilteredTasks = Object.fromEntries(
         Object.entries(filteredTasks ?? {}).map(([office, tasks]) => [

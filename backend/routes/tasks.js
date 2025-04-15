@@ -184,7 +184,8 @@ router.get("/status-count/:assignedTo", async (req, res) => {
                 SUM(status = 'In Progress') AS inProgressCount,
                 SUM(status = 'Completed') AS completedCount,
                 SUM(status = 'Overdue') AS overdueCount,
-                SUM(status = 'Cancelled') AS cancelledCount
+                SUM(status = 'Cancelled') AS cancelledCount,
+                SUM(isArchived = 1) AS archivedCount
             FROM tasks
             WHERE assignedTo = ?
         `;
@@ -197,7 +198,15 @@ router.get("/status-count/:assignedTo", async (req, res) => {
         }
 
         const [rows] = await pool.query(query, params);
-            res.json({ ...rows[0], lastUpdated: new Date().toISOString() });
+
+        const [archivedRows] = await pool.query(`
+                SELECT COUNT(*) AS totalArchived
+                FROM tasks 
+                WHERE assignedTo = ? AND isArchived = 1
+                ${since ? 'AND updated_at > ?' :  ''}
+            `, since ? [userId, new Date(since)] : [userId]);
+
+        res.json({ ...rows[0], totalArchived: archivedRows[0].totalArchived, lastUpdated: new Date().toISOString() });
 
     } catch (error) {
         console.error('Error Fetching Task Counts', error);
