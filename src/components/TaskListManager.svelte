@@ -1,22 +1,76 @@
 <script lang="ts">
     import type { TaskData } from "$lib/stores/task";
     import { user, type User } from "$lib/stores/user";
-    import { derived, get } from "svelte/store";
+    import { derived, get, writable } from "svelte/store";
     import { createTask, deleteTask, removeTask, fetchEmployees, fetchTasks, tasks, refreshTasks } from "$lib/api/taskService";
+    import { archiveTask as apiArchiveTasks, unarchiveTask as apiUnarchiveTasks, fetchArchivedTasks } from "$lib/api/archive";
     
     let managerTasks: TaskData[] = [];
     let employeeTasks: TaskData[] = [];
+    const archivedTasks = writable<TaskData[]>([]);
 
     export const userRole = derived(user, ($user: User | null) => $user?.role || "");
     export const allTasks: Record<string, TaskData[]> = {}; 
     export let filteredManagerTasks: any = managerTasks;
     export let filteredEmployeeTasks: any = employeeTasks;
+
     export let currentView = 'own';  
     export let openTaskForm;
     
-    export function setView(view: 'own' | 'employee'){
+    export function setView(view: 'own' | 'employee' | 'archived'){
         currentView = view;
+        if(view === 'archived'){
+            loadArchiveTasks();
+        }
     }
+
+    async function loadArchiveTasks() {
+        try {
+            const fetchedTasks = await fetchArchivedTasks();
+            const currentUser = get(user);
+
+            let filteredArchived = Array.isArray(fetchedTasks) ? fetchedTasks : [];
+
+            filteredArchived = filteredArchived.filter((task: TaskData) => {
+            if(currentUser?.role === 'Employee'){
+                    return task.assignedTo === currentUser?.id || task.createdBy === currentUser?.id; 
+                } else if (currentUser?.role === 'Manager') {
+                    return task.assignedTo === currentUser?.id ||
+                            task.createdBy === currentUser?.id ||
+                            task.office === currentUser?.office;
+                }
+                return true;
+            });
+
+            archivedTasks.set(filteredArchived);
+        } catch (error) {
+            console.error('Error loading archived tasks!', error);
+            archivedTasks.set([]);
+        }
+    }
+
+    async function archiveTask(taskId:number) {
+        try {
+            await apiArchiveTasks(taskId);
+            await refreshTasks();
+            await loadArchiveTasks();
+        } catch (error) {
+            console.error('Error archiving task: ', error);
+            
+        }
+    }
+
+    async function unarchiveTask(taskId:number) {
+        try {
+            await apiUnarchiveTasks(taskId);
+            await refreshTasks();
+            await loadArchiveTasks();
+        } catch (error) {
+            console.error('Error archiving task: ', error);
+        }
+    }
+
+    // $: currentUser = get(user);
 
     function isOverdue(task: TaskData) {
         let className = "";
@@ -73,6 +127,7 @@
 <div class="task-view-btns">
     <button on:click={() => setView('own')} class:active={currentView === 'own'}>Personal Tasks</button>
     <button on:click={() => setView('employee')} class:active={currentView === 'employee'}>Employees Tasks</button>
+    <button on:click={() => setView('archived')} class:active={currentView === 'archived'}>Archived Tasks</button>
 </div>
     {#if currentView === 'own'}
         <div class="table-container">
@@ -87,6 +142,7 @@
                 </thead>
                 <tbody>
                     {#if filteredManagerTasks.length > 0}
+                    <!-- {#if filteredManagerTasks.filter((task: TaskData) => !task.isArchived).length > 0} -->
                         {#each filteredManagerTasks as task (task.id)}
                             <tr>
                                 <td>
@@ -113,6 +169,7 @@
                                 <td class="actions">
                                     <button class="btn edit" on:click={() => openTaskForm(task)}>Update</button>
                                     <button class="btn delete" on:click={() => removeTask(task.id)}>Delete</button>
+                                    <button class="btn edit" on:click={() => archiveTask(task.id)}>Archive</button>
                                 </td>
                             </tr>
                         {/each}
@@ -137,6 +194,7 @@
                 </thead>
                 <tbody>
                     {#if filteredEmployeeTasks.length > 0}
+                    <!-- {#if filteredEmployeeTasks.filter((task: TaskData) => !task.isArchived).length > 0} -->
                         {#each filteredEmployeeTasks as task (task.id)}
                             <tr>
                                 <td>
@@ -171,58 +229,167 @@
             </table>
         </div>
     {/if}
+    {#if currentView === 'archived'}
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Task</th>
+                        <th>Status</th>
+                        <th>Due Date</th>
+                        <th style="text-align: center;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {#if $archivedTasks.length > 0}
+                        {#each $archivedTasks as task (task.id)}
+                            <tr>
+                                <td>
+                                    <div class="task">
+                                        <b>{task.title}</b><br>
+                                        {task.description}
+                                        
+                                        {#if task.assignedTo !== task.createdBy}
+                                            <br><br><span><i><b>Task Assigned By Manager: </b> {task.createdByName}</i></span>
+                                        {:else}
+                                            <span></span>
+                                        {/if}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="status-container">
+                                        <div class="status-circle" style="background-color: {getStatusColor(task.status)};"></div>
+                                        {task.status}
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="{isOverdue(task)}">{formatDate(task.endDate)}</span>
+                                </td>
+                                <td class="actions">
+                                    <!-- <button class="btn edit" on:click={() => openTaskForm(task)}>Update</button>
+                                    <button class="btn delete" on:click={() => removeTask(task.id)}>Delete</button> -->
+                                    <button class="btn edit" on:click={() => task.id != null && unarchiveTask(task.id)}>Unarchive</button>
+                                </td>
+                            </tr>
+                        {/each}
+                        {:else}
+                            <tr>
+                                <td colspan="4" style="padding-top: 30px; text-align: center; color: red;">No Archive Tasks Found!</td>
+                            </tr>
+                    {/if}
+                </tbody>
+            </table>
+        </div>
+    {/if}
 {/if}
 {#if $userRole === 'Employee'}
     <div class="task-view-btns">
-        <button on:click={() => setView('own')} class:active={currentView === 'own'} disabled>All Tasks</button>
+        <button on:click={() => setView('own')} class:active={currentView === 'own'}>All Tasks</button>
+        <button on:click={() => setView('archived')} class:active={currentView === 'archived'}>Archived Tasks</button>
     </div>
-    <div class="table-container">
-        <table>
-            <thead>
-                <tr>
-                    <th>Task</th>
-                    <th>Status</th>
-                    <th>Due Date</th>
-                    <th style="text-align: center;">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {#if filteredEmployeeTasks.length > 0}
-                    {#each filteredEmployeeTasks as task (task.id)}
-                        <tr>
-                            <td>
-                                <div class="task">
-                                    <b>{task.title}</b><br>
-                                    {task.description}
-                                    
-                                    {#if task.assignedTo !== task.createdBy}
-                                        <br><br><span><i><b>Task Assigned By Manager: </b> {task.createdByName}</i></span>
-                                    {:else}
-                                        <span></span>
-                                    {/if}
-                                </div>
-                            </td>
-                            <td>
-                                <div class="status-container">
-                                    <div class="status-circle" style="background-color: {getStatusColor(task.status)};"></div>
-                                    {task.status}
-                                </div>
-                            </td>
-                            <td>
-                                <span class="{isOverdue(task)}">{formatDate(task.endDate)}</span>
-                            </td>
-                            <td class="actions">
-                                <button class="btn edit" on:click={() => openTaskForm(task)}>Update</button>
-                                <button class="btn delete" on:click={() => removeTask(task.id)}>Delete</button>
-                            </td>
-                        </tr>
-                    {/each}
-                    {:else}
-                        <tr>
-                            <td colspan="4" style="padding-top: 30px; text-align: center; color: red;">No Tasks Found!</td>
-                        </tr>
-                {/if}
-            </tbody>
-        </table>
-    </div>
+    {#if currentView === 'own'}
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Task</th>
+                        <th>Status</th>
+                        <th>Due Date</th>
+                        <th style="text-align: center;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {#if filteredEmployeeTasks.length > 0}
+                    <!-- {#if filteredEmployeeTasks.filter((task: TaskData) => !task.isArchived).length > 0} -->
+                        {#each filteredEmployeeTasks as task (task.id)}
+                            <tr>
+                                <td>
+                                    <div class="task">
+                                        <b>{task.title}</b><br>
+                                        {task.description}
+                                        
+                                        {#if task.assignedTo !== task.createdBy}
+                                            <br><br><span><i><b>Task Assigned By Manager: </b> {task.createdByName}</i></span>
+                                        {:else}
+                                            <span></span>
+                                        {/if}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="status-container">
+                                        <div class="status-circle" style="background-color: {getStatusColor(task.status)};"></div>
+                                        {task.status}
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="{isOverdue(task)}">{formatDate(task.endDate)}</span>
+                                </td>
+                                <td class="actions">
+                                    <button class="btn edit" on:click={() => openTaskForm(task)}>Update</button>
+                                    <button class="btn delete" on:click={() => removeTask(task.id)}>Delete</button>
+                                    <button class="btn edit" on:click={() => archiveTask(task.id)}>Archive</button>
+                                </td>
+                            </tr>
+                        {/each}
+                        {:else}
+                            <tr>
+                                <td colspan="4" style="padding-top: 30px; text-align: center; color: red;">No Tasks Found!</td>
+                            </tr>
+                    {/if}
+                </tbody>
+            </table>
+        </div>
+    {/if}
+    {#if currentView === 'archived'}
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Task</th>
+                        <th>Status</th>
+                        <th>Due Date</th>
+                        <th style="text-align: center;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {#if $archivedTasks.length > 0}
+                        {#each $archivedTasks as task (task.id)}
+                            <tr>
+                                <td>
+                                    <div class="task">
+                                        <b>{task.title}</b><br>
+                                        {task.description}
+                                        
+                                        {#if task.assignedTo !== task.createdBy}
+                                            <br><br><span><i><b>Task Assigned By Manager: </b> {task.createdByName}</i></span>
+                                        {:else}
+                                            <span></span>
+                                        {/if}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="status-container">
+                                        <div class="status-circle" style="background-color: {getStatusColor(task.status)};"></div>
+                                        {task.status}
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="{isOverdue(task)}">{formatDate(task.endDate)}</span>
+                                </td>
+                                <td class="actions">
+                                    <!-- <button class="btn edit" on:click={() => openTaskForm(task)}>Update</button>
+                                    <button class="btn delete" on:click={() => removeTask(task.id)}>Delete</button> -->
+                                    <button class="btn edit" on:click={() => task.id != null && unarchiveTask(task.id)}>Unarchive</button>
+                                </td>
+                            </tr>
+                        {/each}
+                        {:else}
+                            <tr>
+                                <td colspan="4" style="padding-top: 30px; text-align: center; color: red;">No Archive Tasks Found!</td>
+                            </tr>
+                    {/if}
+                </tbody>
+            </table>
+        </div>
+    {/if}
 {/if}

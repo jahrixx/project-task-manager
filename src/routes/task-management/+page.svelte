@@ -11,6 +11,7 @@
     import { derived, get, writable } from "svelte/store";
     import TaskListManager from "../../components/TaskListManager.svelte";
     import { selectedStatuses } from "$lib/stores/task";
+    import { loadArchiveTasks } from "$lib/api/archive";
 
     export const userRole = derived(user, ($user: User | null) => $user?.role || "");
     
@@ -49,19 +50,23 @@
         assignedToName: null,
         createdByName: null,
         creatorRole: null,
-        assigneeRole: null
+        assigneeRole: null,
+        // isArchived: null
     };
 
     $: currentUser = get(user);
     $ : if ($tasks && get(user) && Array.isArray($tasks)){
             if(currentUser?.role === "Manager"){
-                managerTasks = $tasks.filter(task => task.createdBy === currentUser.id || task.assignedTo === currentUser.id);
+                managerTasks = $tasks.filter(task => (task.createdBy === currentUser.id || task.assignedTo === currentUser.id) && !task.isArchived);
+                // managerTasks = $tasks.filter(task => task.createdBy === currentUser.id || task.assignedTo === currentUser.id);
                 filteredManagerTasks = [ ...managerTasks ];
 
-                employeeTasks = $tasks.filter(task => task.createdBy !== currentUser.id);
+                // employeeTasks = $tasks.filter(task => task.createdBy !== currentUser.id);
+                employeeTasks = $tasks.filter(task => (task.createdBy !== currentUser.id) && !task.isArchived);
                 filteredEmployeeTasks = [ ...employeeTasks ];
             } else {
-                employeeTasks = $tasks.filter(task => task.assignedTo === currentUser?.id);
+                // employeeTasks = $tasks.filter(task => task.assignedTo === currentUser?.id);
+                employeeTasks = $tasks.filter(task => (task.assignedTo === currentUser?.id) && !task.isArchived);
                 filteredEmployeeTasks = [ ...employeeTasks ];
             }
     }

@@ -25,6 +25,7 @@
 .report-container {
     margin-top: -15px;
     margin-left: 50px;
+    margin-bottom: 7px;
     padding: 10px;
     display: flex;
     align-items: center;
@@ -137,6 +138,12 @@ select, .form-group input {
     color: #666;
 }
 
+/* .placeholder.content{
+    max-height: 10vh;
+    overflow-y: auto;
+    border: 2px solid black;
+} */
+
 .placeholder-table table {
     width: 100%;
     border-collapse: collapse;
@@ -208,3 +215,14 @@ select, .form-group input {
     gap: 10px;
     margin-top: 10px;
 }
+
+/* generate report banner */
+.banner {
+    background: #6082B6;
+    border: 2px solid white;
+    margin: auto;
+    width: 99.8%;
+    height: 8vh;
+    /* border: 2px solid black; */
+}
+

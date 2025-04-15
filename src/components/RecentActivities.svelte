@@ -79,11 +79,14 @@
 
 <style>
     .activity-item{
+        /* border: 2px solid black; */
+        /* position: fixed; */
         display: flex; 
         gap: 50px; 
         margin: 0; 
         padding: 0; 
         line-height: normal;
+        height: 15vh;
     }
 
     .activity-item p {

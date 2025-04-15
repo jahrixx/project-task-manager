@@ -15,6 +15,7 @@ router.get("/", async (req, res) => {
         SELECT tasks.id, 
                tasks.title, 
                tasks.description, 
+               tasks.isArchived,
                DATE_FORMAT(tasks.startDate, '%Y-%m-%d') AS startDate, 
                DATE_FORMAT(tasks.endDate, '%Y-%m-%d') AS endDate, 
                tasks.status,
@@ -84,6 +85,87 @@ router.get("/", async (req, res) => {
     } catch (error) {
         console.error("Error fetching tasks from MySQL:", error);
         res.status(500).json({ message: "Server error while fetching tasks." });
+    }
+});
+
+router.get("/archived", async (req, res) => {
+    // const userId = req.query.userId;
+    const pool = getPool();
+
+    const sql = `
+        SELECT t.id,
+                t.title,
+                t.description,
+                t.status,
+                t.endDate,
+                t.assignedTo,
+                t.createdBy,
+                t.isArchived,
+                u.office,
+                CONCAT(u.firstName, ' ', u.lastName) AS createdByName
+        FROM tasks t
+        JOIN users u ON t.createdBy = u.id
+        WHERE t.isArchived = 1
+        ORDER BY t.endDate DESC
+    `;
+
+    try {
+        const [results] = await pool.query(sql);
+        res.json(results);
+
+    } catch (error) {
+        console.error('Error Fetching archived tasks: ', error);
+        return res.status(500).json({error: 'Database Error!'});
+    }
+    
+});
+
+router.patch("/:id/archive", async (req, res) => {
+    const taskId = req.params.id;
+    const pool = getPool();
+
+    try {
+        let sql = `
+            UPDATE tasks
+                SET isArchived = 1, archived_at = NOW()
+                WHERE id = ?
+        `;
+        const [result] = await pool.query(sql, [taskId]);
+
+        if(result.affectedRows === 0){
+            return res.json({message: 'Task Updated Successfully!'});
+        }
+        
+        res.json({message: 'Task Archived Successfully!'});
+
+    } catch (error) {
+        console.error('Error archiving tasks', error);
+        result.status(500).json({ error: 'Internal Sever Error' });
+    }
+});
+
+router.patch("/:id/unarchive", async (req, res) => {
+    const taskId = req.params.id;
+    const pool = getPool();
+
+    try {
+        let sql = `
+            UPDATE tasks
+                SET isArchived = 0, unArchived_at = NOW()
+                WHERE id = ?
+        `;
+
+        const [result] = await pool.query(sql, [taskId]);
+        
+        if(result.affectedRows === 0){
+            return res.json({message: 'Task Updated Successfully!'});
+        }
+        
+        res.json({message: 'Task Unarchived Successfully!'});
+
+    } catch (error) {
+        console.error('Error unarchiving tasks', error);
+        res.status(500).json({ error: 'Internal Sever Error' });
     }
 });
 
