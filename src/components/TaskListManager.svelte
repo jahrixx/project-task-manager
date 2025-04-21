@@ -7,13 +7,14 @@
 
     let managerTasks: TaskData[] = [];
     let employeeTasks: TaskData[] = [];
-    let archivedTasks = writable<TaskData[]>([]);
+    export let archivedTasks: TaskData[] = [];
+    // export let archivedTasks = writable<TaskData[]>([]);
 
     export const userRole = derived(user, ($user: User | null) => $user?.role || "");
     export const allTasks: Record<string, TaskData[]> = {}; 
     export let filteredManagerTasks: any = managerTasks;
     export let filteredEmployeeTasks: any = employeeTasks;
-    export const filteredArchivedTasks: any = archivedTasks;
+    // export const filteredArchivedTasks: any = archivedTasks;
     
     export let currentView = 'own';  
     export let openTaskForm;
@@ -43,10 +44,10 @@
                 return true;
             });
 
-            archivedTasks.set(filteredArchived);
+            return archivedTasks = filteredArchived;
         } catch (error) {
             console.error('Error loading archived tasks!', error);
-            archivedTasks.set([]);
+            return archivedTasks;
         }
     }
 
@@ -242,8 +243,8 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {#if $archivedTasks.length > 0}
-                        {#each $archivedTasks as task (task.id)}
+                    {#if archivedTasks.length > 0}
+                        {#each archivedTasks as task (task.id)}
                             <tr>
                                 <td>
                                     <div class="task">
@@ -358,8 +359,8 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {#if $archivedTasks.length > 0}
-                        {#each $archivedTasks as task (task.id)}
+                    {#if archivedTasks.length > 0}
+                        {#each archivedTasks as task (task.id)}
                             <tr>
                                 <td>
                                     <div class="task">

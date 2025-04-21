@@ -77,8 +77,62 @@ export async function loadArchiveTasks() {
         });
 
         archivedTasks.set(filteredArchived);
+        return filteredArchived;
     } catch (error) {
         console.error('Error loading archived tasks!', error);
         archivedTasks.set([]);
+        return [];
     }
 }
+
+// export async function loadArchiveTasks() {
+//     try {
+//         const fetchedTasks = await fetchArchivedTasks();
+//         const currentUser = get(user);
+
+//         let filteredArchived = Array.isArray(fetchedTasks) ? fetchedTasks : [];
+
+//         filteredArchived = filteredArchived.filter((task: TaskData) => {
+//         if(currentUser?.role === 'Employee'){
+//                 return task.assignedTo === currentUser?.id || task.createdBy === currentUser?.id; 
+//             } else if (currentUser?.role === 'Manager') {
+//                 return task.assignedTo === currentUser?.id ||
+//                         task.createdBy === currentUser?.id ||
+//                         task.office === currentUser?.office;
+//             }
+//             return true;
+//         });
+
+//         return filteredArchived;
+//     } catch (error) {
+//         console.error('Error loading archived tasks!', error);
+//         return archivedTasks;
+//     }
+// }
+
+// export async function loadArchiveTasks(): Promise<TaskData[]> {
+//     try {
+//         const fetchedTasks = await fetchArchivedTasks();
+//         const currentUser = get(user);
+
+//         let filteredArchived = Array.isArray(fetchedTasks) ? fetchedTasks : [];
+
+//         filteredArchived = filteredArchived.filter((task: TaskData) => {
+//         if(currentUser?.role === 'Employee'){
+//                 return task.assignedTo === currentUser?.id || task.createdBy === currentUser?.id; 
+//             } else if (currentUser?.role === 'Manager') {
+//                 return task.assignedTo === currentUser?.id ||
+//                         task.createdBy === currentUser?.id ||
+//                         task.office === currentUser?.office;
+//             }
+//             return true;
+//         });
+
+//         archivedTasks.set(filteredArchived);
+//         return filteredArchived;
+//     } catch (error) {
+//         console.error('Error loading archived tasks!', error);
+//         archivedTasks.set([]);
+//         return [];
+//     }
+// }
