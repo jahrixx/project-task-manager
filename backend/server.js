@@ -8,6 +8,8 @@ app.use(cors());
 app.use(express.json());
 
 const { updateTaskStatuses } = require("./routes/services/taskService");
+const { router: notificationRoutes } = require("./routes/notification");
+const { checkOverdueTasks } = require("./routes/services/overdueChecker");
 
 // Import Routes
 const rolesRoutes = require("./routes/roles");
@@ -19,6 +21,7 @@ const activitiesRoutes = require("./routes/activities");
 const reportsRoutes = require("./routes/reports");
 const dashboardRoutes = require("./routes/dashboard");
 const archiveRoutes = require("./routes/archive");
+// const notificationRoutes = require("./routes/notification");
 // const updateTaskStatuses = require("./routes/services/taskService");
 // const reportRoutes = require("./routes/reports");
 
@@ -32,8 +35,12 @@ app.use("/activities", activitiesRoutes);
 app.use("/reports", reportsRoutes);
 app.use("/dashboard", dashboardRoutes);
 app.use("/archive", archiveRoutes);
+app.use("/notification", notificationRoutes);
 app.use('/uploads', express.static('uploads'));
+// app.use("/notification", notificationRoutes);
 // app.use("/api/reports", reportRoutes);
+
+setInterval(checkOverdueTasks, 300000);
 
 updateTaskStatuses()
     .then(result => console.log("Initial status update complete: ", result))

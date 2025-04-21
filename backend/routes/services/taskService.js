@@ -17,8 +17,9 @@ const updateTaskStatuses = async () => {
         const [overdueResult] = await pool.query(`
             UPDATE tasks 
             SET status = 'Overdue', updated_at = CURRENT_TIMESTAMP
-            WHERE DATE(endDate) < ?
-            AND status NOT IN ('Completed', 'Cancelled', 'Pending', 'In Progress')`, [today] );
+            WHERE endDate < ?
+            AND status <> 'Overdue'
+            AND status NOT IN ('Completed', 'Cancelled')`, [today] );
 
         console.log(`Updated ${overdueResult.affectedRows} tasks to "Overdue" status`);
         

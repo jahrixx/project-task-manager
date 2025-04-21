@@ -119,19 +119,13 @@ async function createTables() {
         await pool.query(`
             CREATE TABLE IF NOT EXISTS notifications (
                 id INT AUTO_INCREMENT PRIMARY KEY,
-                title VARCHAR(255) NOT NULL,
-                description LONGTEXT,
-                createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                startDate DATE NOT NULL,
-                endDate DATE NOT NULL,
                 userId INT,
-                createdBy INT,
-                assignedTo INT,
                 taskId INT,
-                FOREIGN KEY (createdBy) REFERENCES users(id),
-                FOREIGN KEY (assignedTo) REFERENCES users(id),
-                FOREIGN KEY (taskId) REFERENCES tasks(id) ON DELETE SET NULL,
-                FOREIGN KEY (userId) REFERENCES users(id) ON DELETE SET NULL
+                message VARCHAR(255),
+                isRead BOOLEAN DEFAULT FALSE,
+                createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY (taskId) REFERENCES tasks(id) ON DELETE SET NULL
             )
         `);
         console.log("✅ Notifications table created or already exists.");

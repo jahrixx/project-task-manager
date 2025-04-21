@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const { updateTaskStatuses } = require("./services/taskService");
 const { getPool } = require("../db");
+const { createNotification } = require("./notification");
 
 // GET: Fetch tasks with filtering based on the requester
 router.get("/", async (req, res) => {
@@ -295,6 +296,7 @@ router.post("/", async (req, res) => {
 
         const taskId = result.insertId;
 
+        await createNotification(assignedTo, `You have been assigned a new task: ${title}.`)
         // create task insert to activities table
         await pool.query(
             "INSERT INTO activities (message, createdBy, assignedTo, taskId) VALUES (?, ?, ?, ?)",
@@ -349,6 +351,7 @@ router.put("/:id", async (req, res) => {
         console.log("Updated Task End Date", formattedEndDate)
         console.log("Updated Task Status", status)
 
+        await createNotification(assignedTo, `Task "${title}" has been updated.`)
         // insert activity table 
         await pool.query(`
             INSERT INTO activities (message, createdBy, assignedTo, taskId) VALUES (?,?,?,?)`,

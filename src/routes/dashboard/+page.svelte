@@ -10,6 +10,7 @@
     import CurrentTasks from "../../components/CurrentTasks.svelte";
     import { get } from 'svelte/store';
     import { fetchActivities } from '$lib/api/activityService';
+    import NotificationPanel from '../../components/NotificationPanel.svelte';
 
     let pendingCount = 0;
     let inProgressCount = 0;
@@ -181,7 +182,7 @@
                     <div class="notification">
                         <h2 style="margin: auto; width: 100%;">Notifications<hr style="height: 3px; background-color: lightgray;"></h2>
                         <div class="notification-list">
-
+                            <NotificationPanel {userId}/>
                         </div>
                     </div>
                 </div>
@@ -247,7 +248,7 @@
                     <div class="notification">
                         <h2 style="margin: auto; width: 100%;">Notifications<hr style="height: 3px; background-color: lightgray;"></h2>
                         <div class="notification-list">
-
+                            <NotificationPanel {userId}/>
                         </div>
                     </div>
                 </div>
