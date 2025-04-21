@@ -19,9 +19,9 @@ async function checkOverdueTasks() {
 
         if(existing.length === 0){
             await createNotification(task.assignedTo, message, task.id);
-            console.log(`Notification Created For Task: ${task.title}.`);
+            // console.log(`Notification Created For Task: ${task.title}.`);
         } else {
-            console.log(`Notification For Task: ${task.title}. already exists! Skipped!`);
+            // console.log(`Notification For Task: ${task.title}. already exists! Skipped!`);
         }
     }
 }
