@@ -6,11 +6,11 @@ async function checkOverdueTasks() {
     const pool = getPool();
     
     const [ tasks ] = await pool.query(
-        `SELECT id, title, assignedTo FROM tasks WHERE endDate < CURDATE() AND status != 'Completed'`
+        `SELECT id, title, assignedTo FROM tasks WHERE endDate < CURDATE() AND LOWER(status) != 'completed'`
     );
 
     for (const task of tasks){
-        const message = `Task "${task.title}" is Overdue!`;
+        const message = `Task "${task.title}" is <span style="font-weight: bold; color: red;">Overdue</span>!`;
 
         const [ existing ] = await pool.query(
             `SELECT id FROM notifications WHERE userId = ? AND message = ? AND taskId = ? LIMIT 1`,

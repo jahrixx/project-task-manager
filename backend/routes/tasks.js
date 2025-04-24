@@ -261,18 +261,19 @@ router.post("/", async (req, res) => {
         const pool = getPool();
 
         // Fetch manager's office and role
-        const [managerRows] = await pool.query("SELECT office, role FROM users WHERE id = ?", [createdBy]);
+        const [managerRows] = await pool.query("SELECT office, role, firstName, lastName FROM users WHERE id = ?", [createdBy]);
         if (managerRows.length === 0) {
             return res.status(404).json({ message: "Manager not found." });
         }
 
-        const { office: managerOffice, role: managerRole } = managerRows[0];
+        const { office: managerOffice, role: managerRole, firstName: managerFirstName, lastName: managerLastName } = managerRows[0];
+        const managerFullName = `${managerFirstName} ${managerLastName}`;
 
         let assignedUserId = assignedTo || createdBy;
 
         if (managerRole === "Manager" && assignedTo) {
             // Check if the assigned employee belongs to the same office
-            const [employeeRows] = await pool.query("SELECT office FROM users WHERE id = ?", [assignedTo]);
+            const [employeeRows] = await pool.query("SELECT office, firstName, lastName FROM users WHERE id = ?", [assignedTo]);
 
             if (employeeRows.length === 0) {
                 return res.status(404).json({ message: "Assigned employee not found." });
@@ -296,13 +297,33 @@ router.post("/", async (req, res) => {
 
         const taskId = result.insertId;
 
-        await createNotification(assignedTo, `You have been assigned a new task: ${title}.`)
         // create task insert to activities table
         await pool.query(
             "INSERT INTO activities (message, createdBy, assignedTo, taskId) VALUES (?, ?, ?, ?)",
             [`created task ${title} with status ${status.toLowerCase()}`, createdBy, assignedTo, taskId]
         );
-        res.status(201).json({ message: "Task assigned successfully!", taskId: result.insertId });
+
+        //Create Notification
+        if(assignedUserId === createdBy){
+            await createNotification(createdBy, `You created a task for yourself: "${title}".<br>- (Due: ${formattedEndDate})`, taskId, 'task_self_assigned');
+        } else {
+            const [employeeRows] = await pool.query(
+                `SELECT firstName, lastName FROM users WHERE id = ?`,
+                [assignedTo]
+            );
+            const employeeFullName = employeeRows.length > 0
+                ? `${employeeRows[0].firstName} ${employeeRows[0].lastName}`
+                : 'a team member';
+
+            await createNotification(assignedTo, `${managerFullName} assigned you a task: "${title}".<br>` +
+                `- Due Date: ${formattedEndDate}<br>` +
+                `- Status: ${status}<br>`, taskId, 'task_assigned');
+            
+            await createNotification(createdBy, `You assigned "${title}" to ${employeeFullName}.<br>` +
+                `- Due Date: ${formattedEndDate}<br>`, taskId, 'task_assignment_confirmation');
+        }
+
+        res.status(201).json({ message: "Task assigned successfully!", taskId: result.insertId, notificationSent: true });
 
     } catch (error) {
         console.error("Error assigning task:", error);
@@ -335,12 +356,6 @@ router.put("/:id", async (req, res) => {
         const formattedEndDate = new Date(endDate).toISOString().split("T")[0];
         const today = new Date().toISOString().split("T")[0];
 
-        // if(formattedEndDate === today){
-        //     status = "Due Date";
-        // } else if(formattedEndDate < today){
-        //     status = "Overdue";
-        // };
-
         //(insert timestamps)
         const [result] = await pool.query(
             "UPDATE tasks SET title = ?, description = ?, startDate = ?, endDate = ?, status = ?, assignedTo = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?", 
@@ -351,15 +366,20 @@ router.put("/:id", async (req, res) => {
         console.log("Updated Task End Date", formattedEndDate)
         console.log("Updated Task Status", status)
 
-        await createNotification(assignedTo, `Task "${title}" has been updated.`)
         // insert activity table 
         await pool.query(`
             INSERT INTO activities (message, createdBy, assignedTo, taskId) VALUES (?,?,?,?)`,
             [`updated task ${title} with status ${status.toLowerCase()}`, completedBy, null, id]);
-    
+
         if (result.affectedRows === 0) {
             return res.status(500).json({ message: "Failed to update task. No rows affected." });
         }
+
+        if(completedBy === assignedTo){
+            // await createNotification(assignedUserId, `You have been assigned a new task: ${title}.`, taskId)
+            await createNotification(completedBy, `Task "${title}" has been updated.`, id);
+        }
+
         res.json({ message: "Task updated successfully." });
     } catch (error) {
         console.error("Error updating task:", error);

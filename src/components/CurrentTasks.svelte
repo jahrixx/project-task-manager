@@ -142,6 +142,7 @@
 <style>
     .error{
         text-align: center;
+        color: red;
     }
 
     li {

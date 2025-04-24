@@ -122,6 +122,7 @@ async function createTables() {
                 userId INT,
                 taskId INT,
                 message VARCHAR(255),
+                type VARCHAR(50),
                 isRead BOOLEAN DEFAULT FALSE,
                 createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE,
