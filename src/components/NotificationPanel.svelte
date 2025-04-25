@@ -76,7 +76,7 @@
             {#each $notifications as note (note.id)}
                     <li class="notification-card" class:isRead={note.isRead}>
                         <div style="margin-left: 10px;">
-                            <div class="container-time-controls" style="display: flex;">
+                            <div class="container-time-controls">
                                 <div class="date-time">
                                     <span style="color: #175E88; font-weight: 600;">{weekDayFormatter.format(new Date(note.createdAt))}, {timeFormatter.format(new Date(note.createdAt))}</span>
                                 </div>
@@ -188,5 +188,6 @@
     .container-time-controls {
         display: flex;
         align-items: center;
+        justify-content: space-between;
     }
 </style>
