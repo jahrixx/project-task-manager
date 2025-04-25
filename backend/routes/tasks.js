@@ -261,12 +261,13 @@ router.post("/", async (req, res) => {
         const pool = getPool();
 
         // Fetch manager's office and role
-        const [managerRows] = await pool.query("SELECT office, role, firstName, lastName FROM users WHERE id = ?", [createdBy]);
+        const [managerRows] = await pool.query("SELECT office, role, firstName, lastName, profilePic FROM users WHERE id = ?", [createdBy]);
         if (managerRows.length === 0) {
             return res.status(404).json({ message: "Manager not found." });
         }
 
         const { office: managerOffice, role: managerRole, firstName: managerFirstName, lastName: managerLastName } = managerRows[0];
+        const manager =  managerRows[0] || {};
         const managerFullName = `${managerFirstName} ${managerLastName}`;
 
         let assignedUserId = assignedTo || createdBy;
@@ -305,22 +306,30 @@ router.post("/", async (req, res) => {
 
         //Create Notification
         if(assignedUserId === createdBy){
-            await createNotification(createdBy, `You created a task for yourself: "${title}".<br>- (Due: ${formattedEndDate})`, taskId, 'task_self_assigned');
+            await createNotification(
+                createdBy, 
+                `You created a task for yourself: <b>"${title}"</b>.<br><b>-</b> <span style="font-weight: bold; color: red;">Due Date</span><b>: ${formattedEndDate}</b>`, 
+                taskId, 
+                'task_self_assigned',
+                manager.profilePic
+            );
+
         } else {
             const [employeeRows] = await pool.query(
-                `SELECT firstName, lastName FROM users WHERE id = ?`,
+                `SELECT firstName, lastName, profilePic FROM users WHERE id = ?`,
                 [assignedTo]
             );
+            const employee = employeeRows[0] || {};
             const employeeFullName = employeeRows.length > 0
                 ? `${employeeRows[0].firstName} ${employeeRows[0].lastName}`
                 : 'a team member';
 
-            await createNotification(assignedTo, `${managerFullName} assigned you a task: "${title}".<br>` +
-                `- Due Date: ${formattedEndDate}<br>` +
-                `- Status: ${status}<br>`, taskId, 'task_assigned');
+            await createNotification(assignedTo, `Manager <b>${managerFullName}</b> assigned a task entitled <b>"${title}"</b> to employee ${employeeFullName}.<br>` +
+                `<b>-</b> <span style="font-weight: bold; color: red;">Due Date</span><b>: ${formattedEndDate}</b><br>` +
+                `<b>- Status: ${status}</b><br>`, taskId, 'task_assigned', employee.profilePic);
             
-            await createNotification(createdBy, `You assigned "${title}" to ${employeeFullName}.<br>` +
-                `- Due Date: ${formattedEndDate}<br>`, taskId, 'task_assignment_confirmation');
+            await createNotification(createdBy, `Manager <b>${managerFullName}</b> created a task entitled<b>"${title}"</b> and assigned to employee <b>${employeeFullName}</b>.<br>` +
+                `<b>-</b> <span style="font-weight: bold; color: red;">Due Date</span><b>: ${formattedEndDate}</b><br>`, taskId, 'task_assignment_confirmation', employee.profilePic);
         }
 
         res.status(201).json({ message: "Task assigned successfully!", taskId: result.insertId, notificationSent: true });

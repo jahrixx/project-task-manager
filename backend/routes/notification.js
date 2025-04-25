@@ -4,13 +4,13 @@ const { off } = require("process");
 
 const router = express.Router();
 
-async function createNotification(userId, message, taskId, type = 'task') {
+async function createNotification(userId, message, taskId, type = 'task', profilePic = null) {
     const pool = getPool();
     
     try {
         await pool.query(
-            `INSERT INTO notifications (userId, message, taskId, type, isRead, createdAt) VALUES (?,?,?,?,?, CURRENT_TIMESTAMP)`,
-            [userId, message, taskId, type, 0]
+            `INSERT INTO notifications (userId, message, taskId, type, profilePic, isRead, createdAt) VALUES (?,?,?,?,?,0,CURRENT_TIMESTAMP)`,
+            [userId, message, taskId, type, profilePic]
         );    
         console.log(`Notification created for user ${userId}: ${message}`);
         return true;
@@ -19,6 +19,26 @@ async function createNotification(userId, message, taskId, type = 'task') {
         return false;
     }
 }
+
+// async function createAdminNotification(message, taskId, type = 'task') {
+//     const pool = getPool();
+    
+//     try {
+//         const [adminRows] = await pool.query(
+//             `SELECT id FROM users WHERE role = 'Admin`,
+//             [message, taskId, type]
+//         );    
+        
+//         for(const admin of adminRows) {
+//             await createNotification(admin.id, message, taskId, type);
+//         }
+        
+//         return true;
+//     } catch (error) {
+//         console.error("Error creating admin notification: ", error);
+//         return false;
+//     }
+// }
 
 async function getUnreadCount(userId) {
     const pool = getPool();
@@ -37,9 +57,10 @@ router.get('/:userId', async (req, res) => {
         const { limit = 20, offset = 0, unreadOnly = false } = req.query;
 
         let query = `
-            SELECT n.*, t.title as taskTitle
+            SELECT n.*, t.title as taskTitle, u.profilePic
             FROM notifications n
             LEFT JOIN tasks t ON n.taskId = t.id
+            LEFT JOIN users u ON n.userId = u.id
             WHERE n.userId = ? AND t.status != 'Completed' AND t.isArchived = 0 
         `;
 
@@ -81,11 +102,11 @@ router.get('/admin/all', async (req, res) => {
         const { limit = 20, offset = 0, unreadOnly = false } = req.query;
 
         let query = `
-            SELECT n.*, t.title as taskTitle, u.firstName, u.lastName
+            SELECT n.*, t.title as taskTitle, u.firstName, u.lastName, u.profilePic
             FROM notifications n
             LEFT JOIN tasks t ON n.taskId = t.id
             LEFT JOIN users u ON n.userId = u.id
-            WHERE t.status != 'Completed' 
+            WHERE t.status != 'Completed' AND t.isArchived = 0
         `;
 
         if(unreadOnly === 'true'){

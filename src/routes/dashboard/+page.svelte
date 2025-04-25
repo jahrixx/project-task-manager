@@ -181,7 +181,7 @@
                     </div>
                     <div class="notification">
                         <h2 style="margin: auto; width: 100%;">Notifications<hr style="height: 3px; background-color: lightgray;"></h2>
-                        <div class="notification-list">
+                        <div class="notification-list-admin">
                             <NotificationPanel {userId} {role}/>
                         </div>
                     </div>
@@ -256,3 +256,14 @@
         </div>
     {/if}
 {/if}
+<style>
+    .notification-list-admin {
+        height: 280px; 
+        overflow-y: auto;
+    }
+
+    .notification-list-admin::-webkit-scrollbar {
+        width: 0;
+        background: transparent;
+    }
+</style>

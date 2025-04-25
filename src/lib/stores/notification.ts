@@ -11,6 +11,7 @@ export type Notification = {
     taskTitle?: string;
     firstName?: string;
     lastName?: string;
+    profilePic?: string | null;
 }
 
 export const notifications = writable<Notification[]>([]);
