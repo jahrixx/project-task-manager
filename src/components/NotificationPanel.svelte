@@ -3,7 +3,7 @@
     import { onMount } from 'svelte';
     import { isAuthenticated, user, type User } from '$lib/stores/user';
     import { get } from "svelte/store";
-
+    
     export let userId: number;
     export let role: string;
     
@@ -13,8 +13,11 @@
     let initialized = true;
     let error: string | null = null;
     let hasData = false;
+    let showMenu: number | null = null;
     
     onMount(() => {
+        const currentUser = get(user);
+        role = currentUser?.role ?? '';
         let cancelled = false;
 
         const fetchNotifications = async () => {
@@ -42,6 +45,8 @@
                 }
             }
         };
+
+        console.log("Current User Role: ", role);
         
         fetchNotifications();
 
@@ -63,21 +68,29 @@
             hour12: true,
         });
 
-    // async function markAsRead(id: number) {
-    //     try { 
-    //         const response = await fetch(`http://localhost:3000/notification/read/${id}`, { method: 'POST' });
+    async function markNotificationAsRead(id: number) {
+        try { 
+            const response = await fetch(`http://localhost:3000/notification/read/${id}`, { method: 'POST' });
 
-    //         if(!response.ok) throw new Error('Failed to mark as unread.');
-    //         await loadNotifications(userId, role);
-    //     } catch (err) {
-    //         console.error("Error marking notification as read: ", err);   
-    //     }
-    // }
+            if(!response.ok) throw new Error('Failed to mark as unread.');
+            if (role === "Admin") {
+                await loadAdminNotifications();
+            } else {
+                await loadUserNotifications(userId);
+            }
+        } catch (err) {
+            console.error("Error marking notification as read: ", err);   
+        }
+    }
+
+    function toggleMenu(noteId: number) {
+        showMenu = showMenu === noteId ? null : noteId;
+    }
     
 </script>
 
 <div class="notification-container">
-    {#if !initialized}
+    {#if loading && !initialized}
         <p style="text-align: center">Loading Notifications...</p>
     {:else if error}
         <p style="text-align: center; color: red;">{error}</p>
@@ -91,14 +104,29 @@
                             <div class="container-time-controls">
                                 <div class="date-time">
                                     <span style="color: #175E88; font-weight: 600;">{weekDayFormatter.format(new Date(note.createdAt))} : {timeFormatter.format(new Date(note.createdAt))}</span>
+                                    <br>
+                                    <!-- <span style="color: black; font-weight: 600;">
+                                        {#if role === "Admin"}
+                                            {note.firstName} {note.lastName}
+                                        {/if}
+                                    </span> -->
                                 </div>
                                 <div class="more-controls">
-                                    <button aria-label="More options">
+                                    <button aria-label="More options" on:click={() => toggleMenu(note.id)}>
                                        <span>…</span>
                                     </button>
-                                    <button aria-label="Close">
+                                    
+                                    <!-- <button aria-label="Close">
                                         <span>x</span>
-                                     </button>
+                                    </button> -->
+                                    
+                                    {#if showMenu ===  note.id}
+                                        <div class="options-menu">
+                                            {#if !note.isRead}
+                                                <button class="read" on:click={() => markNotificationAsRead(note.id)}>Mark as read</button>
+                                            {/if}
+                                        </div>
+                                    {/if}
                                 </div>
                             </div>
                             <div class="pic-content">
@@ -106,15 +134,10 @@
                                     <img src={note.profilePic ? `http://localhost:3000${note.profilePic}` : '/src/components/assets/default-avatar.png'} alt="User Profile" class="user-pic">
                                 </span>
                                 <span class="content">
-                                    <!-- {#if role === "Admin"}
-                                        {note.firstName} {note.lastName}:
-                                    {/if} -->
                                     {@html note.message}
                                 </span>
                             </div>
-                            <!-- {#if !note.isRead}
-                                <button class="read" on:click={() => markAsRead(note.id)}>Mark as read</button>
-                            {/if} -->
+                            
                         </div>
                     </li>
             {/each}
@@ -124,11 +147,7 @@
 
 <style>
     .notification-container{
-        /* border: 2px solid black; */
-        /* border-radius: 10px; */
-        /* background-image: linear-gradient(#FFFFFF, rgba(23, 94, 136, 0.40)); */
         overflow-y: auto;
-        /* height: 250px; */
     }
 
     .notification-container::-webkit-scrollbar {
@@ -143,7 +162,6 @@
     }
 
     .notification-card{
-        /* border: 2px solid black; */
         padding: 10px 5px;
         margin-bottom: 5px;
         background-color: rgba(23, 94, 136, 0.50);
@@ -168,18 +186,53 @@
     .content{
         margin-top: 1.5px;
     }
-/* 
+
     .read{
         cursor: pointer;
-    } */
+        background: none;
+        border: none;
+    }
 
     .user-pic{
         width: 40px;
         height: 40px;
         object-fit: cover;
         border: 1.5px solid #175E88;
-        /* border-radius: 50%; */
-        /* transition: transform 0.3s ease-in-out; */
+    }
+
+    .more-controls {
+        position: relative;
+        display: inline-block;
+    }
+
+    .options-menu {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        margin-top: 3px;
+        background: #ffffff;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        padding: 0.25rem;
+        min-width: 90px;
+        z-index: 200;
+    }
+
+    .options-menu button {
+        width: 100%;
+        text-align: center;
+        padding: 0.25rem;
+        background: none;
+        border: none;
+        color: #333;
+        font-size: 14px;
+        cursor: pointer;
+        transition: background 0.2s ease;
+    }
+
+    .options-menu button:hover {
+        background-color: #f0f0f0;
     }
 
     .more-controls > button{
