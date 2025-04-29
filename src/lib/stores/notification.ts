@@ -31,25 +31,30 @@ export const notifications = writable<Notification[]>([]);
 //     }
 // }
 
-export async function loadNotifications(userId: number, role: string) {
+export async function loadAdminNotifications() {
     try {
-        let endpoint = " ";
-        if(role === "Admin"){
-            endpoint = `http://localhost:3000/notification/admin/all`;
-        } else {
-            endpoint = `http://localhost:3000/notification/${userId}`;
-        }
-
-        const res = await fetch(endpoint);
+        const res = await fetch(`http://localhost:3000/notification/admin/all`);
         const data = await res.json();
-        
         const notificationsData = data.notifications || [];
-        
         notifications.set(notificationsData);
         return notificationsData;
     } catch (error) {
-        console.error("Error loading notification: ", error);
-        notifications.set([]);   
+        console.error("Error loading admin notifications: ", error);
+        notifications.set([]);
+        throw error;
+    }
+}
+
+export async function loadUserNotifications(userId: number) {
+    try {
+        const res = await fetch(`http://localhost:3000/notification/${userId}`);
+        const data = await res.json();
+        const notificationsData = data.notifications || [];
+        notifications.set(notificationsData);
+        return notificationsData;
+    } catch (error) {
+        console.error("Error loading user notifications: ", error);
+        notifications.set([]);
         throw error;
     }
 }

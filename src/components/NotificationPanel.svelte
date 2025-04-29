@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { notifications, loadNotifications, type Notification } from '../lib/stores/notification';
+    import { notifications, loadAdminNotifications, loadUserNotifications, type Notification } from '../lib/stores/notification';
     import { onMount } from 'svelte';
     import { isAuthenticated, user, type User } from '$lib/stores/user';
     import { get } from "svelte/store";
@@ -7,78 +7,90 @@
     export let userId: number;
     export let role: string;
     
-    $: currentUser = get(user);
-    $: profilePicUrl = currentUser?.profilePic
-    
-    ? `http://localhost:3000${currentUser.profilePic}`
-    : '/src/components/assets/default-avatar.png';
+    const API_BASE_URL = 'http://localhost:3000';
     
     let loading = true;
+    let initialized = true;
     let error: string | null = null;
     let hasData = false;
     
     onMount(() => {
-        if (!userId) {
-            error = "No User ID provided.";
-            loading = false;
-            return;
-        }
+        let cancelled = false;
 
         const fetchNotifications = async () => {
             try {
                 loading = true;
-                await loadNotifications(userId, role);
-                hasData =  $notifications.length > 0;
-                error = null;
+                if (role === "Admin") {
+                    await loadAdminNotifications();
+                } else {
+                    await loadUserNotifications(userId);
+                }
+
+                hasData = $notifications.length > 0;
+                if (!cancelled) {
+                    error = null;
+                }
             } catch (err) {
-                error = "Failed to load notifications";
-                console.error(err);
+                if (!cancelled) {
+                    error = "Failed to load notifications.";
+                    console.error("Notification loading error", err);
+                }
             } finally {
-                loading = false;
+                if (!cancelled) {
+                    loading = false;
+                    initialized = true;
+                }
             }
         };
-
+        
         fetchNotifications();
-        
+
         const interval = setInterval(fetchNotifications, 5000);
-        return () => clearInterval(interval);
-        
+        return () => {
+            cancelled = true;
+            clearInterval(interval);
+        };
     });
 
-    const weekDayFormatter = new Intl.DateTimeFormat('en-US', { weekday: 'long' });
+    const weekDayFormatter = new Intl.DateTimeFormat('en-US', { 
+        weekday: 'long', 
+        month: 'long',
+        day: 'numeric'
+    });
     const timeFormatter = new Intl.DateTimeFormat('en-US', {
             hour: 'numeric',
             minute: '2-digit',
             hour12: true,
         });
 
-    async function markAsRead(id: number) {
-        try { 
-            const response = await fetch(`http://localhost:3000/notification/read/${id}`, { method: 'POST' });
+    // async function markAsRead(id: number) {
+    //     try { 
+    //         const response = await fetch(`http://localhost:3000/notification/read/${id}`, { method: 'POST' });
 
-            if(!response.ok) throw new Error('Failed to mark as unread.');
-            await loadNotifications(userId, role);
-        } catch (err) {
-            console.error("Error marking notification as read: ", err);   
-        }
-    }
+    //         if(!response.ok) throw new Error('Failed to mark as unread.');
+    //         await loadNotifications(userId, role);
+    //     } catch (err) {
+    //         console.error("Error marking notification as read: ", err);   
+    //     }
+    // }
+    
 </script>
 
 <div class="notification-container">
-    {#if loading && !hasData}
-        <p style="text-align: center;">Loading notifications...</p>
+    {#if !initialized}
+        <p style="text-align: center">Loading Notifications...</p>
     {:else if error}
         <p style="text-align: center; color: red;">{error}</p>
     {:else if !hasData}
-            <p style="text-align: center; color: red;">No notifications found!</p>
-        {:else}
+        <p style="text-align: center; color: red;">No Notifications Available!</p>
+    {:else}
         <ul>
             {#each $notifications as note (note.id)}
                     <li class="notification-card" class:isRead={note.isRead}>
                         <div style="margin-left: 10px;">
                             <div class="container-time-controls">
                                 <div class="date-time">
-                                    <span style="color: #175E88; font-weight: 600;">{weekDayFormatter.format(new Date(note.createdAt))}, {timeFormatter.format(new Date(note.createdAt))}</span>
+                                    <span style="color: #175E88; font-weight: 600;">{weekDayFormatter.format(new Date(note.createdAt))} : {timeFormatter.format(new Date(note.createdAt))}</span>
                                 </div>
                                 <div class="more-controls">
                                     <button aria-label="More options">
