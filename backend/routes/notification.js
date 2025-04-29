@@ -4,13 +4,13 @@ const { off } = require("process");
 
 const router = express.Router();
 
-async function createNotification(userId, message, taskId, type = 'task', profilePic = null) {
+async function createNotification(userId, message, taskId, type) {
     const pool = getPool();
     
     try {
         await pool.query(
-            `INSERT INTO notifications (userId, message, taskId, type, profilePic, isRead, createdAt) VALUES (?,?,?,?,?,0,CURRENT_TIMESTAMP)`,
-            [userId, message, taskId, type, profilePic]
+            `INSERT INTO notifications (userId, message, taskId, type, isRead, createdAt) VALUES (?,?,?,?,0,CURRENT_TIMESTAMP)`,
+            [userId, message, taskId, type]
         );    
         console.log(`Notification created for user ${userId}: ${message}`);
         return true;

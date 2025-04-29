@@ -267,7 +267,6 @@ router.post("/", async (req, res) => {
         }
 
         const { office: managerOffice, role: managerRole, firstName: managerFirstName, lastName: managerLastName } = managerRows[0];
-        const manager =  managerRows[0] || {};
         const managerFullName = `${managerFirstName} ${managerLastName}`;
 
         let assignedUserId = assignedTo || createdBy;
@@ -306,13 +305,7 @@ router.post("/", async (req, res) => {
 
         //Create Notification
         if(assignedUserId === createdBy){
-            await createNotification(
-                createdBy, 
-                `You created a task for yourself: <b>"${title}"</b>.<br><b>-</b> <span style="font-weight: bold; color: red;">Due Date</span><b>: ${formattedEndDate}</b>`, 
-                taskId, 
-                'task_self_assigned',
-                manager.profilePic
-            );
+            await createNotification(createdBy, `You created a task for yourself: "${title}".<br>- (Due: ${formattedEndDate})`, taskId, 'task_self_assigned');
 
         } else {
             const [employeeRows] = await pool.query(
@@ -324,12 +317,12 @@ router.post("/", async (req, res) => {
                 ? `${employeeRows[0].firstName} ${employeeRows[0].lastName}`
                 : 'a team member';
 
-            await createNotification(assignedTo, `Manager <b>${managerFullName}</b> assigned a task entitled <b>"${title}"</b> to employee ${employeeFullName}.<br>` +
-                `<b>-</b> <span style="font-weight: bold; color: red;">Due Date</span><b>: ${formattedEndDate}</b><br>` +
-                `<b>- Status: ${status}</b><br>`, taskId, 'task_assigned', employee.profilePic);
+            await createNotification(assignedTo, `${managerFullName} assigned you a task: "${title}".<br>` +
+                `- Due Date: ${formattedEndDate}<br>` +
+                `- Status: ${status}<br>`, taskId, 'task_assigned');
             
-            await createNotification(createdBy, `Manager <b>${managerFullName}</b> created a task entitled<b>"${title}"</b> and assigned to employee <b>${employeeFullName}</b>.<br>` +
-                `<b>-</b> <span style="font-weight: bold; color: red;">Due Date</span><b>: ${formattedEndDate}</b><br>`, taskId, 'task_assignment_confirmation', employee.profilePic);
+            await createNotification(createdBy, `You assigned "${title}" to ${employeeFullName}.<br>` +
+                `- Due Date: ${formattedEndDate}<br>`, taskId, 'task_assignment_confirmation');
         }
 
         res.status(201).json({ message: "Task assigned successfully!", taskId: result.insertId, notificationSent: true });

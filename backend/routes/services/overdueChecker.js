@@ -6,7 +6,7 @@ async function checkOverdueTasks() {
     const pool = getPool();
     
     const [ tasks ] = await pool.query(
-        `SELECT id, title, assignedTo FROM tasks WHERE endDate < CURDATE() AND LOWER(status) != 'completed'`
+        `SELECT id, title, assignedTo FROM tasks WHERE endDate < CURDATE() AND LOWER(status) != 'Completed'`
     );
 
     for (const task of tasks){

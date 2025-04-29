@@ -89,9 +89,9 @@
                         </div>
                     </div>
                 {/each}
+            {/if}
             {:else}
                 <p class="error">{errorMessage}</p>
-            {/if}
         {/each}
     </ul>
 {:else if currentUser?.role === 'Manager'}
