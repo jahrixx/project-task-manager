@@ -10,7 +10,8 @@ async function checkOverdueTasks() {
     );
 
     for (const task of tasks){
-        const message = `Task "${task.title}" is <span style="font-weight: bold; color: red;">Overdue</span>!`;
+        // const message = `<br><span>Task "${task.title}" is <span style="font-weight: bold; color: red;">Overdue</span></span>!`;
+        const message = `<div style="margin-top: 10px;">Task "${task.title}" is <span style="font-weight: bold; color: red;">Overdue</span>!</div>`;
 
         const [ existing ] = await pool.query(
             `SELECT id FROM notifications WHERE userId = ? AND message = ? AND taskId = ? LIMIT 1`,

@@ -79,7 +79,7 @@
 
 <style>
     .activity-item{
-        /* border: 2px solid black; */
+        /* border: 1px solid black; */
         /* position: fixed; */
         display: flex; 
         gap: 50px; 
@@ -96,9 +96,9 @@
         background-color: transparent;
         color: black;
         border-radius: 8px;
-        padding: 10px;
-        margin-bottom: 5px;
-        max-height: 80px;
+        padding: 0px 5px 5px 5px;
+        /* margin-bottom: 5px; */
+        /* max-height: 80px; */
         overflow-y: auto;
         scrollbar-width: none;
         /* border: 2px solid black; */

@@ -61,7 +61,7 @@ router.get('/:userId', async (req, res) => {
             FROM notifications n
             LEFT JOIN tasks t ON n.taskId = t.id
             LEFT JOIN users u ON n.userId = u.id
-            WHERE n.userId = ? AND t.status != 'Completed' AND t.isArchived = 0 
+            WHERE n.userId = ? AND t.isArchived = 0 
         `;
 
         const params = [ userId ];
@@ -106,7 +106,7 @@ router.get('/admin/all', async (req, res) => {
             FROM notifications n
             LEFT JOIN tasks t ON n.taskId = t.id
             LEFT JOIN users u ON n.userId = u.id
-            WHERE t.status != 'Completed' AND t.isArchived = 0
+            WHERE t.isArchived = 0
         `;
 
         if(unreadOnly === 'true'){

@@ -12,13 +12,11 @@ h2 {
 }
 
 .current-task-list {
-    /* border: 2px solid black; */
     height: 270px;
     overflow-y: auto;
 }
 
 .current-task-list-emp{
-    /* border: 2px solid black; */
     height: 250px;
     overflow-y: auto;
 }
@@ -42,8 +40,6 @@ h2 {
     column-gap: 10px;
     margin-left: 47px;
     margin-bottom: 5px;
-    /* justify-content: space-evenly;
-    margin-top: 20px; */
 }
 
 .task-card-emp {
@@ -84,19 +80,6 @@ h2 {
 .task-card-emp:hover {
     background: #1CA0C3;
 }
-
-/* .circle {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 30px;
-    height: 30px;
-    background: white;
-    color: black;
-    font-weight: bold;
-    font-size: 1.5rem;
-    border-radius: 50%;
-} */
 
 .task-card {
     width: 318px;
@@ -179,13 +162,13 @@ h2 {
 .notification {
     width: 100%;
     margin-right: 50px;
-    /* border: 2px solid black; */
-    max-height: 270px;
+    /* border: 2px solid black;
+    max-height: 270px; */
 }
 
 .current-task-and-notifications {
     width: 100%;
     margin-left: 55px;
-    /* border: 2px solid black; */
-    max-height: 270px;
+    /* border: 2px solid black;
+    max-height: 270px; */
 }

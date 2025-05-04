@@ -4,6 +4,16 @@ const { updateTaskStatuses } = require("./services/taskService");
 const { getPool } = require("../db");
 const { createNotification } = require("./notification");
 
+function getStatusColor(status) {
+    switch(status.toLowerCase()) {
+        case 'pending': return '#FF7518';
+        case 'in progress': return '#1434A4';
+        case 'completed': return '#00A36C';
+        case 'overdue': return '#C41E3A';
+        default: return '#000000';
+    }
+}
+
 // GET: Fetch tasks with filtering based on the requester
 router.get("/", async (req, res) => {
     const { userId, role, office } = req.query;
@@ -304,7 +314,7 @@ router.post("/", async (req, res) => {
 
         const taskId = result.insertId;
 
-        // create task insert to activities table
+       // create task insert to activities table
         await pool.query(
             "INSERT INTO activities (message, createdBy, assignedTo, taskId) VALUES (?, ?, ?, ?)",
             [`created task ${title} with status ${status.toLowerCase()}`, createdBy, assignedTo, taskId]
@@ -312,24 +322,40 @@ router.post("/", async (req, res) => {
 
         //Create Notification
         if(assignedUserId === createdBy){
-            await createNotification(createdBy, `Created A Personal Task: <b>"${title}"</b>.<br>- Due Date: <span style="font-weight: bold; color: #C41E3A;">${formattedDueDate}</span>`, taskId, 'task_self_assigned');
-
+            await createNotification(
+                createdBy, 
+                `Created A Personal Task: <b>"${title}"</b>.<br>` +
+                `- Due Date: <span style="font-weight: bold; color: #C41E3A;">${formattedDueDate}</span><br>` +
+                `- Status: <span style="font-weight: bold; color: ${getStatusColor(status)}">${status}</span>`, 
+                taskId, 
+                'task_self_assigned'
+            );
         } else {
             const [employeeRows] = await pool.query(
                 `SELECT firstName, lastName, profilePic FROM users WHERE id = ?`,
                 [assignedTo]
             );
-            // const employee = employeeRows[0] || {};
             const employeeFullName = employeeRows.length > 0
                 ? `${employeeRows[0].firstName} ${employeeRows[0].lastName}`
                 : 'a team member';
 
-            await createNotification(assignedTo, `<b>${managerFullName}</b> assigned a task: <b>"${title}"</b>.<br>` +
+            await createNotification(
+                assignedTo, 
+                `<b>${managerFullName}</b> assigned a task: <b>"${title}"</b>.<br>` +
                 `- Due Date: <span style="font-weight: bold; color: #C41E3A;">${formattedDueDate}</span><br>` +
-                `- Status: ${status}<br>`, taskId, 'task_assigned');
+                `- Status: <span style="font-weight: bold; color: ${getStatusColor(status)}">${status}</span>`, 
+                taskId, 
+                'task_assigned'
+            );
             
-            await createNotification(createdBy, `Assigned task <b>"${title}"</b> to <b>${employeeFullName}</b>.<br>` +
-                `- Due Date: <span style="font-weight: bold; color: #C41E3A;">${formattedDueDate}</span><br>`, taskId, 'task_assignment_confirmation');
+            await createNotification(
+                createdBy, 
+                `Assigned task <b>"${title}"</b> to <b>${employeeFullName}</b>.<br>` +
+                `- Due Date: <span style="font-weight: bold; color: #C41E3A;">${formattedDueDate}</span><br>` +
+                `- Status: <span style="font-weight: bold; color: ${getStatusColor(status)}">${status}</span>`, 
+                taskId, 
+                'task_assignment_confirmation'
+            );
         }
 
         res.status(201).json({ message: "Task assigned successfully!", taskId: result.insertId, notificationSent: true });
@@ -384,9 +410,75 @@ router.put("/:id", async (req, res) => {
             return res.status(500).json({ message: "Failed to update task. No rows affected." });
         }
 
-        if(completedBy === assignedTo){
-            // await createNotification(assignedUserId, `You have been assigned a new task: ${title}.`, taskId)
-            await createNotification(completedBy, `Task "${title}" has been updated.`, id);
+        // Get user details for notifications
+        const [createdByRows] = await pool.query(
+            `SELECT firstName, lastName FROM users WHERE id = ?`,
+            [createdBy]
+        );
+        const createdByFullName = createdByRows.length > 0 
+            ? `${createdByRows[0].firstName} ${createdByRows[0].lastName}`
+            : 'System';
+
+        const [assignedToRows] = await pool.query(
+            `SELECT firstName, lastName FROM users WHERE id = ?`,
+            [assignedTo]
+        );
+        const assignedToFullName = assignedToRows.length > 0
+            ? `${assignedToRows[0].firstName} ${assignedToRows[0].lastName}`
+            : 'a team member';
+
+        // Create notifications based on who made the update and the new status
+        if (completedBy === createdBy) {
+            // Creator updated their own task
+            if (assignedTo === createdBy) {
+                // Personal task update
+                await createNotification(
+                    createdBy,
+                    `Updated your personal task: <b>"${title}"</b>.<br>` +
+                    `- New Status: <span style="font-weight: bold; color: ${getStatusColor(status)}">${status}</span><br>` +
+                    `- Due Date: <span style="font-weight: bold; color: #C41E3A;">${formattedEndDate}</span>`,
+                    id,
+                    'task_updated'
+                );
+            } else {
+                // Creator updated a task assigned to someone else
+                await createNotification(
+                    createdBy,
+                    `Updated task <b>"${title}"</b> assigned to <b>${assignedToFullName}</b>.<br>` +
+                    `- New Status: <span style="font-weight: bold; color: ${getStatusColor(status)}">${status}</span><br>` +
+                    `- Due Date: <span style="font-weight: bold; color: #C41E3A;">${formattedEndDate}</span>`,
+                    id,
+                    'task_updated'
+                );
+                
+                await createNotification(
+                    assignedTo,
+                    `<b>${createdByFullName}</b> updated your assigned task: <b>"${title}"</b>.<br>` +
+                    `- New Status: <span style="font-weight: bold; color: ${getStatusColor(status)}">${status}</span><br>` +
+                    `- Due Date: <span style="font-weight: bold; color: #C41E3A;">${formattedEndDate}</span>`,
+                    id,
+                    'task_updated'
+                );
+            }
+        } else {
+            // Assigned user updated the task
+            await createNotification(
+                createdBy,
+                `<b>${assignedToFullName}</b> updated task <b>"${title}"</b>.<br>` +
+                `- New Status: <span style="font-weight: bold; color: ${getStatusColor(status)}">${status}</span><br>` +
+                `- Due Date: <span style="font-weight: bold; color: #C41E3A;">${formattedEndDate}</span>`,
+                id,
+                'task_updated'
+            );
+            
+            await createNotification(
+                assignedTo,
+                `You updated task <b>"${title}"</b>.<br>` +
+                `- New Status: <span style="font-weight: bold; color: ${getStatusColor(status)}">${status}</span><br>` +
+                `- Due Date: <span style="font-weight: bold; color: #C41E3A;">${formattedEndDate}</span>`,
+                id,
+                'task_updated'
+            );
         }
 
         res.json({ message: "Task updated successfully." });

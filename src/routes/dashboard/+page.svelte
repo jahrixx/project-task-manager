@@ -167,7 +167,8 @@
                     </div>
                 </div>
                 <div class="activities">
-                    <h2 style="margin: auto; width: 92%;">Recent Activities<hr style="height: 3px; background-color: lightgray;"></h2>
+                    <h2 style="margin: auto; width: 92%; padding-bottom: 11px;">Recent Activities</h2>
+                    <hr style="height: 3px; width: 92%; background-color: lightgray; margin: auto;">
                     <div class="container-recent-activities" style="margin: auto; width: 90%;">
                         <RecentActivities {activities} {role}/>
                     </div>
@@ -227,7 +228,8 @@
                     </div>
                 </div>
                 <div class="activities">
-                    <h2 style="margin: auto; width: 92%;">Recent Activities<hr style="height: 3px; background-color: lightgray;"></h2>
+                    <h2 style="margin: auto; width: 92%; padding-bottom: 11px;">Recent Activities</h2>
+                    <hr style="height: 3px; width: 92%; background-color: lightgray; margin: auto;">
                     <div class="container-recent-activities" style="margin: auto; width: 92%;">
                         <RecentActivities {activities} {role}/>
                     </div>
@@ -257,11 +259,38 @@
     {/if}
 {/if}
 <style>
-    .notification-list-admin {
-        height: 280px; 
+    .container-recent-activities{
+        padding-top: 2.5px;
+        height: 90px;
         overflow-y: auto;
+        /* border: 1px solid black; */
     }
 
+    .notification-list-admin {
+        height: 305px; 
+        overflow-y: auto;
+        /* border: 1px solid black; */
+    }
+
+    .notification-list{
+        height: 275px; 
+        overflow-y: auto;
+        /* border: 1px solid black; */
+        
+    }
+
+    .current-task-list{
+        height: 305px; 
+        /* border: 1px solid black; */
+    }
+
+    .current-task-list-emp{
+        height: 275px; 
+        /* border: 1px solid black; */
+    }
+
+    .container-recent-activities::-webkit-scrollbar,
+    .notification-list::-webkit-scrollbar,
     .notification-list-admin::-webkit-scrollbar {
         width: 0;
         background: transparent;
