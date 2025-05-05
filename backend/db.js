@@ -83,6 +83,25 @@ async function createTables() {
                 FOREIGN KEY (createdBy) REFERENCES users(id) ON DELETE CASCADE
             )
         `);
+        // await pool.query(`
+        //     CREATE TABLE IF NOT EXISTS tasks (
+        //         id INT AUTO_INCREMENT PRIMARY KEY,
+        //         title VARCHAR(255),
+        //         description LONGTEXT,
+        //         startDate DATE,
+        //         endDate DATE,
+        //         status VARCHAR(50),
+        //         assignedTo INT,
+        //         createdBy INT,
+        //         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        //         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        //         isArchived BOOLEAN DEFAULT FALSE,
+        //         archived_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        //         unarchived_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        //         FOREIGN KEY (assignedTo) REFERENCES users(id) ON DELETE CASCADE,
+        //         FOREIGN KEY (createdBy) REFERENCES users(id) ON DELETE CASCADE
+        //     )
+        // `);
         console.log("✅ Tasks table created or already exists.");
 
         await pool.query(`
@@ -98,6 +117,7 @@ async function createTables() {
                 FOREIGN KEY (taskId) REFERENCES tasks(id) ON DELETE SET NULL
             )
         `);
+        
         console.log("✅ Activities table created or already exists.");
 
         await pool.query(`

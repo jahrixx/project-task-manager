@@ -389,6 +389,12 @@ router.put("/:id", async (req, res) => {
         // Convert dates to MySQL-friendly format
         const formattedStartDate = new Date(startDate).toISOString().split("T")[0];
         const formattedEndDate = new Date(endDate).toISOString().split("T")[0];
+        const formattedDueDate = new Date(endDate).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            weekday: 'long'
+        });
         const today = new Date().toISOString().split("T")[0];
 
         //(insert timestamps)
@@ -436,7 +442,7 @@ router.put("/:id", async (req, res) => {
                     createdBy,
                     `Updated your personal task: <b>"${title}"</b>.<br>` +
                     `- New Status: <span style="font-weight: bold; color: ${getStatusColor(status)}">${status}</span><br>` +
-                    `- Due Date: <span style="font-weight: bold; color: #C41E3A;">${formattedEndDate}</span>`,
+                    `- Due Date: <span style="font-weight: bold; color: #C41E3A;">${formattedDueDate}</span>`,
                     id,
                     'task_updated'
                 );
@@ -446,7 +452,7 @@ router.put("/:id", async (req, res) => {
                     createdBy,
                     `Updated task <b>"${title}"</b> assigned to <b>${assignedToFullName}</b>.<br>` +
                     `- New Status: <span style="font-weight: bold; color: ${getStatusColor(status)}">${status}</span><br>` +
-                    `- Due Date: <span style="font-weight: bold; color: #C41E3A;">${formattedEndDate}</span>`,
+                    `- Due Date: <span style="font-weight: bold; color: #C41E3A;">${formattedDueDate}</span>`,
                     id,
                     'task_updated'
                 );
@@ -455,7 +461,7 @@ router.put("/:id", async (req, res) => {
                     assignedTo,
                     `<b>${createdByFullName}</b> updated your assigned task: <b>"${title}"</b>.<br>` +
                     `- New Status: <span style="font-weight: bold; color: ${getStatusColor(status)}">${status}</span><br>` +
-                    `- Due Date: <span style="font-weight: bold; color: #C41E3A;">${formattedEndDate}</span>`,
+                    `- Due Date: <span style="font-weight: bold; color: #C41E3A;">${formattedDueDate}</span>`,
                     id,
                     'task_updated'
                 );
@@ -466,7 +472,7 @@ router.put("/:id", async (req, res) => {
                 createdBy,
                 `<b>${assignedToFullName}</b> updated task <b>"${title}"</b>.<br>` +
                 `- New Status: <span style="font-weight: bold; color: ${getStatusColor(status)}">${status}</span><br>` +
-                `- Due Date: <span style="font-weight: bold; color: #C41E3A;">${formattedEndDate}</span>`,
+                `- Due Date: <span style="font-weight: bold; color: #C41E3A;">${formattedDueDate}</span>`,
                 id,
                 'task_updated'
             );
@@ -475,7 +481,7 @@ router.put("/:id", async (req, res) => {
                 assignedTo,
                 `You updated task <b>"${title}"</b>.<br>` +
                 `- New Status: <span style="font-weight: bold; color: ${getStatusColor(status)}">${status}</span><br>` +
-                `- Due Date: <span style="font-weight: bold; color: #C41E3A;">${formattedEndDate}</span>`,
+                `- Due Date: <span style="font-weight: bold; color: #C41E3A;">${formattedDueDate}</span>`,
                 id,
                 'task_updated'
             );
