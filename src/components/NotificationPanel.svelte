@@ -83,6 +83,21 @@
         }
     }
 
+    async function markNotificationAsUnread(id: number) {
+        try { 
+            const response = await fetch(`http://localhost:3000/notification/unread/${id}`, { method: 'POST' });
+
+            if(!response.ok) throw new Error('Failed to mark as unread.');
+            if (role === "Admin") {
+                await loadAdminNotifications();
+            } else {
+                await loadUserNotifications(userId);
+            }
+        } catch (err) {
+            console.error("Error marking notification as read: ", err);   
+        }
+    }
+
     function toggleMenu(noteId: number) {
         showMenu = showMenu === noteId ? null : noteId;
     }
@@ -124,6 +139,8 @@
                                         <div class="options-menu">
                                             {#if !note.isRead}
                                                 <button class="read" on:click={() => markNotificationAsRead(note.id)}>Mark as read</button>
+                                            {:else}
+                                                <button class="read" on:click={() => markNotificationAsUnread(note.id)}>Mark as unread</button>
                                             {/if}
                                         </div>
                                     {/if}
@@ -177,21 +194,24 @@
     li {
         margin: auto;
     }
+    
+    .content{
+        margin-top: 1.5px;
+    }
 
     .isRead {
         opacity: 0.6;
         text-decoration: line-through;
     }
     
-    .content{
-        margin-top: 1.5px;
-    }
-
     .read{
         cursor: pointer;
         background: none;
         border: none;
+        width: 250px;
     }
+
+
 
     .user-pic{
         width: 40px;
@@ -220,7 +240,7 @@
     }
 
     .options-menu button {
-        width: 100%;
+        width: 106px;
         text-align: center;
         padding: 0.25rem;
         background: none;

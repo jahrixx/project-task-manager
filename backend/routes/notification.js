@@ -161,6 +161,24 @@ router.post('/read/:id', async (req, res) => {
     }
 });
 
+router.post('/unread/:id', async (req, res) => {
+    try {
+        const pool = getPool();
+        const { id } = req.params;
+
+        const [ result ] = await pool.query(
+            `UPDATE notifications SET isRead = 0 WHERE id = ?`,
+            [ id ]
+        );
+
+        res.json({ result, success: true });
+
+    } catch (error) {
+        console.error("Error marking notification as read: ", error);
+        res.status(500).json({ message: "Server error while updating notification." })
+    }
+});
+
 router.post('/:userId/read-all', async (req, res) => {
     try {
         const pool = getPool();

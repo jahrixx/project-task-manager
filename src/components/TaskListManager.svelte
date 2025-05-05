@@ -7,8 +7,8 @@
 
     let managerTasks: TaskData[] = [];
     let employeeTasks: TaskData[] = [];
-    export let archivedTasks: TaskData[] = [];
-    // export let archivedTasks = writable<TaskData[]>([]);
+    // export let archivedTasks: TaskData[] = [];
+    export let archivedTasks = writable<TaskData[]>([]);
 
     export const userRole = derived(user, ($user: User | null) => $user?.role || "");
     export const allTasks: Record<string, TaskData[]> = {}; 
@@ -44,7 +44,7 @@
                 return true;
             });
 
-            return archivedTasks = filteredArchived;
+            return $archivedTasks = filteredArchived;
         } catch (error) {
             console.error('Error loading archived tasks!', error);
             return archivedTasks;
@@ -243,8 +243,8 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {#if archivedTasks.length > 0}
-                        {#each archivedTasks as task (task.id)}
+                    {#if $archivedTasks.length > 0}
+                        {#each $archivedTasks as task (task.id)}
                             <tr>
                                 <td>
                                     <div class="task">
@@ -359,8 +359,8 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {#if archivedTasks.length > 0}
-                        {#each archivedTasks as task (task.id)}
+                    {#if $archivedTasks.length > 0}
+                        {#each $archivedTasks as task (task.id)}
                             <tr>
                                 <td>
                                     <div class="task">

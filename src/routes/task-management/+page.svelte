@@ -25,7 +25,8 @@
     
     let managerTasks: TaskData[] = [];
     let employeeTasks: TaskData[] = [];
-    let archivedTasks: TaskData[] = [];
+    // let archivedTasks: TaskData[] = [];
+    let archivedTasks = writable<TaskData[]>([]);
 
     let selectedDepartments: any = [];
 
@@ -69,10 +70,14 @@
                 employeeTasks = $tasks.filter(task => (task.createdBy !== currentUser.id) && !task.isArchived);
                 filteredEmployeeTasks = [ ...employeeTasks ];
 
+                loadArchiveTasks().then(tasks => archivedTasks.set(tasks));
+
             } else {
                 // employeeTasks = $tasks.filter(task => task.assignedTo === currentUser?.id);
                 employeeTasks = $tasks.filter(task => (task.assignedTo === currentUser?.id) && !task.isArchived);
                 filteredEmployeeTasks = [ ...employeeTasks ];
+
+                loadArchiveTasks().then(tasks => archivedTasks.set(tasks));
             }
             
             // loadArchiveTasks();
@@ -91,7 +96,9 @@
                                             currentUser?.office ?? ''
                                         );
                                         
-            archivedTasks = await loadArchiveTasks();
+            const archivedTask = await loadArchiveTasks();
+            archivedTasks.set(archivedTask);
+
             console.log('Archived Tasks (Console in the parent component): ',archivedTasks)
             
             if (currentUser.role === "Admin") {
@@ -187,19 +194,26 @@
                         (task.status?.toLowerCase() ?? "").includes(search)
                     );
 
-                    archivedTasks = archivedTasks.filter(task =>
+                    archivedTasks.update(tasks => tasks.filter(task =>
                         (task.title?.toLowerCase() ?? "").includes(search) ||
                         (task.description?.toLowerCase() ?? "").includes(search) ||
                         (task.createdByName?.toLowerCase() ?? "").includes(search) ||
                         (task.status?.toLowerCase() ?? "").includes(search)
-                    );
+                    ));
+
+                    // archivedTasks = archivedTasks.filter(task =>
+                    //     (task.title?.toLowerCase() ?? "").includes(search) ||
+                    //     (task.description?.toLowerCase() ?? "").includes(search) ||
+                    //     (task.createdByName?.toLowerCase() ?? "").includes(search) ||
+                    //     (task.status?.toLowerCase() ?? "").includes(search)
+                    // );
 
                     console.log('Archived Search Bar: ', archivedTasks)
 
                 } else {
                     filteredManagerTasks = [ ...managerTasks ];
                     filteredEmployeeTasks = [ ...employeeTasks ];
-                    archivedTasks = [ ...archivedTasks ];
+                    $archivedTasks = [ ...$archivedTasks ];
                 }
                 break;
 
@@ -211,12 +225,19 @@
                     (task.status?.toLowerCase() ?? "").includes(search)
                 );
 
-                archivedTasks = archivedTasks.filter(task =>
+                archivedTasks.update(tasks => tasks.filter(task =>
                     (task.title?.toLowerCase() ?? "").includes(search) ||
                     (task.description?.toLowerCase() ?? "").includes(search) ||
                     (task.createdByName?.toLowerCase() ?? "").includes(search) ||
                     (task.status?.toLowerCase() ?? "").includes(search)
-                );
+                ));
+
+                // archivedTasks = archivedTasks.filter(task =>
+                //     (task.title?.toLowerCase() ?? "").includes(search) ||
+                //     (task.description?.toLowerCase() ?? "").includes(search) ||
+                //     (task.createdByName?.toLowerCase() ?? "").includes(search) ||
+                //     (task.status?.toLowerCase() ?? "").includes(search)
+                // );
                 break;
 
             default:
@@ -248,7 +269,8 @@
         if($selectedStatuses.length === 0){
             filteredManagerTasks = [ ...managerTasks ];
             filteredEmployeeTasks = [ ...employeeTasks ];
-            loadArchiveTasks();
+            loadArchiveTasks().then(tasks => archivedTasks.set(tasks));
+            // loadArchiveTasks();
             return;
         }
 
@@ -260,9 +282,13 @@
             $selectedStatuses.includes(task.status)
         );
         
-        archivedTasks = archivedTasks.filter(task =>
+        archivedTasks.update(tasks => tasks.filter(task =>
             $selectedStatuses.includes(task.status)
-        );
+        ));
+
+        // archivedTasks = archivedTasks.filter(task =>
+        //     $selectedStatuses.includes(task.status)
+        // );
     }
 
     function updateSelection(department: string) {
@@ -287,16 +313,19 @@
             case "Manager":
                 filteredManagerTasks = [ ...managerTasks ];
                 filteredEmployeeTasks = [ ...employeeTasks ];
-                loadArchiveTasks().then(tasks => archivedTasks = tasks);
+                // loadArchiveTasks().then(tasks => archivedTasks = tasks);
+                loadArchiveTasks().then(tasks => archivedTasks.set(tasks));
                 break;
             
             case "Employee":
                 filteredEmployeeTasks = [ ...employeeTasks ];
-                loadArchiveTasks().then(tasks => archivedTasks = tasks);
+                // loadArchiveTasks().then(tasks => archivedTasks = tasks);
+                loadArchiveTasks().then(tasks => archivedTasks.set(tasks));
                 break;
         
             default:
                 filteredTasks = { ...allTasks };
+                // loadArchiveTasks().then(tasks => archivedTasks.set(tasks));
                 // loadArchiveTasks().then(tasks => archivedTasks = tasks);
                 break;
         }
@@ -368,7 +397,7 @@
                             <div class="filter-container">
                                 <div class="filter-header">Filter by Status</div>
                                 <div class="checkbox-group">
-                                    {#each Array.from(new Set([...managerTasks, ...employeeTasks, ...archivedTasks].map(task => task.status))) as status}
+                                    {#each Array.from(new Set([...managerTasks, ...employeeTasks, ...$archivedTasks].map(task => task.status))) as status}
                                         <label>
                                             <input type="checkbox" 
                                                    checked = {$selectedStatuses.includes(status)}
@@ -457,11 +486,11 @@
                     </div>
                 {/if}
             {/if}
-            {#if filteredEmployeeTasks || filteredManagerTasks || archivedTasks}
+            {#if filteredEmployeeTasks || filteredManagerTasks || $archivedTasks}
                 <TaskListManager 
                     {filteredEmployeeTasks} 
                     {filteredManagerTasks} 
-                    {archivedTasks} 
+                    archivedTasks={archivedTasks}
                     {openTaskForm}
                 />
                 {:else}
