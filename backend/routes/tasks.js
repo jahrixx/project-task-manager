@@ -10,6 +10,7 @@ function getStatusColor(status) {
         case 'in progress': return '#1434A4';
         case 'completed': return '#00A36C';
         case 'overdue': return '#C41E3A';
+        case 'cancelled': return '#E34234'; 
         default: return '#000000';
     }
 }
