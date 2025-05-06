@@ -318,7 +318,7 @@ router.post("/", async (req, res) => {
        // create task insert to activities table
         await pool.query(
             "INSERT INTO activities (message, createdBy, assignedTo, taskId) VALUES (?, ?, ?, ?)",
-            [`created task ${title} with status ${status.toLowerCase()}`, createdBy, assignedTo, taskId]
+            [`created task ${title} with status <span style="font-weight: bold; color: ${getStatusColor(status)}">${status.toLowerCase()}</span>`, createdBy, assignedTo, taskId]
         );
 
         //Create Notification
@@ -411,7 +411,7 @@ router.put("/:id", async (req, res) => {
         // insert activity table 
         await pool.query(`
             INSERT INTO activities (message, createdBy, assignedTo, taskId) VALUES (?,?,?,?)`,
-            [`updated task ${title} with status ${status.toLowerCase()}`, completedBy, null, id]);
+            [`updated task ${title} with status <span style="font-weight: bold; color: ${getStatusColor(status)}">${status.toLowerCase()}</span>`, completedBy, null, id]);
 
         if (result.affectedRows === 0) {
             return res.status(500).json({ message: "Failed to update task. No rows affected." });
@@ -510,7 +510,7 @@ router.delete("/:id", async (req, res) => {
         // insert to activities table
         await pool.query(
             `INSERT INTO activities (message, createdBy, assignedTo, taskId) VALUES (?,?,?,?)`,
-            [`deleted task ${title} with status ${status.toLowerCase()}`, createdBy, null, id]
+            [`deleted task ${title} with status <span style="font-weight: bold; color: ${getStatusColor(status)}">${status.toLowerCase()}</span>`, createdBy, null, id]
         );
 
         const [result] = await pool.query("DELETE FROM tasks WHERE id = ?", [id]);

@@ -65,7 +65,7 @@
                                 <p><b>{formatDateTime(activity.date)}</b></p>
                             </div>
                             <div>
-                                <p><b><i>{activity.userFullname}</i></b> {activity.message}</p>
+                                <p><b><i>{activity.userFullname}</i></b> {@html activity.message}</p>
                             </div>
                         </div>
                     {/if}
