@@ -38,7 +38,7 @@
 <div class="sidebar">
     <div class="logo-container">
         <img src="/src/components/assets/logo.png" alt="Logo">
-        <h2>Project Task Manager</h2>
+        <h2 class="project-title">Project Task Manager</h2>
     </div>    
     <ul>
         <li>
@@ -153,9 +153,10 @@
         box-shadow: 10px 0 10px rgba(0, 0, 0, 0.3);
     }
 
-    .sidebar h2 {
-        text-align: center;
-        margin-bottom: 20px;
+    .sidebar .project-title {
+        text-align: left;
+        font-family: 'Times New Roman', Times, serif;
+        font-size: 1.9rem;
     }
 
     .sidebar ul {
