@@ -12,6 +12,10 @@ export type Notification = {
     firstName?: string;
     lastName?: string;
     creatorRole?: string;
+    creatorFirstName?: string;
+    creatorLastName?: string;
+    assigneeFirstName?: string;
+    assigneeLastName?: string;
     profilePic?: string | null;
 }
 

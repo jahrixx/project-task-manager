@@ -149,10 +149,26 @@
                                     {@html note.message}
                                 </span>
                             </div>
-                            <div>
-                                <span style="color: black; font-size: 10px;">
-                                    {#if role === "Admin"}
-                                        <span><b>By {note.creatorRole}</b>: {note.firstName} {note.lastName}</span>
+                            <div class="notification-sender">
+                                <span style="color: black; font-size: 11px;">
+                                    {#if note.type === 'task_assigned'}
+                                        <span><b>Assigned By {note.creatorRole}</b>: {note.creatorFirstName} {note.creatorLastName}</span>
+
+                                    {:else if note.type === 'task_assignment_confirmation'}
+                                        <span><b>Assigned To</b>: {note.assigneeFirstName} {note.assigneeLastName}</span>
+
+                                    {:else if note.type === 'task_self_assigned'}
+                                        {#if role === 'Employee'}
+                                            <span><b>Employee Personal Task</b></span>
+                                        {:else}
+                                            <span><b>Personal Task By</b>: {note.firstName} {note.lastName}</span>
+                                        {/if}
+                                    {:else}    
+                                        {#if role === 'Admin'}
+                                            <span><b>{note.creatorRole}</b>: {note.firstName} {note.lastName}</span>
+                                        {:else}
+                                            <span><b>By {note.creatorRole}</b>: {note.firstName} {note.lastName}</span>
+                                        {/if}
                                     {/if}
                                 </span>
                             </div>

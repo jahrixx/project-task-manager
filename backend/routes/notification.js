@@ -65,26 +65,29 @@ router.get('/:userId', async (req, res) => {
         // `;
 
         let query = `
-            SELECT n.*, t.title as taskTitle, 
-                CASE
-                    WHEN n.type = 'task_assigned' THEN (
-                        SELECT creator.profilePic
-                        FROM users creator
-                        WHERE creator.id = t.createdBy
-                    )
-                    WHEN n.type = 'task_assignment_confirmation' THEN (
-                        SELECT assignee.profilePic
-                        FROM users assignee
-                        WHERE assignee.id = t.assignedTo
-                    )
-                    WHEN n.type = 'task_self_assigned' OR NULL THEN u.profilePic
-                    ELSE u.profilePic
-                END AS profilePic
-            FROM notifications n
-            LEFT JOIN tasks t ON n.taskId = t.id
-            LEFT JOIN users u ON n.userId = u.id
-            WHERE n.userId = ? AND t.isArchived = 0
-        `;
+                SELECT 
+                    n.*, 
+                    t.title as taskTitle,
+                    u.firstName,
+                    u.lastName,
+                    creator.firstName as creatorFirstName,
+                    creator.lastName as creatorLastName,
+                    creator.role as creatorRole,
+                    assignee.firstName as assigneeFirstName,
+                    assignee.lastName as assigneeLastName,
+                    CASE
+                        WHEN n.type = 'task_assigned' THEN creator.profilePic
+                        WHEN n.type = 'task_assignment_confirmation' THEN assignee.profilePic
+                        WHEN n.type = 'task_self_assigned' THEN u.profilePic
+                        ELSE u.profilePic
+                    END AS profilePic
+                FROM notifications n
+                LEFT JOIN tasks t ON n.taskId = t.id
+                LEFT JOIN users u ON n.userId = u.id
+                LEFT JOIN users creator ON t.createdBy = creator.id
+                LEFT JOIN users assignee ON t.assignedTo = assignee.id
+                WHERE n.userId = ? AND t.isArchived = 0
+            `;
 
         const params = [ userId ];
 
@@ -131,31 +134,29 @@ router.get('/admin/all', async (req, res) => {
         // `;
 
         let query = `
-            SELECT n.*, t.title as taskTitle, u.firstName, u.lastName,
-                CASE
-                    WHEN n.type = 'task_assigned' THEN (
-                        SELECT creator.profilePic
-                        FROM users creator
-                        WHERE creator.id = t.createdBy
-                    )
-                    WHEN n.type = 'task_assignment_confirmation' THEN (
-                        SELECT assignee.profilePic
-                        FROM users assignee
-                        WHERE assignee.id = t.assignedTo
-                    )
-                    WHEN n.type = 'task_self_assigned' OR NULL THEN u.profilePic
-                    ELSE u.profilePic
-                END AS profilePic,
-                (
-                    SELECT creator.role
-                    FROM users creator
-                    WHERE creator.id = t.createdBy
-                ) AS creatorRole
-            FROM notifications n
-            LEFT JOIN tasks t ON n.taskId = t.id
-            LEFT JOIN users u ON n.userId = u.id
-            WHERE t.isArchived = 0
-        `;
+                SELECT 
+                    n.*, 
+                    t.title as taskTitle,
+                    u.firstName,
+                    u.lastName,
+                    creator.firstName as creatorFirstName,
+                    creator.lastName as creatorLastName,
+                    creator.role as creatorRole,
+                    assignee.firstName as assigneeFirstName,
+                    assignee.lastName as assigneeLastName,
+                    CASE
+                        WHEN n.type = 'task_assigned' THEN creator.profilePic
+                        WHEN n.type = 'task_assignment_confirmation' THEN assignee.profilePic
+                        WHEN n.type = 'task_self_assigned' THEN u.profilePic
+                        ELSE u.profilePic
+                    END AS profilePic
+                FROM notifications n
+                LEFT JOIN tasks t ON n.taskId = t.id
+                LEFT JOIN users u ON n.userId = u.id
+                LEFT JOIN users creator ON t.createdBy = creator.id
+                LEFT JOIN users assignee ON t.assignedTo = assignee.id
+                WHERE t.isArchived = 0
+            `;
 
         const params = [];
 
