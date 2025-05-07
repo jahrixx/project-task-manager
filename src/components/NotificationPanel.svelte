@@ -120,11 +120,6 @@
                                 <div class="date-time">
                                     <span style="color: #175E88; font-weight: 600;">{weekDayFormatter.format(new Date(note.createdAt))} : {timeFormatter.format(new Date(note.createdAt))}</span>
                                     <br>
-                                    <!-- <span style="color: black; font-weight: 600;">
-                                        {#if role === "Admin"}
-                                            {note.firstName} {note.lastName}
-                                        {/if}
-                                    </span> -->
                                 </div>
                                 <div class="more-controls">
                                     <button aria-label="More options" on:click={() => toggleMenu(note.id)}>
@@ -154,7 +149,13 @@
                                     {@html note.message}
                                 </span>
                             </div>
-                            
+                            <div>
+                                <span style="color: black; font-size: 10px;">
+                                    {#if role === "Admin"}
+                                        <span><b>By {note.creatorRole}</b>: {note.firstName} {note.lastName}</span>
+                                    {/if}
+                                </span>
+                            </div>
                         </div>
                     </li>
             {/each}

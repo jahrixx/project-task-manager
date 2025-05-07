@@ -11,6 +11,7 @@ export type Notification = {
     taskTitle?: string;
     firstName?: string;
     lastName?: string;
+    creatorRole?: string;
     profilePic?: string | null;
 }
 

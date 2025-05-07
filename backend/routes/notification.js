@@ -56,12 +56,34 @@ router.get('/:userId', async (req, res) => {
         const { userId } = req.params;
         const { limit = 20, offset = 0, unreadOnly = false } = req.query;
 
+        // let query = `
+        //     SELECT n.*, t.title as taskTitle, u.profilePic
+        //     FROM notifications n
+        //     LEFT JOIN tasks t ON n.taskId = t.id
+        //     LEFT JOIN users u ON n.userId = u.id
+        //     WHERE n.userId = ? AND t.isArchived = 0 
+        // `;
+
         let query = `
-            SELECT n.*, t.title as taskTitle, u.profilePic
+            SELECT n.*, t.title as taskTitle, 
+                CASE
+                    WHEN n.type = 'task_assigned' THEN (
+                        SELECT creator.profilePic
+                        FROM users creator
+                        WHERE creator.id = t.createdBy
+                    )
+                    WHEN n.type = 'task_assignment_confirmation' THEN (
+                        SELECT assignee.profilePic
+                        FROM users assignee
+                        WHERE assignee.id = t.assignedTo
+                    )
+                    WHEN n.type = 'task_self_assigned' OR NULL THEN u.profilePic
+                    ELSE u.profilePic
+                END AS profilePic
             FROM notifications n
             LEFT JOIN tasks t ON n.taskId = t.id
             LEFT JOIN users u ON n.userId = u.id
-            WHERE n.userId = ? AND t.isArchived = 0 
+            WHERE n.userId = ? AND t.isArchived = 0
         `;
 
         const params = [ userId ];
@@ -74,7 +96,6 @@ router.get('/:userId', async (req, res) => {
         params.push(parseInt(limit), parseInt(offset));
 
         const [ notifications ] =  await pool.query(query, params);
-
         const [ countResult ] = await pool.query(
             `SELECT COUNT(*) as total FROM notifications WHERE userId = ?`,
             [userId]
@@ -101,21 +122,51 @@ router.get('/admin/all', async (req, res) => {
         const pool = getPool();
         const { limit = 20, offset = 0, unreadOnly = false } = req.query;
 
+        // let query = `
+        //     SELECT n.*, t.title as taskTitle, u.firstName, u.lastName, u.profilePic
+        //     FROM notifications n
+        //     LEFT JOIN tasks t ON n.taskId = t.id
+        //     LEFT JOIN users u ON n.userId = u.id
+        //     WHERE t.isArchived = 0
+        // `;
+
         let query = `
-            SELECT n.*, t.title as taskTitle, u.firstName, u.lastName, u.profilePic
+            SELECT n.*, t.title as taskTitle, u.firstName, u.lastName,
+                CASE
+                    WHEN n.type = 'task_assigned' THEN (
+                        SELECT creator.profilePic
+                        FROM users creator
+                        WHERE creator.id = t.createdBy
+                    )
+                    WHEN n.type = 'task_assignment_confirmation' THEN (
+                        SELECT assignee.profilePic
+                        FROM users assignee
+                        WHERE assignee.id = t.assignedTo
+                    )
+                    WHEN n.type = 'task_self_assigned' OR NULL THEN u.profilePic
+                    ELSE u.profilePic
+                END AS profilePic,
+                (
+                    SELECT creator.role
+                    FROM users creator
+                    WHERE creator.id = t.createdBy
+                ) AS creatorRole
             FROM notifications n
             LEFT JOIN tasks t ON n.taskId = t.id
             LEFT JOIN users u ON n.userId = u.id
             WHERE t.isArchived = 0
         `;
 
+        const params = [];
+
         if(unreadOnly === 'true'){
             query += `AND n.isRead = 0`;
         }
 
         query += `ORDER BY n.createdAt DESC LIMIT ? OFFSET ?`;
+        params.push(parseInt(limit), parseInt(offset));
 
-        const [ notifications ] =  await pool.query(query, [parseInt(limit), parseInt(offset)]);
+        const [ notifications ] =  await pool.query(query, params);
         const [ countResult ] = await pool.query(`SELECT COUNT(*) as total FROM notifications`);
         const [ unreadCountResult ] = await pool.query(`SELECT COUNT(*) as unread FROM notifications WHERE isRead = 0`);
 
