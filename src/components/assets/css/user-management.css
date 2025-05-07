@@ -277,26 +277,37 @@ input {
     color: red;
 }
 
-button[type="submit"], button[type="button"] {
-    background-color: #23BEDA;
-    color: white;
-    border: none;
-    padding: 10px;
-    border-radius: 8px;
+button[type="submit"] {
+    border: 1px solid #4169E1;
+    background-color: #FAF9F6;
+    color: #4169E1;
+    padding: 7px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button[type="button"] {
+    border: 1px solid #C41E3A;
+    background-color: #FAF9F6;
+    color: #C41E3A;
+    padding: 7px;
+    border-radius: 5px;
     cursor: pointer;
 }
 
 button[type="submit"]:hover {
-    background-color: #175e88;
-    color: white;
+    border: none;
+    background-color: #4169E1;
+    color: #FFFFFF;
 }
 
 button[type="button"]:hover {
-    background-color: red;
-    color: white;
+    border: none;
+    background-color: #C41E3A;
+    color: #FFFFFF;
 }
 
-.actions .btn {
+/* .actions .btn {
     background-color: #23BEDA;
     color: white;
     border: none;
@@ -313,6 +324,41 @@ button[type="button"]:hover {
 .actions .delete:hover {
     background-color: red;
     color: white;
+} */
+
+.actions .btn {
+    /* background-color: #23BEDA;
+    color: white; */
+    width: 45%;
+    border: none;
+    padding: 5px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+
+.actions .edit {
+    border: 1px solid #4169E1;
+    background-color: #FAF9F6;
+    color: #4169E1;
+}
+
+.actions .edit:hover {
+    border: none;
+    background-color: #4169E1;
+    color: #FFFFFF;
+}
+
+.actions .delete {
+    border: 1px solid #C41E3A;
+    background-color: #FAF9F6;
+    color: #C41E3A;
+}
+
+.actions .delete:hover {
+    border: none;
+    background-color: #C41E3A;
+    color: #FFFFFF;
 }
 
 /* form groups styles */

@@ -265,7 +265,7 @@
             printWindow?.document.write(`
                 <html>
                     <head>
-                        <title>Task Report</title>
+                        <title>Task Management Report</title>
                         <style>
                             body { font-family: Arial, sans-serif; margin: 20px; }
                             .report-header { margin-bottom: 20px; }

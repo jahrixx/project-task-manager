@@ -55,23 +55,38 @@ select, .form-group input {
     border-radius: 4px;
 }
 
-.generate-btn, .clear-btn {
+.generate-btn {
+    border: 1px solid #45a049;
+    background-color: #FAF9F6;
+    color: #45a049;
     margin-top: -5px;
-    background-color: #4CAF50;
     padding: 10px 5px;
-    color: white;
-    border: none;
     border-radius: 4px;
     cursor: pointer;
     font-size: 14px;
 }
 
 .clear-btn {
-    background-color: crimson;
+    border: 1px solid #C41E3A;
+    background-color: #FAF9F6;
+    color: #C41E3A;
+    margin-top: -5px;
+    padding: 10px 5px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.clear-btn:hover {
+    border: none;
+    background-color: #C41E3A;
+    color: #FFFFFF;
 }
 
 .generate-btn:hover {
+    border: none;
     background-color: #45a049;
+    color: #FFFFFF;
 }
 
 .report-display {
@@ -170,7 +185,7 @@ select, .form-group input {
  .report-controls {
     display: flex;
     justify-content: flex-end;
-    gap: 15px;
+    gap: 5px;
     padding: 10px;
     background: #6082B6;
     border: 1px solid #e0e0e0;
