@@ -7,7 +7,7 @@ hr {
 }
 
 h3 {
-    margin-top: 7px;
+    margin-top: 10px;
     margin-left: 5px;
     font-size: 1.4rem;
     font-weight: bold;
@@ -201,8 +201,8 @@ thead, tbody tr {
 /* filter button styles */
 .filter-btn {
     text-align: center;
-    height: 40px;
-    width: 40px;
+    height: 45px;
+    width: 45px;
     border: none;
     border-radius: 50%;
     background-color: #23BEDA;
@@ -211,7 +211,7 @@ thead, tbody tr {
     transition: background-color 0.3 ease;
 }
 
-.filter-btn img {
+.filter-btn svg {
     margin: 0;
     padding-top: 5px;
     padding-left: 1px;
@@ -255,26 +255,52 @@ thead, tbody tr {
 .add-btn {
     display: flex;
     border: none;
+    /* width: 100%; */
+    padding: 6px;
     border-radius: 25px;
     background-color: #23BEDA;
     color: white;
     cursor: pointer;
     transition: background-color 0.3 ease;
 }
-.add-btn img {
+.add-btn svg {
     margin: 0;
-    padding-left: 2px;
-    padding-top: 3px;
+    padding-left: 6px;
+    padding-top: 1.5px;
 }
 .add-btn span {
-    font-size: 1rem;
+    font-size: 1.05rem;
+    font-weight: 600;
     margin: 0;
-    padding-left: 3px;
-    padding-right: 5px;
-    padding-top: 10px;
+    padding: 6px;
 }
 
-.filter-btn:hover, .add-btn:hover {
+.add-btn-emp {
+    display: flex;
+    border: none;
+    width: 100%;
+    padding: 6px;
+    border-radius: 25px;
+    background-color: #23BEDA;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3 ease;
+}
+
+.add-btn-emp svg {
+    margin: 0;
+    padding-left: 6px;
+    padding-top: 1.5px;
+}
+
+.add-btn-emp span {
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin: 0;
+    padding: 6px;
+}
+
+.filter-btn:hover, .add-btn:hover, .add-btn-emp:hover {
     background-color: #175e88;
 }
 
@@ -303,9 +329,13 @@ thead, tbody tr {
 }
 
 .search-icon {
-    padding-top: 1px;
+    padding-top: 9px;
     right: 32.5px;
     font-size: 18px;
+}
+
+.search-icon:hover {
+    fill: #23BEDA;
 }
 
 .search-bar {

@@ -14,6 +14,7 @@
     export const allTasks: Record<string, TaskData[]> = {}; 
     export let filteredManagerTasks: any = managerTasks;
     export let filteredEmployeeTasks: any = employeeTasks;
+    export let filteredArchivedTasks: any = archivedTasks;
     // export const filteredArchivedTasks: any = archivedTasks;
     
     export let currentView = 'own';  
@@ -243,8 +244,8 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {#if $archivedTasks.length > 0}
-                        {#each $archivedTasks as task (task.id)}
+                    {#if filteredArchivedTasks.length > 0}
+                        {#each filteredArchivedTasks as task (task.id)}
                             <tr>
                                 <td>
                                     <div class="task">
@@ -359,8 +360,8 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {#if $archivedTasks.length > 0}
-                        {#each $archivedTasks as task (task.id)}
+                    {#if filteredArchivedTasks.length > 0}
+                        {#each filteredArchivedTasks as task (task.id)}
                             <tr>
                                 <td>
                                     <div class="task">
