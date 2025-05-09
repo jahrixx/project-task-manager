@@ -334,7 +334,7 @@ thead, tbody tr {
     font-size: 18px;
 }
 
-.search-icon:hover {
+.search-icon:hover > svg {
     fill: #23BEDA;
 }
 
