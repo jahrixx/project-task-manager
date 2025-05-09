@@ -22,8 +22,7 @@
 
     let filteredManagerTasks: TaskData[] = [];
     let filteredEmployeeTasks: TaskData[] = [];
-    // let filteredArchivedTasks: TaskData[] = [];
-    let filteredArchivedTasks = writable<TaskData[]>([]);
+    let filteredArchivedTasks: TaskData[] = [];
     
     let managerTasks: TaskData[] = [];
     let employeeTasks: TaskData[] = [];
@@ -74,7 +73,7 @@
 
                 loadArchiveTasks().then(tasks => {
                     archivedTasks.set(tasks);
-                    filteredArchivedTasks.set(tasks);
+                    filteredArchivedTasks = tasks;
                 });
 
             } else {
@@ -84,7 +83,7 @@
 
                 loadArchiveTasks().then(tasks => {
                     archivedTasks.set(tasks);
-                    filteredArchivedTasks.set(tasks);
+                    filteredArchivedTasks = tasks;
                 });
             }
             // loadArchiveTasks();
