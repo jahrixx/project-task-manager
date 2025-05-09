@@ -86,7 +86,7 @@ router.get('/:userId', async (req, res) => {
                 LEFT JOIN users u ON n.userId = u.id
                 LEFT JOIN users creator ON t.createdBy = creator.id
                 LEFT JOIN users assignee ON t.assignedTo = assignee.id
-                WHERE n.userId = ? AND t.isArchived = 0
+                WHERE n.userId = ?
             `;
 
         const params = [ userId ];
@@ -155,7 +155,6 @@ router.get('/admin/all', async (req, res) => {
                 LEFT JOIN users u ON n.userId = u.id
                 LEFT JOIN users creator ON t.createdBy = creator.id
                 LEFT JOIN users assignee ON t.assignedTo = assignee.id
-                WHERE t.isArchived = 0
             `;
 
         const params = [];
@@ -246,6 +245,55 @@ router.post('/:userId/read-all', async (req, res) => {
     } catch (error) {
         console.error("Error marking notification as read: ", error);
         res.status(500).json({ message: "Server error while updating notification." })
+    }
+});
+
+// DELETE: Remove a notification
+router.delete("/:id", async (req, res) => {
+    const pool = getPool();
+    const { id } = req.params;
+
+    try {
+        const [notification] = await pool.query(`SELECT message, type FROM notifications WHERE id = ?`, [id]);
+        if(notification.length === 0){
+            return res.status(404).json({ message: "Notification not found." });
+        }
+        
+        const sql = `
+            SELECT t.id,
+                    t.title,
+                    t.description,
+                    t.status,
+                    t.endDate,
+                    t.assignedTo,
+                    t.createdBy,
+                    t.isArchived,
+                    u2.office,
+                    CONCAT(u1.firstName, ' ', u1.lastName) AS assignedToName, 
+                    CONCAT(u2.firstName, ' ', u2.lastName) AS createdByName
+            FROM tasks t
+            LEFT JOIN users u1 ON t.assignedTo = u1.id
+            LEFT JOIN users u2 ON t.createdBy = u2.id
+            WHERE t.isArchived = 1
+            ORDER BY t.endDate DESC
+        `;
+        
+        const { title, status, createdBy } = notification[0];
+        // insert to activities table
+        await pool.query(
+            `INSERT INTO activities (message, userId, taskId) VALUES (?,?,?)`,
+            [`deleted notification ${title} with status ${status}`, createdBy, null, id]
+        );
+
+        const [result] = await pool.query("DELETE FROM notifications WHERE id = ?", [id]);
+        if (result.affectedRows === 0) {
+            return res.status(500).json({ message: "Failed to Delete Notification." });
+        }
+
+        res.json({ message: "Notification deleted successfully." });
+    } catch (error) {
+        console.error("Error deleting notification:", error);
+        res.status(500).json({ message: "Server error while deleting notification." });
     }
 });
 

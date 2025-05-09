@@ -3,6 +3,7 @@
     import { onMount } from 'svelte';
     import { isAuthenticated, user, type User } from '$lib/stores/user';
     import { get } from "svelte/store";
+    import { removeNotification } from '$lib/api/notificationService';
     
     export let userId: number;
     export let role: string;
@@ -134,8 +135,10 @@
                                         <div class="options-menu">
                                             {#if !note.isRead}
                                                 <button class="read" on:click={() => markNotificationAsRead(note.id)}>Mark as read</button>
+                                                <button class="read" on:click={() => removeNotification(note.id)}>Delete Notification</button>    
                                             {:else}
                                                 <button class="read" on:click={() => markNotificationAsUnread(note.id)}>Mark as unread</button>
+                                                <button class="read" on:click={() => removeNotification(note.id)}>Delete Notification</button>
                                             {/if}
                                         </div>
                                     {/if}
