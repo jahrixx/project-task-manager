@@ -123,22 +123,20 @@
                                     <br>
                                 </div>
                                 <div class="more-controls">
-                                    <button aria-label="More options" on:click={() => toggleMenu(note.id)}>
-                                       <span>…</span>
+                                    <button class="more-options" on:click={() => toggleMenu(note.id)} aria-label="more-options">
+                                        <svg width="20px" height="20px" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" fill="#FFFFFF"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path fill="#FFFFFF" fill-rule="evenodd" d="M3 8a2 2 0 100 4 2 2 0 000-4zm5 2a2 2 0 114 0 2 2 0 01-4 0zm7 0a2 2 0 114 0 2 2 0 01-4 0z"></path> </g></svg>
                                     </button>
                                     
-                                    <!-- <button aria-label="Close">
-                                        <span>x</span>
-                                    </button> -->
+                                    <button class="delete-notification" on:click={() => removeNotification(note.id)} aria-label="delete-notification">
+                                        <svg width="20px" height="20px"viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" fill="#FFFFFF"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><path fill="#FFFFFF" d="M352 192V95.936a32 32 0 0 1 32-32h256a32 32 0 0 1 32 32V192h256a32 32 0 1 1 0 64H96a32 32 0 0 1 0-64h256zm64 0h192v-64H416v64zM192 960a32 32 0 0 1-32-32V256h704v672a32 32 0 0 1-32 32H192zm224-192a32 32 0 0 0 32-32V416a32 32 0 0 0-64 0v320a32 32 0 0 0 32 32zm192 0a32 32 0 0 0 32-32V416a32 32 0 0 0-64 0v320a32 32 0 0 0 32 32z"></path></g></svg>
+                                    </button>
                                     
                                     {#if showMenu ===  note.id}
                                         <div class="options-menu">
                                             {#if !note.isRead}
                                                 <button class="read" on:click={() => markNotificationAsRead(note.id)}>Mark as read</button>
-                                                <button class="read" on:click={() => removeNotification(note.id)}>Delete Notification</button>    
                                             {:else}
                                                 <button class="read" on:click={() => markNotificationAsUnread(note.id)}>Mark as unread</button>
-                                                <button class="read" on:click={() => removeNotification(note.id)}>Delete Notification</button>
                                             {/if}
                                         </div>
                                     {/if}
@@ -198,10 +196,24 @@
         gap: 10px;
     }
 
+    .pic-content img{
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        object-fit: cover;
+    }
+
+    .notification-sender {
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        text-align: left;
+    }
+
     .notification-card{
-        padding: 10px 5px;
+        border-radius: 8px;
+        padding: 13px 8px;
         margin-bottom: 5px;
         background-color: rgba(23, 94, 136, 0.50);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
         width: 88%;
     }
 
@@ -216,7 +228,9 @@
     }
     
     .content{
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
         margin-top: 1.5px;
+        margin-bottom: 5px;
     }
 
     .isRead {
@@ -231,8 +245,6 @@
         width: 250px;
     }
 
-
-
     .user-pic{
         width: 40px;
         height: 40px;
@@ -242,14 +254,14 @@
 
     .more-controls {
         position: relative;
-        display: inline-block;
+        display: flex;
     }
 
     .options-menu {
         position: absolute;
         top: 100%;
         right: 0;
-        margin-top: 3px;
+        margin-top: -10px;
         background: #ffffff;
         border: 1px solid #ccc;
         border-radius: 6px;
@@ -281,18 +293,25 @@
         cursor: pointer;
     }
 
-    .more-controls > button > span {
+    .more-controls > button > svg {
         display: inline-block;
-        line-height: 1;
-        font-weight: bolder;
-        font-size: 20px;
-        color: #FFFFFF;
-        vertical-align: middle;
+    }
+
+    .delete-notification > svg:hover {
+        fill: red;
+    }
+
+    .more-options > svg:hover {
+        fill: #175E88;
     }
 
     .container-time-controls {
         display: flex;
         align-items: center;
         justify-content: space-between;
+    }
+
+    .date-time {
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
     }
 </style>
