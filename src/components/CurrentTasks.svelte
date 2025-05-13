@@ -5,12 +5,9 @@
     import { user } from "$lib/stores/user";
     import { get } from "svelte/store";
     import { tasks } from "$lib/api/taskService";
-    import { getOffices } from "$lib/api/userService";
 
     $: currentUser = get(user);
-
     $: filteredCurrentTasks = $tasks.filter(task => ['Pending', 'In Progress', 'Overdue'].includes(task.status) && !task.isArchived);
-
     $: statusFilteredTasks = Object.fromEntries(
         Object.entries(filteredTasks ?? {}).map(([office, tasks]) => [
             office, 
@@ -74,7 +71,6 @@
 </script>
 
 {#if currentUser?.role === 'Admin'}
-    <!-- <h3>All Offices Current Tasks<hr></h3> -->
     <ul>
         {#each Object.entries(statusFilteredTasks ?? {}) as [office, tasks]}
             {#if tasks.length > 0}
@@ -95,7 +91,6 @@
         {/each}
     </ul>
 {:else if currentUser?.role === 'Manager'}
-    <!-- <h3>Current Tasks in {currentUser.office}<hr></h3> -->
     <ul>
         {#if filteredCurrentTasks.length > 0}
             {#each filteredCurrentTasks as task}
@@ -106,7 +101,6 @@
                     </div>
                     <div class="task-description">
                         <li>{task.title}:  <b>{task.assignedToName}</b> - <b>{task.assigneeRole}</b></li>
-                        <!-- <li>{task.title} -  ({task.assignedToName}-{task.assigneeRole})</li> -->
                     </div>
                 </div>
             {/each}
@@ -115,7 +109,6 @@
         {/if}
     </ul>
 {:else}
-    <!-- <h3>Current Tasks of {currentUser?.firstName} {currentUser?.lastName}<hr></h3> -->
     <ul>
         {#if filteredCurrentTasks.length > 0}
             {#each filteredCurrentTasks as task}
@@ -134,57 +127,3 @@
         {/if}
     </ul>
 {/if}
-
-<!-- {#if errorMessage}
-    <p class="error">{errorMessage}</p>
-{/if} -->
-
-<style>
-    .error{
-        text-align: center;
-        color: red;
-    }
-
-    li {
-        list-style: none;
-    }
-
-    ul {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-    }
-
-    .status-circle {
-        width: 14px;
-        height: 14px;
-        border-radius: 50%;
-        margin-right: 8px;
-        margin-left: 7px;
-    }
-
-    .task-description {
-        width: 100%;
-        padding-top: 5px;
-    }
-
-    .task-container {
-        /* border: 2px solid black; */
-        /* width: 550px; */
-        display: flex;
-        gap: 30px;
-        margin-bottom: 5px;
-    }
-
-    .status-container {
-        width: 145px;
-        height: 20px;
-        padding: 3px 5px;
-        display: flex;
-        align-items: center;
-        border: 2px solid lightgray;
-        border-radius: 20px;
-        font-size: 15px;
-        font-weight: 500;
-    }
-</style>

@@ -6,7 +6,6 @@
     import Login from '../login/+page.svelte';
     import Sidebar from '../../components/Sidebar.svelte';
     import UserProfile from '../../components/UserProfile.svelte';
-    import { get } from 'svelte/store';
     
     let users: User[] = [];
     let allUsers: User[] = [];
