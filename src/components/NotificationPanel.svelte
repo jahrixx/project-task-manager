@@ -166,9 +166,7 @@
                                         {/if}
                                     {:else}    
                                         {#if role === 'Admin'}
-                                            <span><b>{note.creatorRole}</b>: {note.firstName} {note.lastName}</span>
-                                        {:else}
-                                            <span><b>By {note.creatorRole}</b>: {note.firstName} {note.lastName}</span>
+                                            <span><b>By </b>: {note.firstName} {note.lastName}</span>
                                         {/if}
                                     {/if}
                                 </span>
