@@ -91,7 +91,7 @@ select, .form-group input {
 
 .report-display {
     margin-top: -1px;
-    margin-left: 19px;
+    margin-left: 26px;
     padding: 20px;
     background: white;
     border: 1px solid #ddd;
@@ -236,7 +236,7 @@ select, .form-group input {
     background: #6082B6;
     border: 2px solid white;
     margin: auto;
-    width: 99.8%;
+    width: 98.5%;
     height: 8vh;
     /* border: 2px solid black; */
 }

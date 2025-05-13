@@ -43,7 +43,14 @@
         roleOrder = rolesArray.map((role: any) => role.name)   
     });
     
-    $ : groupedUsers = groupedAndOrderUsers(users, roleOrder)
+    $ : {
+        if(searchQuery){
+            filterUsers();
+        } else {
+            users = [ ...allUsers ]
+        }
+        groupedUsers = groupedAndOrderUsers(users, roleOrder)
+    }
 
     function groupedAndOrderUsers(users: User[], roleOrder: string[]): User[] {
         const grouped: Record<string, User[]> = users.reduce((acc, user) => {
@@ -89,7 +96,12 @@
     }
     
     function filterUsers() {
-        groupedUsers = allUsers.filter(user =>
+        if(!searchQuery){
+            users = [ ...allUsers ];
+            return;
+        }
+        
+        users = allUsers.filter(user =>
             (user.firstName?.toLowerCase() ?? "").includes(searchQuery.toLowerCase()) ||
             (user.lastName?.toLowerCase() ?? "").includes(searchQuery.toLowerCase()) ||
             (user.username?.toLowerCase() ?? "").includes(searchQuery.toLowerCase()) ||
@@ -98,7 +110,7 @@
             (`${user.firstName ?? ""} ${user.lastName ?? ""}`.toLowerCase()).includes(searchQuery.toLowerCase())
         );
 
-        if(groupedUsers.length === 0){
+        if(users.length === 0){
             alert("No Users Found!");
             return;
         }
