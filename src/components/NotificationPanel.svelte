@@ -104,7 +104,7 @@
     }
     
 </script>
-
+<link rel="stylesheet" href="src/components/assets/css/notification-panel.css">
 <div class="notification-container">
     {#if loading && !initialized}
         <p style="text-align: center">Loading Notifications...</p>

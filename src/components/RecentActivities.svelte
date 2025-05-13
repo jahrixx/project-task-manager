@@ -35,7 +35,7 @@
     }
 
 </script>
-
+<link rel="stylesheet" href="src/components/assets/css/recent-activities.css">
 <div class="recent-activities">
     {#if activities.length > 0}
         <ul> 
@@ -76,46 +76,3 @@
             <p style="text-align: center;">No Recent Activities!</p>
     {/if}
 </div>
-
-<style>
-    .activity-item{
-        /* border: 1px solid black; */
-        /* position: fixed; */
-        display: flex; 
-        gap: 50px; 
-        margin: 0; 
-        padding: 0; 
-        line-height: normal;
-    }
-
-    .activity-item p {
-        margin: 5px;
-    }
-
-    .recent-activities {
-        background-color: transparent;
-        color: black;
-        border-radius: 8px;
-        padding: 0px 5px 5px 5px;
-        /* margin-bottom: 5px; */
-        /* max-height: 80px; */
-        overflow-y: auto;
-        scrollbar-width: none;
-        /* border: 2px solid black; */
-    }
-
-    .recent-activities::-webkit-scrollbar{
-        display: none;
-    }
-
-    .recent-activities ul {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-    }
-
-    .recent-activities li {
-        padding: 0;
-        margin: 0;
-    }
-</style>
