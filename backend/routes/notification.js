@@ -258,32 +258,6 @@ router.delete("/:id", async (req, res) => {
         if(notification.length === 0){
             return res.status(404).json({ message: "Notification not found." });
         }
-        
-        const sql = `
-            SELECT t.id,
-                    t.title,
-                    t.description,
-                    t.status,
-                    t.endDate,
-                    t.assignedTo,
-                    t.createdBy,
-                    t.isArchived,
-                    u2.office,
-                    CONCAT(u1.firstName, ' ', u1.lastName) AS assignedToName, 
-                    CONCAT(u2.firstName, ' ', u2.lastName) AS createdByName
-            FROM tasks t
-            LEFT JOIN users u1 ON t.assignedTo = u1.id
-            LEFT JOIN users u2 ON t.createdBy = u2.id
-            WHERE t.isArchived = 1
-            ORDER BY t.endDate DESC
-        `;
-        
-        const { title, status, createdBy } = notification[0];
-        // insert to activities table
-        await pool.query(
-            `INSERT INTO activities (message, userId, taskId) VALUES (?,?,?)`,
-            [`deleted notification ${title} with status ${status}`, createdBy, null, id]
-        );
 
         const [result] = await pool.query("DELETE FROM notifications WHERE id = ?", [id]);
         if (result.affectedRows === 0) {

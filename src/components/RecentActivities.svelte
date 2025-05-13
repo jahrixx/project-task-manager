@@ -73,6 +73,6 @@
             {/each}
         </ul>
         {:else}
-            <p style="text-align: center;">No Recent Activities!</p>
+            <p style="text-align: center; color: red;">No Recent Activities!</p>
     {/if}
 </div>
