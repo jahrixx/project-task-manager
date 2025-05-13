@@ -1,6 +1,6 @@
 <script lang="ts">
     import { goto } from '$app/navigation';
-    import { isAuthenticated, user, type User } from '$lib/stores/user';
+    import { user } from '$lib/stores/user';
     import { onMount } from 'svelte';
 
     let currentUser = $user;
@@ -22,6 +22,7 @@
     })
 </script>
 
+<link rel="stylesheet" href="src/components/assets/css/user-profile.css">
 {#if loading}
 <p style="text-align: center; color: red;">loading user...</p>
     {:else if $user}
@@ -42,46 +43,3 @@
             </div>
         </div>
 {/if}
-
-<style>
-    .user-header {
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        margin-top: 35px;
-        margin-bottom: 20px;
-        margin-left: 15px;
-        /* padding: 10px; */
-        /* background: #f8f9fa;
-        border-radius: 8px;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); */
-    }
-
-    .profile-pic {
-        width: 65px;
-        height: 65px;
-        border-radius: 50%;
-        object-fit: cover;
-        border: 2px solid #23BEDA;
-        margin-left: 30px;
-    }
-
-    .user-name {
-        background: none;
-        border: none;
-        font-size: 1rem;
-        font-weight: bold;
-        cursor: pointer;
-        color: #23BEDA;
-    }
-
-    .user-name:hover {
-        text-decoration: underline;
-    }
-
-    .user-role {
-        padding-left: 7px;
-        font-size: 0.9rem;
-        color: #555;
-    }
-</style>
