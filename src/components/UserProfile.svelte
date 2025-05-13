@@ -43,3 +43,41 @@
             </div>
         </div>
 {/if}
+<style>
+    .user-header {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        margin-top: 35px;
+        margin-bottom: 20px;
+        margin-left: 15px;
+    }
+
+    .profile-pic {
+        width: 65px;
+        height: 65px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid #23BEDA;
+        margin-left: 30px;
+    }
+
+    .user-name {
+        background: none;
+        border: none;
+        font-size: 1rem;
+        font-weight: bold;
+        cursor: pointer;
+        color: #23BEDA;
+    }
+
+    .user-name:hover {
+        text-decoration: underline;
+    }
+
+    .user-role {
+        padding-left: 7px;
+        font-size: 0.9rem;
+        color: #555;
+    }
+</style>
