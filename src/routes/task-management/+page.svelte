@@ -1,6 +1,6 @@
 <script lang="ts">
     import type { TaskData } from "$lib/stores/task";
-    import { createTask, deleteTask, fetchEmployees, fetchTasks, tasks } from "$lib/api/taskService";
+    import { fetchEmployees, fetchTasks, tasks } from "$lib/api/taskService";
     import { goto } from "$app/navigation";
     import { isAuthenticated, user, type User } from "$lib/stores/user";
     import { onMount } from "svelte";
@@ -19,31 +19,43 @@
     let showForm = false;
     let showFilters = false;
     let editId: any = null;
-
-    let filteredManagerTasks: TaskData[] = [];
-    let filteredEmployeeTasks: TaskData[] = [];
-    let filteredArchivedTasks: TaskData[] = [];
-    
+    let searchQuery = writable("");
     let managerTasks: TaskData[] = [];
     let employeeTasks: TaskData[] = [];
-    // let archivedTasks: TaskData[] = [];
     let archivedTasks = writable<TaskData[]>([]);
+    let filteredManagerTasks = writable<TaskData[]>([]);
+    let filteredEmployeeTasks= writable<TaskData[]>([]);
+
+    const filteredArchivedTasks = derived(
+        [archivedTasks, searchQuery, selectedStatuses],
+        ([$archivedTasks, $searchQuery, $selectedStatuses]) => {
+            let filtered = $archivedTasks;
+            if($searchQuery) {
+                const search = $searchQuery.toLowerCase();
+                filtered = filtered.filter(task => 
+                    (task.title?.toLowerCase() ?? "").includes(search) ||
+                    (task.description?.toLowerCase() ?? "").includes(search) ||
+                    (task.createdByName?.toLowerCase() ?? "").includes(search) ||
+                    (task.status?.toLowerCase() ?? "").includes(search)
+                );
+            }
+            if($selectedStatuses.length > 0){
+                filtered = filtered.filter(task => $selectedStatuses.includes(task.status));
+            }
+            return filtered;
+        }
+    )
 
     let selectedDepartments: any = [];
-
     let selectedTask: any;
     let selectedOffice: any;
     let computedAssignedTo: any;
-
     let allTasks: Record<string, TaskData[]> = {}; 
     let filteredTasks: Record<string, TaskData[]> = {};
-    
     let errorMessage = '';
     let successMessage = ''; 
-    let searchQuery = "";
     let currentUser;
     let statusClass = '';
-
     let taskData: TaskData = {
         id: null,
         title: '',
@@ -57,36 +69,38 @@
         createdByName: null,
         creatorRole: null,
         assigneeRole: null,
-        // isArchived: null
     };
 
     $: currentUser = get(user);
     $ : if ($tasks && get(user) && Array.isArray($tasks)){
             if(currentUser?.role === "Manager"){
                 managerTasks = $tasks.filter(task => (task.createdBy === currentUser.id || task.assignedTo === currentUser.id) && !task.isArchived);
-                // managerTasks = $tasks.filter(task => task.createdBy === currentUser.id || task.assignedTo === currentUser.id);
-                filteredManagerTasks = [ ...managerTasks ];
+                $filteredManagerTasks = [ ...managerTasks ];
 
-                // employeeTasks = $tasks.filter(task => task.createdBy !== currentUser.id);
                 employeeTasks = $tasks.filter(task => (task.createdBy !== currentUser.id) && !task.isArchived);
-                filteredEmployeeTasks = [ ...employeeTasks ];
+                $filteredEmployeeTasks = [ ...employeeTasks ];
 
                 loadArchiveTasks().then(tasks => {
                     archivedTasks.set(tasks);
-                    filteredArchivedTasks = tasks;
                 });
 
             } else {
-                // employeeTasks = $tasks.filter(task => task.assignedTo === currentUser?.id);
                 employeeTasks = $tasks.filter(task => (task.assignedTo === currentUser?.id) && !task.isArchived);
-                filteredEmployeeTasks = [ ...employeeTasks ];
+                $filteredEmployeeTasks = [ ...employeeTasks ];
 
                 loadArchiveTasks().then(tasks => {
                     archivedTasks.set(tasks);
-                    filteredArchivedTasks = tasks;
                 });
             }
-            // loadArchiveTasks();
+    }
+
+    $: {
+        const $searchQuery = get(searchQuery);
+        if($searchQuery) {
+            filterTasks();
+        } else {
+            resetSearch();
+        }
     }
 
     onMount(async () => {
@@ -103,7 +117,6 @@
                                         );
                                         
             const archivedTask = await loadArchiveTasks();
-            filteredArchivedTasks = archivedTask;
             archivedTasks.set(archivedTask);
 
             console.log('Archived Tasks (Console in the parent component): ',archivedTasks)
@@ -169,7 +182,7 @@
 
     function filterTasks() {
         const currentUser = get(user);
-        let search = searchQuery.toLowerCase();
+        let search = $searchQuery.toLowerCase();
 
         switch (currentUser?.role){
             case "Admin" : 
@@ -187,64 +200,43 @@
 
             case "Manager" :
                 if(search){
-                    filteredManagerTasks = managerTasks.filter(task =>
-                        (task.title?.toLowerCase() ?? "").includes(search) ||
-                        (task.description?.toLowerCase() ?? "").includes(search) ||
-                        (task.assignedToName?.toLowerCase() ?? "").includes(search) ||
-                        (task.status?.toLowerCase() ?? "").includes(search)
+                    filteredManagerTasks.set(
+                        managerTasks.filter(task =>
+                            (task.title?.toLowerCase() ?? "").includes(search) ||
+                            (task.description?.toLowerCase() ?? "").includes(search) ||
+                            (task.assignedToName?.toLowerCase() ?? "").includes(search) ||
+                            (task.status?.toLowerCase() ?? "").includes(search)
+                        )
                     );
 
-                    filteredEmployeeTasks = employeeTasks.filter(task =>
-                        (task.title?.toLowerCase() ?? "").includes(search) ||
-                        (task.description?.toLowerCase() ?? "").includes(search) ||
-                        (task.createdByName?.toLowerCase() ?? "").includes(search) ||
-                        (task.status?.toLowerCase() ?? "").includes(search)
+                    filteredEmployeeTasks.set(
+                        employeeTasks.filter(task => 
+                            (task.title?.toLowerCase() ?? "").includes(search) ||
+                            (task.description?.toLowerCase() ?? "").includes(search) ||
+                            (task.assignedToName?.toLowerCase() ?? "").includes(search) ||
+                            (task.status?.toLowerCase() ?? "").includes(search)
+                        )
                     );
-
-                    archivedTasks.update(tasks => filteredArchivedTasks = tasks.filter(task =>
-                        (task.title?.toLowerCase() ?? "").includes(search) ||
-                        (task.description?.toLowerCase() ?? "").includes(search) ||
-                        (task.createdByName?.toLowerCase() ?? "").includes(search) ||
-                        (task.status?.toLowerCase() ?? "").includes(search)
-                    ));
-
-                    // archivedTasks = archivedTasks.filter(task =>
-                    //     (task.title?.toLowerCase() ?? "").includes(search) ||
-                    //     (task.description?.toLowerCase() ?? "").includes(search) ||
-                    //     (task.createdByName?.toLowerCase() ?? "").includes(search) ||
-                    //     (task.status?.toLowerCase() ?? "").includes(search)
-                    // );
-
-                    console.log('Archived Search Bar: ', archivedTasks)
 
                 } else {
-                    filteredManagerTasks = [ ...managerTasks ];
-                    filteredEmployeeTasks = [ ...employeeTasks ];
-                    filteredArchivedTasks = [ ...$archivedTasks ];
+                    filteredManagerTasks.set([ ...managerTasks ]);
+                    filteredEmployeeTasks.set([ ...employeeTasks ]);
                 }
                 break;
 
             case "Employee" : 
-                filteredEmployeeTasks = employeeTasks.filter(task =>
-                    (task.title?.toLowerCase() ?? "").includes(search) ||
-                    (task.description?.toLowerCase() ?? "").includes(search) ||
-                    (task.createdByName?.toLowerCase() ?? "").includes(search) ||
-                    (task.status?.toLowerCase() ?? "").includes(search)
-                );
-
-                archivedTasks.update(tasks =>  filteredArchivedTasks =  tasks.filter(task =>
-                    (task.title?.toLowerCase() ?? "").includes(search) ||
-                    (task.description?.toLowerCase() ?? "").includes(search) ||
-                    (task.createdByName?.toLowerCase() ?? "").includes(search) ||
-                    (task.status?.toLowerCase() ?? "").includes(search)
-                ));
-
-                // archivedTasks = archivedTasks.filter(task =>
-                //     (task.title?.toLowerCase() ?? "").includes(search) ||
-                //     (task.description?.toLowerCase() ?? "").includes(search) ||
-                //     (task.createdByName?.toLowerCase() ?? "").includes(search) ||
-                //     (task.status?.toLowerCase() ?? "").includes(search)
-                // );
+                if(search) {
+                    filteredEmployeeTasks.set(
+                        employeeTasks.filter(task => 
+                            (task.title?.toLowerCase() ?? "").includes(search) ||
+                            (task.description?.toLowerCase() ?? "").includes(search) ||
+                            (task.assignedToName?.toLowerCase() ?? "").includes(search) ||
+                            (task.status?.toLowerCase() ?? "").includes(search)
+                        )
+                    );
+                } else {
+                    filteredEmployeeTasks.set([ ...employeeTasks ]);
+                }
                 break;
 
             default:
@@ -273,32 +265,19 @@
     }
 
     function filterByStatus(){   
-        if($selectedStatuses.length === 0){
-            filteredManagerTasks = [ ...managerTasks ];
-            filteredEmployeeTasks = [ ...employeeTasks ];
-            loadArchiveTasks().then(tasks => {
-                archivedTasks.set(tasks);
-                filteredArchivedTasks = tasks;
-            });
-            // loadArchiveTasks();
+        if(get(selectedStatuses).length === 0){
+            filteredManagerTasks.set([ ...managerTasks ]);
+            filteredEmployeeTasks.set([ ...employeeTasks ]);
             return;
         }
 
-        filteredManagerTasks = managerTasks.filter(task =>
-            $selectedStatuses.includes(task.status)
+        filteredManagerTasks.set(
+            managerTasks.filter(task => get(selectedStatuses).includes(task.status))
         );
 
-        filteredEmployeeTasks = employeeTasks.filter(task =>
-            $selectedStatuses.includes(task.status)
+        filteredEmployeeTasks.set(
+            employeeTasks.filter(task => get(selectedStatuses).includes(task.status))
         );
-        
-        archivedTasks.update(tasks => filteredArchivedTasks = tasks.filter(task =>
-            $selectedStatuses.includes(task.status)
-        ));
-
-        // archivedTasks = archivedTasks.filter(task =>
-        //     $selectedStatuses.includes(task.status)
-        // );
     }
 
     function updateSelection(department: string) {
@@ -311,7 +290,7 @@
     }
 
     function resetSearch(){
-        searchQuery = "";
+        $searchQuery = "";
         showFilters = false;
 
         const currentUser = get(user);
@@ -321,28 +300,16 @@
                 break;
             
             case "Manager":
-                filteredManagerTasks = [ ...managerTasks ];
-                filteredEmployeeTasks = [ ...employeeTasks ];
-                // loadArchiveTasks().then(tasks => archivedTasks = tasks);
-                loadArchiveTasks().then(tasks => {
-                    archivedTasks.set(tasks);
-                    filteredArchivedTasks = tasks;
-                });
+                filteredManagerTasks.set([ ...managerTasks ]);
+                filteredEmployeeTasks.set([ ...employeeTasks ]);
                 break;
             
             case "Employee":
-                filteredEmployeeTasks = [ ...employeeTasks ];
-                // loadArchiveTasks().then(tasks => archivedTasks = tasks);
-                loadArchiveTasks().then(tasks => {
-                    archivedTasks.set(tasks);
-                    filteredArchivedTasks = tasks;
-                });
+                filteredEmployeeTasks.set([ ...employeeTasks ])
                 break;
         
             default:
                 filteredTasks = { ...allTasks };
-                // loadArchiveTasks().then(tasks => archivedTasks.set(tasks));
-                // loadArchiveTasks().then(tasks => archivedTasks = tasks);
                 break;
         }
     }
@@ -446,11 +413,11 @@
                 </div>
                 <div class="search">
                     <div class="search-input-container">
-                        <input type="text" class="search-bar" placeholder="Search tasks..." bind:value={searchQuery} on:input={filterTasks} on:keydown={ (e) => { if (e.key === "Enter")e.preventDefault(); }} >
+                        <input type="text" class="search-bar" placeholder="Search tasks..." bind:value={$searchQuery} on:input={filterTasks} on:keydown={ (e) => { if (e.key === "Enter")e.preventDefault(); }} >
                         <button class="search-icon" on:click={filterTasks} aria-label="search-icon">
                             <svg width="30px" height="30px" viewBox="0 0 24 24" fill="#FFFFFF" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path opacity="0.1" fill-rule="evenodd" clip-rule="evenodd" d="M12 3C4.5885 3 3 4.5885 3 12C3 19.4115 4.5885 21 12 21C19.4115 21 21 19.4115 21 12C21 4.5885 19.4115 3 12 3ZM11.5 7.75C9.42893 7.75 7.75 9.42893 7.75 11.5C7.75 13.5711 9.42893 15.25 11.5 15.25C13.5711 15.25 15.25 13.5711 15.25 11.5C15.25 9.42893 13.5711 7.75 11.5 7.75Z" fill="#323232"></path> <path d="M3 12C3 4.5885 4.5885 3 12 3C19.4115 3 21 4.5885 21 12C21 19.4115 19.4115 21 12 21C4.5885 21 3 19.4115 3 12Z" stroke="#323232" stroke-width="2"></path> <path d="M14 14L16 16" stroke="#323232" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path> <path d="M15 11.5C15 13.433 13.433 15 11.5 15C9.567 15 8 13.433 8 11.5C8 9.567 9.567 8 11.5 8C13.433 8 15 9.567 15 11.5Z" stroke="#323232" stroke-width="2"></path> </g></svg>
                         </button>
-                        {#if searchQuery !== ""}
+                        {#if $searchQuery !== ""}
                             <button class="reset-icon" on:click={resetSearch}>❌</button>
                         {/if}
                     </div>
@@ -518,17 +485,16 @@
                     </div>
                 {/if}
             {/if}
-            {#if filteredEmployeeTasks || filteredManagerTasks || filteredArchivedTasks}
+            {#if filteredManagerTasks || filteredManagerTasks || filteredArchivedTasks}
                 <TaskListManager 
-                    {filteredEmployeeTasks} 
-                    {filteredManagerTasks} 
-                    {filteredArchivedTasks}
+                    filteredManagerTasks={$filteredManagerTasks}
+                    filteredEmployeeTasks={$filteredEmployeeTasks}
+                    filteredArchivedTasks={$filteredArchivedTasks}
                     {openTaskForm}
                 />
-                {:else}
-                    <p>Loading tasks...</p>
-            {/if}      
+            {:else}
+                <p>Loading Task Lists!</p>
+            {/if}
         </div>
     </div>
 {/if}
-

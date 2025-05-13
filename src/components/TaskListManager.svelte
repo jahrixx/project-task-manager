@@ -2,24 +2,20 @@
     import type { TaskData } from "$lib/stores/task";
     import { user, type User } from "$lib/stores/user";
     import { derived, get, writable } from "svelte/store";
-    import { createTask, deleteTask, removeTask, fetchEmployees, fetchTasks, tasks, refreshTasks } from "$lib/api/taskService";
+    import { removeTask, refreshTasks } from "$lib/api/taskService";
     import { archiveTask as apiArchiveTasks, unarchiveTask as apiUnarchiveTasks, fetchArchivedTasks } from "$lib/api/archive";
 
     let managerTasks: TaskData[] = [];
     let employeeTasks: TaskData[] = [];
-    // export let archivedTasks: TaskData[] = [];
-    export let archivedTasks = writable<TaskData[]>([]);
 
     export const userRole = derived(user, ($user: User | null) => $user?.role || "");
     export const allTasks: Record<string, TaskData[]> = {}; 
+    export let archivedTasks = writable<TaskData[]>([]);
     export let filteredManagerTasks: any = managerTasks;
     export let filteredEmployeeTasks: any = employeeTasks;
     export let filteredArchivedTasks: any = archivedTasks;
-    // export const filteredArchivedTasks: any = archivedTasks;
-    
+    export let openTaskForm;    
     export let currentView = 'own';  
-    export let openTaskForm;
-    
     export function setView(view: 'own' | 'employee' | 'archived'){
         currentView = view;
         if(view === 'archived'){
@@ -145,7 +141,6 @@
                 </thead>
                 <tbody>
                     {#if filteredManagerTasks.length > 0}
-                    <!-- {#if filteredManagerTasks.filter((task: TaskData) => !task.isArchived).length > 0} -->
                         {#each filteredManagerTasks as task (task.id)}
                             <tr>
                                 <td>
@@ -197,7 +192,6 @@
                 </thead>
                 <tbody>
                     {#if filteredEmployeeTasks.length > 0}
-                    <!-- {#if filteredEmployeeTasks.filter((task: TaskData) => !task.isArchived).length > 0} -->
                         {#each filteredEmployeeTasks as task (task.id)}
                             <tr>
                                 <td>
@@ -259,7 +253,6 @@
                                             <br><br><span><i><b>Task Created By Employee: </b> {task.createdByName}</i></span>
                                         {:else}
                                             <br><br><span><i><b>Task Created By Manager: </b> {task.createdByName}</i></span>
-                                            <!-- <span></span> -->
                                         {/if}
                                     </div>
                                 </td>
@@ -273,8 +266,6 @@
                                     <span class="{isOverdue(task)}">{formatDate(task.endDate)}</span>
                                 </td>
                                 <td class="actions">
-                                    <!-- <button class="btn edit" on:click={() => openTaskForm(task)}>Update</button>
-                                    <button class="btn delete" on:click={() => removeTask(task.id)}>Delete</button> -->
                                     <button class="btn archive" on:click={() => task.id != null && unarchiveTask(task.id)}>Unarchive</button>
                                 </td>
                             </tr>
@@ -307,7 +298,6 @@
                 </thead>
                 <tbody>
                     {#if filteredEmployeeTasks.length > 0}
-                    <!-- {#if filteredEmployeeTasks.filter((task: TaskData) => !task.isArchived).length > 0} -->
                         {#each filteredEmployeeTasks as task (task.id)}
                             <tr>
                                 <td>
@@ -319,7 +309,6 @@
                                             <br><br><span><i><b>Task Assigned By Manager: </b> {task.createdByName}</i></span>
                                         {:else}
                                             <br><br><span><i><b>Personal Task Created By: </b> {task.createdByName}</i></span>
-                                            <!-- <span></span> -->
                                         {/if}
                                     </div>
                                 </td>
@@ -385,8 +374,6 @@
                                     <span class="{isOverdue(task)}">{formatDate(task.endDate)}</span>
                                 </td>
                                 <td class="actions">
-                                    <!-- <button class="btn edit" on:click={() => openTaskForm(task)}>Update</button>
-                                    <button class="btn delete" on:click={() => removeTask(task.id)}>Delete</button> -->
                                     <button class="btn archive" on:click={() => task.id != null && unarchiveTask(task.id)}>Unarchive</button>
                                 </td>
                             </tr>
