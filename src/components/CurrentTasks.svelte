@@ -69,7 +69,7 @@
         }
     }
 </script>
-
+<link rel="stylesheet" href="src/components/assets/css/current-tasks.css">
 {#if currentUser?.role === 'Admin'}
     <ul>
         {#each Object.entries(statusFilteredTasks ?? {}) as [office, tasks]}
