@@ -315,11 +315,40 @@ router.post("/", async (req, res) => {
 
         const taskId = result.insertId;
 
-       // create task insert to activities table
-        await pool.query(
-            "INSERT INTO activities (message, createdBy, assignedTo, taskId) VALUES (?, ?, ?, ?)",
-            [`created task ${title} with status <span style="font-weight: bold; color: ${getStatusColor(status)}">"${status.toLowerCase()}".</span>`, createdBy, assignedTo, taskId]
-        );
+        // create task insert to activities table
+        // await pool.query(
+        //     "INSERT INTO activities (message, createdBy, assignedTo, taskId) VALUES (?, ?, ?, ?)",
+        //     [`created task ${title} with status <span style="font-weight: bold; color: ${getStatusColor(status)}">"${status.toLowerCase()}".</span>`, createdBy, assignedTo, taskId]
+        // );
+
+        if(assignedUserId === createdBy) {
+            await pool.query(
+                `INSERT INTO activities (message, createdBy, assignedTo, taskId) VALUES (?,?,?,?)`,
+                [
+                    `created task <b>"${title}"</b> with status <span style="font-weight: bold; color: ${getStatusColor(status)}">"${status.toLowerCase()}".</span>`, 
+                    createdBy, 
+                    null, 
+                    taskId
+                ]
+            );
+        } else {
+            const [employeeRows] = await pool.query(
+                `SELECT firstName, lastName, profilePic FROM users WHERE id = ?`,
+                [assignedTo]
+            );
+            const employeeFullName = employeeRows.length > 0
+                ? `${employeeRows[0].firstName} ${employeeRows[0].lastName}`
+                : 'a team member';
+
+            await pool.query(
+                `INSERT INTO activities (message, assignedTo, taskId) VALUES (?,?,?)`,
+                [
+                    `assigned task <b>"${title}"</b> with status <span style="font-weight: bold; color: ${getStatusColor(status)}">"${status.toLowerCase()}",</span> to employee <b>${employeeFullName}</b>.`, 
+                    assignedTo, 
+                    taskId
+                ]
+            );
+        }
 
         //Create Notification
         if(assignedUserId === createdBy){
@@ -411,7 +440,7 @@ router.put("/:id", async (req, res) => {
         // insert activity table 
         await pool.query(`
             INSERT INTO activities (message, createdBy, assignedTo, taskId) VALUES (?,?,?,?)`,
-            [`updated task ${title} with status <span style="font-weight: bold; color: ${getStatusColor(status)}">"${status.toLowerCase()}".</span>`, completedBy, null, id]);
+            [`updated task <b>"${title}"</b> with status <span style="font-weight: bold; color: ${getStatusColor(status)}">"${status.toLowerCase()}".</span>`, completedBy, null, id]);
 
         if (result.affectedRows === 0) {
             return res.status(500).json({ message: "Failed to update task. No rows affected." });
@@ -510,7 +539,7 @@ router.delete("/:id", async (req, res) => {
         // insert to activities table
         await pool.query(
             `INSERT INTO activities (message, createdBy, assignedTo, taskId) VALUES (?,?,?,?)`,
-            [`deleted task ${title} with status <span style="font-weight: bold; color: ${getStatusColor(status)}">"${status.toLowerCase()}".</span>`, createdBy, null, id]
+            [`deleted task <b>"${title}"</b> with status <span style="font-weight: bold; color: ${getStatusColor(status)}">"${status.toLowerCase()}".</span>`, createdBy, null, id]
         );
 
         const [result] = await pool.query("DELETE FROM tasks WHERE id = ?", [id]);
