@@ -166,8 +166,8 @@
                                 </td>
                                 <td class="actions">
                                     <button class="btn edit" on:click={() => openTaskForm(task)}>Update</button>
-                                    <button class="btn delete" on:click={() => removeTask(task.id)}>Delete</button>
                                     <button class="btn archive" on:click={() => archiveTask(task.id)}>Archive</button>
+                                    <button class="btn delete" on:click={() => removeTask(task.id)}>Delete</button>
                                 </td>
                             </tr>
                         {/each}
@@ -323,12 +323,12 @@
                                 </td>
                                 <td class="actions">
                                     <button class="btn edit" on:click={() => openTaskForm(task)}>Update</button>
+                                    <button class="btn archive" on:click={() => archiveTask(task.id)}>Archive</button>
                                     {#if task.assignedTo === task.createdBy}
                                         <button class="btn delete" on:click={() => removeTask(task.id)}>Delete</button>
                                     {:else}
                                         <button class="btn delete" style="background: rgba(0, 0, 0, 0.5); opacity: 0.5; pointer-events: none;" disabled on:click={() => removeTask(task.id)}>Delete</button>
                                     {/if}
-                                    <button class="btn archive" on:click={() => archiveTask(task.id)}>Archive</button>
                                 </td>
                             </tr>
                         {/each}
