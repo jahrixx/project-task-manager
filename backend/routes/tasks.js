@@ -341,9 +341,10 @@ router.post("/", async (req, res) => {
                 : 'a team member';
 
             await pool.query(
-                `INSERT INTO activities (message, assignedTo, taskId) VALUES (?,?,?)`,
+                `INSERT INTO activities (message, createdBy, assignedTo, taskId) VALUES (?,?,?,?)`,
                 [
                     `assigned task <b>"${title}"</b> with status <span style="font-weight: bold; color: ${getStatusColor(status)}">"${status.toLowerCase()}",</span> to employee <b>${employeeFullName}</b>.`, 
+                    createdBy,
                     assignedTo, 
                     taskId
                 ]

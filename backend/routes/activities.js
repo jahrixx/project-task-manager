@@ -19,24 +19,31 @@ router.get("/", async (req, res) => {
             query = `
                 SELECT a.*, CONCAT(u.firstName, ' ', u.lastName) AS userFullname
                 FROM activities a
-                JOIN users u ON a.createdBy = u.id OR a.assignedTo = u.id
+                JOIN users u ON a.createdBy = u.id
                 ORDER BY a.date DESC LIMIT 10
             `;
         } else if(role === 'Manager') {
             query = `
                 SELECT a.*, CONCAT(u.firstName, ' ', u.lastName) AS userFullname
                 FROM activities a
-                JOIN users u ON a.createdBy = u.id OR a.assignedTo = u.id
-                WHERE u.office = (SELECT office FROM users WHERE id = ?)
+                JOIN users u ON a.createdBy = u.id
+                WHERE a.createdBy IN (
+                    SELECT id FROM users WHERE office = (SELECT office FROM users WHERE id = ?)
+                )
+                OR a.assignedTo IN (
+                    SELECT id FROM users WHERE office = (SELECT office FROM users WHERE id = ?)
+                )
+                GROUP BY a.id
                 ORDER BY a.date DESC LIMIT 10
             `;
-             queryParams = [userId];
+             queryParams = [userId, userId];
         } else if (role === 'Employee') {
             query = `
                 SELECT a.*, CONCAT(u.firstName, ' ', u.lastName) AS userFullname
                 FROM activities a
-                JOIN users u ON a.createdBy = u.id OR a.assignedTo = u.id
+                JOIN users u ON a.createdBy = u.id
                 WHERE a.createdBy = ? OR a.assignedTo = ?
+                GROUP BY a.id
                 ORDER BY a.date DESC LIMIT 10
             `;
              queryParams = [userId, userId]
