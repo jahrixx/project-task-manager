@@ -146,7 +146,7 @@ async function createTables() {
                 isRead BOOLEAN DEFAULT FALSE,
                 createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE,
-                FOREIGN KEY (taskId) REFERENCES tasks(id) ON DELETE SET NULL
+                FOREIGN KEY (taskId) REFERENCES tasks(id) ON DELETE CASCADE
             )
         `);
         console.log("✅ Notifications table created or already exists.");

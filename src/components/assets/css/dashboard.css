@@ -70,7 +70,7 @@ h2 {
     border: none;
     font-size: 1rem;
     font-weight: bold;
-    padding: 5px 10px;
+    padding: 6px 10px;
     border-radius: 50%;
     cursor: pointer;
     transition: 0.3s;
@@ -79,8 +79,8 @@ h2 {
 .add-btn-emp:has(span.x-icon) {
     font-size: .8rem;
     color: white;
-    width: 25px;
-    height: 25px;
+    width: 30px;
+    height: 30px;
     padding: 0;
     border-radius: 50%;
 }
