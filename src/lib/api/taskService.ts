@@ -135,7 +135,7 @@ export async function removeTask(taskId: number | null) {
     } 
         try {
             await deleteTask(taskId);
-            alert("Task deleted successfully");
+            alert("Task and Notification card deleted successfully");
             await refreshTasks();
         } catch (error) {
             console.error("Error deleting task :", error);
