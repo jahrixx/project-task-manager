@@ -328,6 +328,12 @@ thead, tbody tr {
     border: none;
 }
 
+.reset-icon {
+    padding-top: 7.5px;
+    right: 8px;
+    font-size: 18px;
+}
+
 .search-icon {
     padding-top: 9px;
     right: 32.5px;
