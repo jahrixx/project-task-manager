@@ -12,6 +12,13 @@
     import { fetchActivities } from '$lib/api/activityService';
     import NotificationPanel from '../../components/NotificationPanel.svelte';
 
+    let pendingTasks: {id: number, title: string }[] = [];
+    let inProgressTasks: {id: number, title: string }[] = [];
+    let completedTasks: {id: number, title: string }[] = [];
+    let archivedTasks: {id: number, title: string }[] = [];
+    let overdueTasks: {id: number, title: string }[] = [];
+    let cancelledTasks: {id: number, title: string }[] = [];
+
     let pendingCount = 0;
     let inProgressCount = 0;
     let completedCount = 0;
@@ -53,6 +60,8 @@
         
         if ($userRole === 'Admin') {
             fetchDashboardStats();
+        } else {
+            fetchTaskCounts(userId);
         }
     });
 
@@ -76,6 +85,13 @@
             overdueCount = data.overdueCount;
             archivedCount = data.archivedCount;
 
+            pendingTasks = data.pendingTasks || [];
+            inProgressTasks = data.inProgressTasks || [];
+            completedTasks = data.completedTasks || [];
+            cancelledTasks = data.cancelledTasks || [];
+            overdueTasks = data.overdueTasks || [];
+            archivedTasks = data.archivedTasks || [];
+            
             if (data.lastUpdated) {
                 lastUpdated = data.lastUpdated;
             }
@@ -199,32 +215,134 @@
                     <div class="task-card-emp">
                         <!-- <span class="circle"></span> -->
                         <span class="empTxt">Pending Tasks</span>
-                        <button class="add-btn-emp">{pendingCount ?? 0}</button>
+                        <button class="add-btn-emp" on:click={() => toggleModal("Pending")}>
+                            {#if activeModal === 'Pending'}
+                                <span class="x-icon">❌</span>
+                            {:else}
+                                {pendingCount ?? 0}
+                            {/if}
+                        </button>
+                        {#if activeModal === 'Pending'}
+                            <div class="overlay-top">
+                                {#if pendingTasks.length > 0}
+                                    {#each pendingTasks as task, index (task.id)}
+                                        <p>{index + 1}. {task.title}</p>
+                                    {/each}
+                                {:else}
+                                    <p style="color: #FF7518;"><b>No Pending Tasks!</b></p>
+                                {/if}
+                            </div>
+                        {/if}
                     </div>
                     <div class="task-card-emp">
                         <!-- <span class="circle"></span> -->
                         <span class="empTxt">In Progress Tasks</span>
-                        <button class="add-btn-emp">{inProgressCount ?? 0}</button>
+                        <button class="add-btn-emp" on:click={() => toggleModal("inProgress")}>
+                            {#if activeModal === 'inProgress'}
+                                <span class="x-icon">❌</span>
+                            {:else}
+                                {inProgressCount ?? 0}
+                            {/if}
+                        </button>
+                        {#if activeModal === 'inProgress'}
+                            <div class="overlay-top">
+                                {#if inProgressTasks.length > 0}
+                                    {#each inProgressTasks as task, index (task.id)}
+                                        <p>{index + 1}. {task.title}</p>
+                                    {/each}
+                                {:else}
+                                    <p style="color: #1434A4;"><b>No In Progress Tasks!</b></p>
+                                {/if}
+                            </div>
+                        {/if}
                     </div>
                     <div class="task-card-emp">
                         <!-- <span class="circle"></span> -->
                         <span class="empTxt">Completed Tasks</span>
-                        <button class="add-btn-emp">{completedCount ?? 0}</button>
+                        <button class="add-btn-emp" on:click={() => toggleModal("Completed")}>
+                            {#if activeModal === 'Completed'}
+                                <span class="x-icon">❌</span>
+                            {:else}
+                                {completedCount ?? 0}
+                            {/if}
+                        </button>
+                        {#if activeModal === 'Completed'}
+                            <div class="overlay-top">
+                                {#if completedTasks.length > 0}
+                                    {#each completedTasks as task, index (task.id)}
+                                        <p>{index + 1}. {task.title}</p>
+                                    {/each}
+                                {:else}
+                                    <p style="color: #00A36C;"><b>No Completed Tasks!</b></p>
+                                {/if}
+                            </div>
+                        {/if}
                     </div>
                     <div class="task-card-emp">
                         <!-- <span class="circle"></span> -->
                         <span class="empTxt">Archived Tasks</span>
-                        <button class="add-btn-emp">{archivedCount ?? 0}</button>
+                        <button class="add-btn-emp" on:click={() => toggleModal("Archived")}>
+                            {#if activeModal === 'Archived'}
+                                <span class="x-icon">❌</span>
+                            {:else}
+                                {archivedCount ?? 0}
+                            {/if}
+                        </button>
+                        {#if activeModal === 'Archived'}
+                            <div class="overlay-bottom">
+                                {#if archivedTasks.length > 0}
+                                    {#each archivedTasks as task, index (task.id)}
+                                        <p>{index + 1}. {task.title}</p>
+                                    {/each}
+                                {:else}
+                                    <p style="color: #175E88"><b>No Archived Tasks!</b></p>
+                                {/if}
+                            </div>
+                        {/if}
                     </div>
                     <div class="task-card-emp">
                         <!-- <span class="circle"></span> -->
                         <span class="empTxt">Cancelled Tasks</span>
-                        <button class="add-btn-emp">{cancelledCount ?? 0}</button>
+                        <button class="add-btn-emp" on:click={() => toggleModal("Cancelled")}>
+                            {#if activeModal === 'Cancelled'}
+                                <span class="x-icon">❌</span>
+                            {:else}
+                                {cancelledCount ?? 0}
+                            {/if}
+                        </button>
+                        {#if activeModal === 'Cancelled'}
+                            <div class="overlay-bottom">
+                                {#if cancelledTasks.length > 0}
+                                    {#each cancelledTasks as task, index (task.id)}
+                                        <p>{index + 1}. {task.title}</p>
+                                    {/each}
+                                {:else}
+                                    <p style="color: #E34234"><b>No Cancelled Tasks!</b></p>
+                                {/if}
+                            </div>
+                        {/if}
                     </div>
                     <div class="task-card-emp">
                         <!-- <span class="circle"></span> -->
                         <span class="empTxt">Overdue Tasks</span>
-                        <button class="add-btn-emp">{overdueCount ?? 0}</button>
+                        <button class="add-btn-emp" on:click={() => toggleModal("Overdue")}>
+                            {#if activeModal === 'Overdue'}
+                                <span class="x-icon">❌</span>
+                            {:else}
+                                {overdueCount ?? 0}
+                            {/if}
+                        </button>
+                        {#if activeModal === 'Overdue'}
+                            <div class="overlay-bottom">
+                                {#if overdueTasks.length > 0}
+                                    {#each overdueTasks as task, index (task.id)}
+                                        <p>{index + 1}. {task.title}</p>
+                                    {/each}
+                                {:else}
+                                    <p style="color: #C41E3A"><b>No Overdue Tasks!</b></p>
+                                {/if}
+                            </div>
+                        {/if}
                     </div>
                 </div>
                 <div class="activities">

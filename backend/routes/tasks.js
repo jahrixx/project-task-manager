@@ -3,6 +3,7 @@ const router = express.Router();
 const { updateTaskStatuses } = require("./services/taskService");
 const { getPool } = require("../db");
 const { createNotification } = require("./notification");
+const { title } = require("process");
 
 function getStatusColor(status) {
     switch(status.toLowerCase()) {
@@ -211,6 +212,75 @@ router.get("/status-count/:assignedTo", async (req, res) => {
 
         const [rows] = await pool.query(query, params);
 
+        const taskQuery = `
+            SELECT 
+                id,
+                title,
+                status,
+                endDate,
+                updated_at AS updatedAt,
+                isArchived
+            FROM tasks
+            WHERE assignedTo = ?
+            ${since ? 'AND updated_at > ?' : ''}
+        `;
+
+        const [ tasks ] = await pool.query(taskQuery, params);
+
+        const categorizedTasks = {
+            pendingTasks: [],
+            inProgressTasks: [],
+            completedTasks: [],
+            cancelledTasks: [],
+            overdueTasks: [],
+            archivedTasks: [],
+        };
+
+        const now = new Date();
+
+        tasks.forEach(task => {
+            const taskInfo = {
+                id: task.id,
+                title: task.title,
+                endDate: task.endDate
+            };
+
+            if((task.status === 'Pending' || task.status === 'In Progress') && task.endDate && new Date(task.endDate) < now){
+                categorizedTasks.overdueTasks.push(taskInfo);
+                return;
+            }
+
+            switch (task.status) {
+                case 'Pending':
+                    categorizedTasks.pendingTasks.push(taskInfo);
+                    break;
+                case 'In Progress':
+                    categorizedTasks.inProgressTasks.push(taskInfo);
+                    break;
+                case 'Completed':
+                    categorizedTasks.completedTasks.push(taskInfo);
+                    break;
+                case 'Cancelled':
+                    categorizedTasks.cancelledTasks.push(taskInfo);
+                    break;
+                case 'Overdue':
+                    categorizedTasks.overdueTasks.push(taskInfo);
+                    break;
+                default:
+                    break;
+            }
+
+            if(task.isArchived){
+                categorizedTasks.archivedTasks.push(taskInfo);
+            }
+        });
+
+        let lastUpdated = null;
+        if(tasks.length > 0){
+            const timestamps = tasks.map(t => new Date(t.updatedAt).getTime());
+            lastUpdated = new Date(Math.max(...timestamps));   
+        }
+
         const [archivedRows] = await pool.query(`
                 SELECT COUNT(*) AS totalArchived
                 FROM tasks 
@@ -218,7 +288,12 @@ router.get("/status-count/:assignedTo", async (req, res) => {
                 ${since ? 'AND updated_at > ?' :  ''}
             `, since ? [userId, new Date(since)] : [userId]);
 
-        res.json({ ...rows[0], totalArchived: archivedRows[0].totalArchived, lastUpdated: new Date().toISOString() });
+        res.json({ 
+            ...rows[0],
+            ...categorizedTasks, 
+            totalArchived: archivedRows[0].totalArchived, 
+            lastUpdated: lastUpdated ? lastUpdated.toISOString() : new Date().toISOString
+        });
 
     } catch (error) {
         console.error('Error Fetching Task Counts', error);

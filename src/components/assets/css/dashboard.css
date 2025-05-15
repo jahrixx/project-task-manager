@@ -76,6 +76,15 @@ h2 {
     transition: 0.3s;
 }
 
+.add-btn-emp:has(span.x-icon) {
+    font-size: .8rem;
+    color: white;
+    width: 25px;
+    height: 25px;
+    padding: 0;
+    border-radius: 50%;
+}
+
 .task-card:hover,
 .task-card-emp:hover {
     background: #1CA0C3;
@@ -127,7 +136,31 @@ h2 {
     width: auto;
 }
 
-.overlay p {
+.overlay-top {
+    background-color: #fff;
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    position: absolute;
+    z-index: 999;
+    top: 155px;
+    width: auto;
+}
+
+.overlay-bottom {
+    background-color: #fff;
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    position: absolute;
+    z-index: 999;
+    top: 214px;
+    width: auto;
+}
+
+.overlay, .overlay-top, .overlay-bottom p {
     font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
     margin: 8px 0;
     font-size: .7rem;
