@@ -20,6 +20,7 @@
     let employeesInOffice: { id: number; name: string; role: string; office: string }[] = [];
     let allTasks: Record<string, TaskData[]> = {}; 
     let filteredTasks: Record<string, TaskData[]> = {};
+    let expandedTasks: Record<string, boolean> = {};
     let errorMessage = 'No Current Tasks Availble!';
 
     onMount(async () => {
@@ -68,6 +69,15 @@
                 return 'lightgray';
         }
     }
+
+    function toggleExpand(taskId: number | null | undefined) {
+        if(taskId == null) return;
+
+        expandedTasks = {
+            ...expandedTasks,
+            [taskId]: !expandedTasks[taskId]
+        };
+    }
 </script>
 <link rel="stylesheet" href="src/components/assets/css/current-tasks.css">
 {#if currentUser?.role === 'Admin'}
@@ -81,7 +91,7 @@
                             {task.status}
                         </div>
                         <div class="task-description">
-                            <li><b>{task.title}</b> -  ({task.assignedToName}-{task.assigneeRole})</li>
+                            <li><b>{task.title} - <i>({task.assignedToName}-{task.assigneeRole})</i></b></li>
                         </div>
                     </div>
                 {/each}
@@ -100,7 +110,7 @@
                         {task.status}
                     </div>
                     <div class="task-description">
-                        <li>{task.title}:  <b>{task.assignedToName}</b> - <b>{task.assigneeRole}</b></li>
+                        <li><b>{task.title} - <i>({task.assignedToName}-{task.assigneeRole})</i></b></li>
                     </div>
                 </div>
             {/each}
@@ -111,14 +121,23 @@
 {:else}
     <ul>
         {#if filteredCurrentTasks.length > 0}
-            {#each filteredCurrentTasks as task}
+            {#each filteredCurrentTasks as task (task.id)}
                 <div class="task-container">
                     <div class="status-container">
                         <div class="status-circle" style="background-color: {getStatusColor(task.status)};"></div>
                         {task.status}
                     </div>
                     <div class="task-description">
-                        <li><b>{task.title}</b>: <u>{task.description}</u></li>
+                        <li>
+                            <b>{task.title}</b>:           
+                            {#if task.id != null}
+                                <i class="description-text">
+                                    <button class="text-button {expandedTasks[task.id] ? 'expanded' : ''}" on:click={() => toggleExpand(task.id)}>
+                                        {task.description}
+                                    </button>
+                                </i>
+                            {/if}     
+                        </li>
                     </div>
                 </div>
             {/each}
