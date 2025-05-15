@@ -242,7 +242,7 @@ router.get("/status-count/:assignedTo", async (req, res) => {
             const taskInfo = {
                 id: task.id,
                 title: task.title,
-                endDate: task.endDate
+                endDate: task.endDate + 1
             };
 
             if((task.status === 'Pending' || task.status === 'In Progress') && task.endDate && new Date(task.endDate) < now){

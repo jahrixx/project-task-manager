@@ -139,7 +139,7 @@ h2 {
 .overlay-top {
     background-color: #fff;
     border: 1px solid #ccc;
-    padding: 10px;
+    padding: 2px 7px 2px;
     border-radius: 5px;
     box-shadow: 0 5px 15px rgba(0,0,0,0.2);
     position: absolute;
@@ -150,8 +150,8 @@ h2 {
 
 .overlay-bottom {
     background-color: #fff;
-    border: 1px solid #ccc;
-    padding: 10px;
+    border: 1px solid #ccc;        
+    padding: 2px 7px 2px;
     border-radius: 5px;
     box-shadow: 0 5px 15px rgba(0,0,0,0.2);
     position: absolute;
