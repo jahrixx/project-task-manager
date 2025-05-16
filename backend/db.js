@@ -53,7 +53,7 @@ async function createTables() {
                 office VARCHAR(255),
                 firstName VARCHAR(255),
                 lastName VARCHAR(255),
-                number VARCHAR(11),
+                number VARCHAR(20),
                 address VARCHAR(255),
                 birthday DATE,
                 profilePic VARCHAR(255)

@@ -52,7 +52,7 @@ h2 {
     margin-bottom: 10px;
     border-radius: 10px;
     font-weight: bold;
-    cursor: pointer;
+    /* cursor: pointer; */
     transition: 0.3s;
 }
 
@@ -100,7 +100,7 @@ h2 {
     padding: 12px 20px;
     border-radius: 10px;
     font-weight: bold;
-    cursor: pointer;
+    /* cursor: pointer; */
     transition: 0.3s;
 }
 

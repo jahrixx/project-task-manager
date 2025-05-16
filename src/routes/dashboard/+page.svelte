@@ -139,8 +139,8 @@
                         </button>
                         {#if activeModal === 'Managers'}
                             <div class="overlay">
-                                {#each $dashboardStats.managersList as manager}
-                                    <p>{manager.name} - <i>{manager.officeName}</i></p>
+                                {#each $dashboardStats.managersList as manager, index}
+                                    <p>{index + 1}. {manager.name} - <i>{manager.officeName}</i></p>
                                 {/each}
                             </div> 
                         {/if}
@@ -157,8 +157,8 @@
                         </button>
                         {#if activeModal === 'Employees'}
                             <div class="overlay">
-                                {#each $dashboardStats.employeesList as employee}
-                                    <p>{employee.name} - <i>{employee.officeName}</i></p>
+                                {#each $dashboardStats.employeesList as employee, index}
+                                    <p>{index + 1}. {employee.name} - <i>{employee.officeName}</i></p>
                                 {/each}
                             </div>
                         {/if}
@@ -175,8 +175,8 @@
                         </button>
                         {#if activeModal === 'Offices'}
                             <div class="overlay">
-                                {#each $dashboardStats.officesList as office}
-                                    <p>{office.name}</p>
+                                {#each $dashboardStats.officesList as office, index}
+                                    <p>{index + 1}. {office.name}</p>
                                 {/each}
                             </div>
                         {/if}

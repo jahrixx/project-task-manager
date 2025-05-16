@@ -244,28 +244,28 @@
                             <form on:submit|preventDefault={handleSubmit}>
                                 <div class="form-group">
                                     <label for="firstname">First Name</label>
-                                    <input bind:value={form.firstName} type="text" placeholder="Enter First Name" />    
+                                    <input bind:value={form.firstName} type="text" placeholder="Enter First Name" required/>    
                                 </div>
                                 <div class="form-group">
                                     <label for="lastname">Last Name</label>
-                                    <input bind:value={form.lastName} type="text" placeholder="Enter Last Name" />    
+                                    <input bind:value={form.lastName} type="text" placeholder="Enter Last Name" required/>    
                                 </div>
                                 <div class="form-group">
                                     <label for="number">Phone Number</label>
-                                    <input bind:value={form.number} type="tel" placeholder="Enter Number" />    
+                                    <input bind:value={form.number} type="tel" placeholder="Enter Number" required/>    
                                 </div>
                                 <div class="form-group">
                                     <label for="address">Address</label>
-                                    <input bind:value={form.address} type="text" placeholder="Enter Address" />    
+                                    <input bind:value={form.address} type="text" placeholder="Enter Address" required/>    
                                 </div>
                                 <div class="form-group">
                                     <label for="birthday">Birthday</label>
-                                    <input bind:value={form.birthday} type="date" placeholder="Enter Birthday" />    
+                                    <input bind:value={form.birthday} type="date" placeholder="Enter Birthday" required/>    
                                 </div>
                                 <div class="select-tags">
                                     <div class="form-group2">
                                         <label for="role">Role</label>
-                                        <select bind:value={form.role}>
+                                        <select bind:value={form.role} required>
                                             <option value="">Select Role</option>
                                             {#each rolesArray as role}
                                                 <option value={role.name}>{role.name}</option>
@@ -274,7 +274,7 @@
                                     </div>
                                     <div class="form-group2">
                                         <label for="office">Office</label>
-                                        <select bind:value={form.office}>
+                                        <select bind:value={form.office} required>
                                             <option value="">Select Office</option>
                                             {#each officesArray as office}
                                                 <option value={office.officeName}>{office.officeName}</option>
