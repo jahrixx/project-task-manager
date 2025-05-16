@@ -22,6 +22,9 @@
 		"vite": "^6.0.0"
 	},
 	"dependencies": {
+		"@fullcalendar/core": "^6.1.17",
+		"@fullcalendar/daygrid": "^6.1.17",
+		"@fullcalendar/interaction": "^6.1.17",
 		"express": "^4.21.2",
 		"flatpickr": "^4.6.13",
 		"moment": "^2.30.1",
