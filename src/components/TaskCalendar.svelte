@@ -23,7 +23,7 @@ onMount(async () => {
         title: task.title,
         start: task.startDate,
         end: task.endDate,
-        color: task.status === 'Completed' ? 'green' : task.status === 'Pending' ? 'orange' : 'blue',
+        color: task.status === 'Completed' ? 'green' : (task.status === 'In Progress' ? 'blue' : (task.status === 'Pending' ? 'orange' : 'red')),
         extendedProps : {
             description: task.description,
             status: task.status,
@@ -31,14 +31,23 @@ onMount(async () => {
             createdByName: task.createdByName
         }
     })) : [];
+
+    const isMobile = window.innerWidth <= 500;
     
     const calendar = new Calendar(calendarEl, {
         plugins: [dayGridPlugin, interactionPlugin],
         initialView: 'dayGridMonth', 
         headerToolbar: {
-            left: 'prev,next today',
+            left: isMobile ? 'prev,today,next' : 'prev,next today',
             center: 'title',
-            right: 'dayGridMonth,dayGridWeek'
+            right: isMobile ? '' : 'dayGridMonth,dayGridWeek'
+        },
+        buttonText: {
+            today: isMobile ? 'Now' : 'Today',
+            prev: isMobile ? '◀' : 'Prev',
+            next: isMobile ? '▶' : 'Next',
+            dayGridMonth: isMobile ? 'Month' : 'Month',
+            dayGridWeek: isMobile ? 'Week' : 'Week'
         },
         events,
         eventClick: function (info) {
@@ -47,6 +56,22 @@ onMount(async () => {
         }
     });
     calendar.render();
+
+    // Update on window resize
+    window.addEventListener('resize', () => {
+        const mobile = window.innerWidth <= 500;
+        calendar.setOption('headerToolbar', {
+            left: mobile ? 'prev,next' : 'prev,next today',
+            center: 'title',
+            right: mobile ? '' : 'dayGridMonth,dayGridWeek'
+        });
+        calendar.setOption('buttonText', {
+            today: mobile ? 'Now' : 'Today',
+            prev: mobile ? '◀' : 'Prev',
+            next: mobile ? '▶' : 'Next'
+        });
+    });
+
 });
 </script>
 
@@ -56,5 +81,9 @@ onMount(async () => {
     .calendar-container {
         width: 100%;
         height: 73.5vh;
+    }
+
+    @media screen and (max-width: 700px) and (min-width: 300px) {
+        .calendar-container {margin: 0;}
     }
 </style>

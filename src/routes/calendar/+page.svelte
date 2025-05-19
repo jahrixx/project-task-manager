@@ -59,4 +59,8 @@
         /* height: 70vh;
         border: 1px solid black;     */
     }
+
+    @media screen and (max-width: 700px) and (min-width: 300px) {
+        .main-container {margin: 0;}
+    }
 </style>

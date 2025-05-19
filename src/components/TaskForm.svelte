@@ -169,3 +169,18 @@ async function handleSubmit() {
     </div>
     {/if}
 {/if}
+<style>
+    @media screen and (max-width: 500px) and (min-width: 300px) {
+        .overlay {
+            margin: auto;
+            padding: 0;
+            width: 100%;
+        }    
+        .form-container {
+            margin: 0;
+            margin-right: 8px;
+            width: 82%;
+        }
+    }
+    
+</style>

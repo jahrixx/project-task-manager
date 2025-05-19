@@ -8,6 +8,14 @@
     export const activePage = derived(page, ($page) => $page.url.pathname);
     export const userRole = derived(user, ($user: User | null) => $user?.role || "");
 
+    let isSidebarOpen = false;
+    let lastScrollPosition = 0;
+    let burgerVisible = true;
+
+    function toggleSidebar() {
+        isSidebarOpen = !isSidebarOpen;
+    }
+
     function logoutUser() {
         if (!user) {
             console.error("No user is currently logged in!");
@@ -24,6 +32,17 @@
         goto('/login');
     }
 
+    function handleScroll() {
+        const currentScrollPosition = window.pageYOffset;
+
+        if(currentScrollPosition > lastScrollPosition && currentScrollPosition > 50) {
+            burgerVisible = false;
+        } else {
+            burgerVisible = true;
+        }
+        lastScrollPosition = currentScrollPosition;
+    }
+
     onMount(() => {
         const unsubscribe = user.subscribe($user => {
             if (!$user && get(isAuthenticated)) {
@@ -31,11 +50,17 @@
             }
         });
 
-        return () => unsubscribe();
+        window.addEventListener('scroll', handleScroll);
+
+        return () => {
+            unsubscribe();
+            window.removeEventListener('scroll', handleScroll);
+        } 
+
     });
 </script>
-
-<div class="sidebar">
+<button type="button" class="burger" on:click={() => toggleSidebar()} aria-label="toggle-sidebar" class:visible={burgerVisible}>☰</button>
+<div class="sidebar" class:show={isSidebarOpen}>
     <div class="logo-container">
         <img src="/src/components/assets/logo.png" alt="Logo">
         <h2 class="project-title">Project Task Manager</h2>
@@ -157,11 +182,28 @@
                 </button>
             </li>
         {/if}
-        <li><button class="btn-logout" on:click={logoutUser}>Logout</button></li>
+        <li><button class="btn-logout" on:click={logoutUser}><span>Logout</span></button></li>
     </ul>
 </div>
 
-<style> 
+<style>
+    .burger {
+        margin: 0;
+        padding: 0;
+        position: fixed;
+        top: 0;
+        left: 0;
+        transition: transform 0.3s ease;
+    }
+
+    .burger.visible {
+        transform: translateY(0);
+    }
+
+    .burger:not(.visible) {
+        transform: translateY(-100%);
+    }
+
     .sidebar {
         width: 250px;
         height: 100vh;
@@ -263,5 +305,55 @@
         font-size: 1.7rem;
         margin: 0;
         color: #333;
+    }
+
+    @media screen and (max-width: 700px) and (min-width: 300px) {
+        .burger {
+            display: block;
+            font-size: 15px;
+            cursor: pointer;
+            top: 0;
+            padding: 10px;
+            background-color: #333;
+            color: aliceblue;
+            border: none;
+            z-index: 99999;
+        }
+
+        .sidebar {
+            display: none;
+            width: 100%;
+            height: 100vh;
+            background-color: #333;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 9999;
+            overflow-x: hidden;
+        }
+
+        .logo-container h2 {
+            text-align: left;
+            font-size: 1rem;
+            margin: 0;
+            color: white;
+        }
+
+        .sidebar.show {
+            display: block;
+        }
+
+        .sidebar button {
+            float: none;
+            display: block;
+            width: 100%;
+            border-radius: 0;
+            transform: none;
+            color: whitesmoke;
+        }
+
+        .sidebar .btn-logout > span {
+            text-align: center;
+        }
     }
 </style>

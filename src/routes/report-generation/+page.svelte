@@ -542,3 +542,115 @@
         </div>
     </div>
 {/if}
+<style>
+    @media screen and (max-width: 500px) and (min-width: 300px) {
+        .main-container { margin: 0; }
+        .report-container {
+            display: flex;
+            flex-direction: column;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .report-fields {
+            display: flex;
+            flex-direction: column;
+        }
+        .report-actions {
+            order: 2;
+            width: 100%;
+        }
+        .buttons {
+            display: flex;
+            width: 100%;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        label {
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .generate-btn, .clear-btn {
+            padding: 6px;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            flex: 1;
+        }
+        .report-display {
+            margin: auto;
+            width: 90%;
+            padding-left: 10px;
+            padding-right: 10px;
+            overflow-x: hidden;
+        }
+        .report-content {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .report-header {
+            margin-bottom: 0;
+        }
+        .report-header h2 {
+            font-size: 1.25rem;
+            text-align: center;
+            margin-bottom: 0;
+        }
+        .report-meta {
+            font-size: 0.85rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+            text-align: center;
+        }
+        .report-logo {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 0.75rem;
+            gap: 0.5rem;     
+            margin-bottom: 0;       
+        }
+        .user-info {
+            text-align: center;
+        }
+        .task-table {
+            margin-top: 0;
+        }
+        .task-table, 
+        .placeholder-table table {
+            width: 100%;
+            overflow-x: auto;
+            display: block;
+            font-size: 0.8rem;
+        }
+        .task-table thead,
+        .placeholder-table thead {
+            display: table;
+            width: 100%;
+        }
+        .task-table tbody,
+        .placeholder-table tbody {
+            display: table;
+            width: 100%;
+        }
+        .task-table th,
+        .task-table td,
+        .placeholder-table th,
+        .placeholder-table td {
+            white-space: nowrap;
+            padding: 0.5rem;
+            text-align: left;
+        }
+        .no-tasks,
+        .placeholder-text {
+            text-align: center;
+            font-size: 0.95rem;
+            color: #444;
+        }
+    }
+</style>

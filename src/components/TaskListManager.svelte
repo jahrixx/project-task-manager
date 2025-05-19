@@ -158,7 +158,7 @@
                                 <td>
                                     <div class="status-container">
                                         <div class="status-circle" style="background-color: {getStatusColor(task.status)};"></div>
-                                        {task.status}
+                                        <span class="status-label">{task.status}</span> 
                                     </div>
                                 </td>
                                 <td>
@@ -209,7 +209,7 @@
                                 <td>
                                     <div class="status-container">
                                         <div class="status-circle" style="background-color: {getStatusColor(task.status)};"></div>
-                                        {task.status}
+                                        <span class="status-label">{task.status}</span> 
                                     </div>
                                 </td>
                                 <td>
@@ -259,7 +259,7 @@
                                 <td>
                                     <div class="status-container">
                                         <div class="status-circle" style="background-color: {getStatusColor(task.status)};"></div>
-                                        {task.status}
+                                        <span class="status-label">{task.status}</span> 
                                     </div>
                                 </td>
                                 <td>
@@ -315,7 +315,7 @@
                                 <td>
                                     <div class="status-container">
                                         <div class="status-circle" style="background-color: {getStatusColor(task.status)};"></div>
-                                        {task.status}
+                                        <span class="status-label">{task.status}</span> 
                                     </div>
                                 </td>
                                 <td>
@@ -371,7 +371,7 @@
                                 <td>
                                     <div class="status-container">
                                         <div class="status-circle" style="background-color: {getStatusColor(task.status)};"></div>
-                                        {task.status}
+                                        <span class="status-label">{task.status}</span> 
                                     </div>
                                 </td>
                                 <td>
@@ -392,3 +392,72 @@
         </div>
     {/if}
 {/if}
+<style>
+    @media screen and (max-width: 500px) and (min-width: 300px) {
+        .task-view-btns{
+            left: 0;
+            margin: 0;
+            gap: 10px;
+        }
+        .task-view-btns button{
+            font-size: 14.5px;
+            margin: auto;
+            /* font-weight: 600; */
+        }
+        .table-container {
+            margin: 10px 0;
+            border-radius: 8px;
+            /* width: 100%; */
+        }
+        th, td {
+            padding: 5px;
+            font-size: 12px;
+        }
+
+        .task {
+            max-width: 150px;
+            /* overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap; */
+        }
+
+        .status-container {
+            border: none;
+        }
+        .status-circle {
+            width: 16px;
+            height: 16px;
+            /* position: relative; */
+        }
+        .status-label {
+            display: none;
+        }
+        .actions {
+            gap: 4px;
+            justify-content: center;
+        }
+        .btn {
+            padding: 2px;
+            justify-content: center;
+            font-size: 9px;
+            margin-bottom: 2px;
+        }
+        .archive {
+            font-size: 8.8px;
+        }
+        /* .status-circle:hover::after {
+            content: attr(title);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #333;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 10;
+        } */
+    }
+</style>

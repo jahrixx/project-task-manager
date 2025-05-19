@@ -500,3 +500,82 @@
         </div>
     </div>
 {/if}
+<style>
+    @media screen and (max-width: 500px) and (min-width: 300px) {
+        hr {
+            margin: auto;
+            width: 95%;
+        }
+        .container {margin-bottom: 10px;}
+        .main-container {margin: 0;}
+        .filter-container {
+            left: 5px;
+            padding: 5px;
+        }
+        .header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 8px;
+        }
+        .control-btn {
+            width: 100%;
+            justify-content: flex-end;
+        }
+        .btn-text {
+            display: none;
+        }
+        .search {
+            width: 100%;
+        }
+        .search-bar {
+            width: 100%;
+            padding: 6px 25px 6px 8px;
+            font-size: 14px;
+        }
+        .reset-icon svg,
+        .filter-btn svg,
+        .add-btn svg,
+        .add-btn-emp svg {
+            width: 20px;
+            height: 20px;
+        }
+        .search-icon svg {
+            width: 26px;
+            height: 26px;
+        }
+        .header-title {
+            font-size: 16px;
+            margin: 0 auto;
+        }
+        .filter-btn {
+            height: 35px;
+            width: 35px;
+        }
+        .add-btn {
+            padding: 0;
+        }
+        .add-btn svg {
+            margin: 0;
+            padding-top: 6px;
+            padding-left: 8px;   
+        }
+        .add-btn span {
+            font-size: 14px;
+            padding-top: 9px;
+            padding-right: 8px;
+        }
+        .reset-icon {
+            padding-top: 6.5px;
+        }
+        .search-icon {
+            padding-top: 6.6px;
+        }
+        .search-input-container {
+            width: 100%;
+        }
+        .task-view {
+            margin: 0;
+        }
+    }
+</style>
