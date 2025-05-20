@@ -529,6 +529,7 @@
             width: 100%;
         }
         .search-bar {
+            margin-top: 10px;
             width: 100%;
             padding: 6px 25px 6px 8px;
             font-size: 14px;
@@ -594,6 +595,7 @@
         h3 {
             margin-top: 5px;
             margin-left: 0;
+            margin-bottom: 0;
         }
         .office-name {
             margin-left: 20px;

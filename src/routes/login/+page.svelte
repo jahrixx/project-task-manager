@@ -120,4 +120,38 @@
         background-color: #23BEDA;
         opacity: 70%;
     }
+
+    @media screen and (max-width: 500px) and (min-width: 300px) {
+        .login-container {
+            padding: 0 10px;
+            height: auto;
+        }
+
+        .login-box {
+            width: 100%;
+            padding: 1.5rem 1.5rem;
+            box-sizing: border-box;
+        }
+        .logo-container {
+            flex-direction: column;
+            gap: 10px;
+            text-align: center;
+        }
+        .login-container img {
+            width: 100px;
+            height: 100px;
+        }
+        .logo-container h2 {
+            font-size: 1.8rem;
+            text-align: center;
+        }
+        input {
+            width: 100%;
+            font-size: 1rem;
+        }
+        button {
+            font-size: 1rem;
+            padding: 10px;
+        }
+    }
 </style>
