@@ -473,4 +473,16 @@
             margin-top: 10px;
         } */
     }
+
+    @media screen and (max-width: 320px) {
+        .overlay-bottom {
+            left: 45px;
+            top: 105px;
+        }
+
+        .overlay-top, .overlay {
+            left: 45px;
+            top: 97epx;
+        }
+    }
 </style>

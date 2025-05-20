@@ -580,12 +580,17 @@
             transition: all 0.2s ease;
             flex: 1;
         }
+        .control-btn {
+            gap: 8px;
+            padding: 4px 8px;
+        }
         .report-display {
             margin: auto;
             width: 90%;
             padding-left: 10px;
             padding-right: 10px;
             overflow-x: hidden;
+            margin-top: -1px;
         }
         .report-content {
             display: flex;
@@ -651,6 +656,17 @@
             text-align: center;
             font-size: 0.95rem;
             color: #444;
+        }
+    }
+
+    @media screen and (max-width: 320px) {
+        .report-display {
+            margin-top: -1px;
+        }
+
+        .control-btn {
+            gap: 8px;
+            padding: 4px 8px;
         }
     }
 </style>

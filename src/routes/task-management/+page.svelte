@@ -555,6 +555,20 @@
         .add-btn {
             padding: 0;
         }
+        .add-btn-emp {
+            padding: 0;
+            width: 30%;
+        }
+        .add-btn-emp span {
+            font-size: 14px;
+            padding-top: 9px;
+            padding-right: 8px;
+        }
+        .add-btn-emp svg {
+            margin: 0;
+            padding-top: 6px;
+            padding-left: 8px;
+        }
         .add-btn svg {
             margin: 0;
             padding-top: 6px;
@@ -576,6 +590,45 @@
         }
         .task-view {
             margin: 0;
+        }
+    }
+
+    @media screen and (max-width: 320px) {
+        .reset-icon svg,
+        .filter-btn svg,
+        .add-btn svg,
+        .add-btn-emp svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .add-btn-emp span {
+            font-size: 11px;
+            padding-top: 9px;
+            padding-left: 3px;
+            padding-right: 10px;
+        }
+
+        .add-btn-emp svg {
+            margin: 0;
+            padding-top: 4px;
+            padding-left: 10px;
+        }
+        .reset-icon svg {
+            width: 16px;
+            height: 16px;
+        }
+        .search-icon svg {
+            width: 21px;
+            height: 21px;
+        }
+        .reset-icon {
+            padding-top: 7.5px;
+            right: 8px;
+        }
+        .search-icon {
+            padding-top: 7px;
+            right: 25.5px;
         }
     }
 </style>

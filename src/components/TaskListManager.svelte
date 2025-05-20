@@ -460,4 +460,36 @@
             z-index: 10;
         } */
     }
+
+    @media screen and (max-width: 320px) {
+        /* #date {
+            font-size: 10px;
+        } */
+
+        .status-circle {
+            width: 14px;
+            height: 14px;
+            /* position: relative; */
+        }
+
+        .task {
+            max-width: 150px;
+            /* overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap; */
+        }
+        th, td {
+            padding: 3px;
+            font-size: 10px;
+        }
+        .btn {
+            padding: 2px;
+            justify-content: center;
+            font-size: 7px;
+            margin-bottom: 2px;
+        }
+        .task-view-btns button {
+            font-size: .8rem;
+        }
+    }
 </style>
