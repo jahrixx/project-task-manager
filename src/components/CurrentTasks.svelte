@@ -146,3 +146,12 @@
         {/if}
     </ul>
 {/if}
+<style>
+    @media screen and (max-width: 500px) and (min-width: 300px) {
+
+    }
+    
+    @media screen and (max-width: 320px) {
+        
+    }
+</style>

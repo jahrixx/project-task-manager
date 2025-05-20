@@ -156,3 +156,61 @@
         </div>
     </div>    
 {/if}
+<style>
+    @media screen and (max-width: 600px) {
+        .edit-profile {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 0;
+            /* padding: 20px 10px; */
+            width: 100%;
+            box-sizing: border-box;            
+        }
+
+        .profile-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 2.5px;
+        }
+        .password-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 400px;
+        }
+        .form-group {
+            width: 100%;
+            margin-bottom: 3px;
+            padding: 0 10px;
+            box-sizing: border-box;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            text-align: left;
+        }
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 5px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        .update-btn {
+            width: 100%;
+            margin-top: 20px;
+            padding: 10px 10px;
+            font-size: 12px;
+        }
+
+    }
+
+    /* @media screen and (max-width: 320px) {
+        
+    } */
+</style>
