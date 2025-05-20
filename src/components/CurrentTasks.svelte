@@ -148,7 +148,18 @@
 {/if}
 <style>
     @media screen and (max-width: 500px) and (min-width: 300px) {
-
+        .status-container {
+            width: 120px;
+            height: 10px;
+            padding: 3px;
+            font-size: 10px;
+            margin-top: 8px;
+        }
+        .status-circle {
+            width: 10px;
+            height: 10px;
+            margin-left: 5px;
+        }
     }
     
     @media screen and (max-width: 320px) {

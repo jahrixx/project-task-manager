@@ -285,7 +285,7 @@
                                 <div class="form-btns">
                                     <button type="submit">{editId ? "Update" : "Create"} User</button>
                                     {#if editId}
-                                        <button type="button" on:click={() => { form = {}; editId = null; }}>Cancel</button>
+                                        <button type="button" class="cancel" on:click={() => { form = {}; editId = null; }}>Cancel</button>
                                     {/if}
                                 </div>
                             </form>
@@ -330,3 +330,117 @@
     </div>
 {/if}
 </main>
+<style>
+    @media screen and (max-width: 500px) and (min-width: 300px) {
+        .main-container {
+            margin: 0%;
+        }
+        .filter-container {
+            left: 5px;
+            padding: 5px;
+        }
+        .header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 8px;
+        }
+        .control-btn {
+            width: 100%;
+            justify-content: flex-end;
+        }
+        /* .btn-text {
+            display: none;
+        } */
+        .search {
+            width: 100%;
+        }
+        .search-bar {
+            width: 100%;
+            padding: 6px 25px 6px 8px;
+            font-size: 14px;
+        }
+        .reset-icon svg,
+        .filter-btn svg,
+        .add-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+        .search-icon svg {
+            width: 26px;
+            height: 26px;
+        }
+        .header-title {
+            font-size: 16px;
+            margin: 0 auto;
+        }
+        .filter-btn {
+            height: 35px;
+            width: 35px;
+        }
+        .add-btn {
+            padding: 0;
+        }
+        .add-btn svg {
+            margin: 0;
+            padding-top: 6px;
+            padding-left: 8px;   
+        }
+        .add-btn span {
+            font-size: 14px;
+            padding-top: 9px;
+            padding-right: 8px;
+        }
+        .reset-icon {
+            padding-top: 6.5px;
+        }
+        .search-icon {
+            padding-top: 6.6px;
+        }
+        .search-input-container {
+            width: 100%;
+        }
+        .table-container {
+            width: 95%;
+            margin: auto;
+            /* border-radius: 8px; */
+        }
+        th {
+            padding: 2.5px;
+            font-size: 10px;
+        }
+        td {
+            padding: 2.5px;
+            font-size: 10px;
+        }
+        .actions {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            justify-content: center;
+        }
+        .actions .btn {
+            font-size: 10px;
+            width: 100%;
+            padding: 2px;
+            padding-top: 4px;
+            padding-bottom: 4px;
+        }
+        .overlay {
+            margin: auto;
+            padding: 0;
+            width: 100%;
+        }    
+        .form-container {
+            margin: 0;
+            margin-right: 8px;
+            width: 82%;
+        }
+    }
+
+    @media screen and (max-width: 320px) {
+        .main-container {
+            margin: 0%;
+        }
+    }
+</style>

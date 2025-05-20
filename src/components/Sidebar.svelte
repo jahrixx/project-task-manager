@@ -329,6 +329,7 @@
             top: 0;
             left: 0;
             z-index: 9999;
+            overflow-y: hidden;
             overflow-x: hidden;
         }
 

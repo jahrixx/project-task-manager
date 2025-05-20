@@ -511,11 +511,11 @@
         .filter-container {
             left: 5px;
             padding: 5px;
+            font-size: 12px;
         }
         .header {
             flex-direction: column;
             align-items: flex-start;
-            gap: 10px;
             padding: 8px;
         }
         .control-btn {
@@ -590,6 +590,39 @@
         }
         .task-view {
             margin: 0;
+        }
+        h3 {
+            margin-top: 5px;
+            margin-left: 0;
+        }
+        .office-name {
+            margin-left: 20px;
+        }
+        .task-holder-container{
+            max-width: 100%;
+        }
+        .task-holder {
+            gap: 5px;
+            padding: 5px;
+        }
+        .task-card{
+            padding: 0.5rem;
+            margin: 0.5rem 0;
+            min-width: 190px;
+        }
+        .task-header{
+            font-size: 12px;
+            margin-bottom: 5px;
+            border-bottom: 1px solid lightgray;
+            padding-bottom: 5px;
+            color: white;
+        }
+        .task-card p{
+            text-align: center;
+            margin-bottom: 8px;
+            line-height: 1;
+            color: white;
+            font-size: 10px;
         }
     }
 

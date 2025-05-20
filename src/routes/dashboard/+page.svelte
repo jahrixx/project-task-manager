@@ -429,30 +429,44 @@
             margin: 2px;
             margin-bottom: 20px;
         }
+        .dash-controls {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin: 1px;
+            margin-bottom: 20px;
+        }
+        .task-card {
+            width: 90%;
+            margin: 0;
+            padding: 6px 10px;
+        }
+        .task-text {
+            font-size: 18px;
+        }
         .task-card-emp{
             width: 90%;
             margin: 0;
         }
-
         .section {
             display: flex;
             flex-direction: column;
             gap: 1rem;
             padding: 1rem;
         }
-
         .current-task-and-notifications,
         .notification {
             width: 100%;
             margin-left: 0;
         }
-
         .current-task-list-emp,
         .notification-list {
             width: 100%;
             overflow-x: auto;
         }
-
         h2 {
             font-size: 1.1rem;
             text-align: center;
@@ -463,15 +477,10 @@
             margin-bottom: .5rem;
             width: 100%;
         }
-
-        /* .dash-controls, .dash-controls-emp {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 10px;
-        } */
+        .activities, .current-task-and-notifications, .notification {
+            font-size: 12px;
+        }
+        
     }
 
     @media screen and (max-width: 320px) {
@@ -479,10 +488,13 @@
             left: 45px;
             top: 105px;
         }
-
-        .overlay-top, .overlay {
+        .overlay-top {
             left: 45px;
-            top: 97epx;
+            top: 97px;
+        }
+        .overlay {
+            top: 268px;
+            left: 8px;
         }
     }
 </style>

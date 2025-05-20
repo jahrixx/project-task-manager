@@ -296,7 +296,7 @@ button[type="submit"] {
     cursor: pointer;
 }
 
-button[type="button"] {
+.cancel {
     border: 1px solid #C41E3A;
     background-color: #FAF9F6;
     color: #C41E3A;
@@ -311,7 +311,7 @@ button[type="submit"]:hover {
     color: #FFFFFF;
 }
 
-button[type="button"]:hover {
+.cancel:hover {
     border: none;
     background-color: #C41E3A;
     color: #FFFFFF;

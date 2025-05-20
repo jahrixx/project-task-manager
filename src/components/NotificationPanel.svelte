@@ -177,3 +177,30 @@
         </ul>
     {/if}
 </div>
+<style>
+    @media screen and (max-width: 500px) and (min-width: 300px) {
+        .pic-content{
+            margin-top: 2px;
+        }
+        .pic-content img{
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            object-fit: cover;
+        }
+        .more-controls > button > svg {
+            width: 15px;
+            height: 15px;
+        }
+        .options-menu button {
+            width: 90px;
+            text-align: center;
+            padding: 0.15rem;
+            font-size: 12px;
+        }
+    }
+    
+    @media screen and (max-width: 320px) {
+        
+    }
+</style>

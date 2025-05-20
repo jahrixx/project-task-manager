@@ -402,12 +402,10 @@
         .task-view-btns button{
             font-size: 14.5px;
             margin: auto;
-            /* font-weight: 600; */
         }
         .table-container {
             margin: 10px 0;
             border-radius: 8px;
-            /* width: 100%; */
         }
         th, td {
             padding: 5px;
@@ -416,9 +414,6 @@
 
         .task {
             max-width: 150px;
-            /* overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap; */
         }
 
         .status-container {
@@ -427,7 +422,6 @@
         .status-circle {
             width: 16px;
             height: 16px;
-            /* position: relative; */
         }
         .status-label {
             display: none;
@@ -445,38 +439,16 @@
         .archive {
             font-size: 8.8px;
         }
-        /* .status-circle:hover::after {
-            content: attr(title);
-            position: absolute;
-            bottom: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: #333;
-            color: white;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            white-space: nowrap;
-            z-index: 10;
-        } */
     }
 
     @media screen and (max-width: 320px) {
-        /* #date {
-            font-size: 10px;
-        } */
-
         .status-circle {
             width: 14px;
             height: 14px;
-            /* position: relative; */
         }
 
         .task {
             max-width: 150px;
-            /* overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap; */
         }
         th, td {
             padding: 3px;
