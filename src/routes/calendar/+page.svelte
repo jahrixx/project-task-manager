@@ -37,7 +37,10 @@
     });
 
 </script>
-<link rel="stylesheet" href="src/components/assets/css/calendar.css">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="src/components/assets/css/calendar.css">
+</head>
 <title>Task Calendar</title>
 {#if !isAuthenticated}
     <Login />

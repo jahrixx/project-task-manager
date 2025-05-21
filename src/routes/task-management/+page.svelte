@@ -338,6 +338,7 @@
 
 <title>Task Management</title>
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="src/components/assets/css/task-management.css">
 </head>
 
@@ -558,7 +559,7 @@
         }
         .add-btn-emp {
             padding: 0;
-            width: 30%;
+            width: auto;
         }
         .add-btn-emp span {
             font-size: 14px;
@@ -581,10 +582,10 @@
             padding-right: 8px;
         }
         .reset-icon {
-            padding-top: 6.5px;
+            padding-top: 14.5px;
         }
         .search-icon {
-            padding-top: 6.6px;
+            padding-top: 15.6px;
         }
         .search-input-container {
             width: 100%;
@@ -626,6 +627,9 @@
             color: white;
             font-size: 10px;
         }
+        .task-holder-container::-webkit-scrollbar {
+            height: 2px;
+        }
     }
 
     @media screen and (max-width: 320px) {
@@ -636,18 +640,28 @@
             width: 18px;
             height: 18px;
         }
-
+        .add-btn span {
+            font-size: 13px;
+            padding-top: 9.5px;
+            padding-left: 3px;
+            padding-right: 10px;
+        }
+        .add-btn svg {
+            margin: 0;
+            padding-top: 7px;
+            padding-left: 8px;
+        }
         .add-btn-emp span {
-            font-size: 11px;
-            padding-top: 9px;
+            font-size: 13px;
+            padding-top: 7.5px;
             padding-left: 3px;
             padding-right: 10px;
         }
 
         .add-btn-emp svg {
             margin: 0;
-            padding-top: 4px;
-            padding-left: 10px;
+            padding-top: 5px;
+            padding-left: 8px;
         }
         .reset-icon svg {
             width: 16px;
@@ -658,11 +672,11 @@
             height: 21px;
         }
         .reset-icon {
-            padding-top: 7.5px;
+            padding-top: 15.5px;
             right: 8px;
         }
         .search-icon {
-            padding-top: 7px;
+            padding-top: 15px;
             right: 25.5px;
         }
     }

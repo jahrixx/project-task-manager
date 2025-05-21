@@ -59,6 +59,7 @@
 
     });
 </script>
+<link rel="stylesheet" href="src/components/assets/css/sidebar-mobile-responsive.css">
 <button type="button" class="burger" on:click={() => toggleSidebar()} aria-label="toggle-sidebar" class:visible={burgerVisible}>☰</button>
 <div class="sidebar" class:show={isSidebarOpen}>
     <div class="logo-container">
@@ -192,8 +193,14 @@
         padding: 0;
         position: fixed;
         top: 0;
-        left: 0;
-        transition: transform 0.3s ease;
+        left: 2px;
+        width: 40px;
+        height: 40px;
+        background-color: #ff6b6b;
+        transform: rotate(45deg) translate(10px) translateY(-10px);
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        transition: all 0.3s ease;
+        clip-path: polygon(0 0, 100% 0, 100% 75%, 50% 100%, 0 75%);
     }
 
     .burger.visible {
@@ -310,14 +317,16 @@
     @media screen and (max-width: 700px) and (min-width: 300px) {
         .burger {
             display: block;
-            font-size: 15px;
+            font-size: 18px;
             cursor: pointer;
             top: 0;
             padding: 10px;
+            padding-bottom: 45px;
             background-color: #333;
             color: aliceblue;
             border: none;
             z-index: 99999;
+            position: fixed;
         }
 
         .sidebar {

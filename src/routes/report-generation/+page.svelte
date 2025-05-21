@@ -304,6 +304,7 @@
 
 <title>Reports Generation</title>
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="src/components/assets/css/report-generation.css">
 </head>
 {#if !isAuthenticated}
@@ -616,9 +617,14 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            font-size: 0.75rem;
             gap: 0.5rem;     
             margin-bottom: 0;       
+        }
+        .logo {
+            font-size: 1.25rem;
+        }
+        .user-name, .user-role {
+            font-size: 0.85rem;
         }
         .user-info {
             text-align: center;
@@ -631,7 +637,7 @@
             width: 100%;
             overflow-x: auto;
             display: block;
-            font-size: 0.8rem;
+            font-size: 0.85rem;
         }
         .task-table thead,
         .placeholder-table thead {
@@ -654,7 +660,8 @@
         .no-tasks,
         .placeholder-text {
             text-align: center;
-            font-size: 0.95rem;
+            font-style: italic;
+            font-size: 0.85rem;
             color: #444;
         }
     }
