@@ -1,14 +1,13 @@
 <script lang="ts">
-    import { notifications, loadAdminNotifications, loadUserNotifications, type Notification } from '../lib/stores/notification';
     import { onMount } from 'svelte';
-    import { isAuthenticated, user, type User } from '$lib/stores/user';
+    import { user} from '$lib/stores/user';
     import { get } from "svelte/store";
     import { removeNotification } from '$lib/api/notificationService';
+    import { markNotificationAsRead, markNotificationAsUnread } from '$lib/api/notificationService';
+    import { notifications, loadAdminNotifications, loadUserNotifications } from '../lib/stores/notification';
     
     export let userId: number;
     export let role: string;
-    
-    const API_BASE_URL = `${import.meta.env.VITE_BASE_URL}`;
     
     let loading = true;
     let initialized = true;
@@ -46,8 +45,6 @@
                 }
             }
         };
-
-        console.log("Current User Role: ", role);
         
         fetchNotifications();
 
@@ -68,36 +65,6 @@
             minute: '2-digit',
             hour12: true,
         });
-
-    async function markNotificationAsRead(id: number) {
-        try { 
-            const response = await fetch(`${import.meta.env.VITE_BASE_URL}/notification/read/${id}`, { method: 'POST' });
-
-            if(!response.ok) throw new Error('Failed to mark as unread.');
-            if (role === "Admin") {
-                await loadAdminNotifications();
-            } else {
-                await loadUserNotifications(userId);
-            }
-        } catch (err) {
-            console.error("Error marking notification as read: ", err);   
-        }
-    }
-
-    async function markNotificationAsUnread(id: number) {
-        try { 
-            const response = await fetch(`${import.meta.env.VITE_BASE_URL}/notification/unread/${id}`, { method: 'POST' });
-
-            if(!response.ok) throw new Error('Failed to mark as unread.');
-            if (role === "Admin") {
-                await loadAdminNotifications();
-            } else {
-                await loadUserNotifications(userId);
-            }
-        } catch (err) {
-            console.error("Error marking notification as read: ", err);   
-        }
-    }
 
     function toggleMenu(noteId: number) {
         showMenu = showMenu === noteId ? null : noteId;

@@ -1,6 +1,6 @@
 import { type User } from "$lib/stores/user";
 
-const API_URL = `${import.meta.env.VITE_BASE_URL}users`;
+const API_URL = `${import.meta.env.VITE_BASE_URL}/users`;
 
 export async function getUsers() {
     const res = await fetch(API_URL);
