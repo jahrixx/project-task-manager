@@ -59,7 +59,6 @@
 
     });
 </script>
-<link rel="stylesheet" href="src/components/assets/css/sidebar-mobile-responsive.css">
 <button type="button" class="burger" on:click={() => toggleSidebar()} aria-label="toggle-sidebar" class:visible={burgerVisible}>☰</button>
 <div class="sidebar" class:show={isSidebarOpen}>
     <div class="logo-container">

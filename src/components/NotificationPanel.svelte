@@ -8,7 +8,7 @@
     export let userId: number;
     export let role: string;
     
-    const API_BASE_URL = 'http://localhost:3000';
+    const API_BASE_URL = `${import.meta.env.VITE_BASE_URL}`;
     
     let loading = true;
     let initialized = true;
@@ -71,7 +71,7 @@
 
     async function markNotificationAsRead(id: number) {
         try { 
-            const response = await fetch(`http://localhost:3000/notification/read/${id}`, { method: 'POST' });
+            const response = await fetch(`${import.meta.env.VITE_BASE_URL}/notification/read/${id}`, { method: 'POST' });
 
             if(!response.ok) throw new Error('Failed to mark as unread.');
             if (role === "Admin") {
@@ -86,7 +86,7 @@
 
     async function markNotificationAsUnread(id: number) {
         try { 
-            const response = await fetch(`http://localhost:3000/notification/unread/${id}`, { method: 'POST' });
+            const response = await fetch(`${import.meta.env.VITE_BASE_URL}/notification/unread/${id}`, { method: 'POST' });
 
             if(!response.ok) throw new Error('Failed to mark as unread.');
             if (role === "Admin") {
@@ -144,7 +144,7 @@
                             </div>
                             <div class="pic-content">
                                 <span>
-                                    <img src={note.profilePic ? `http://localhost:3000${note.profilePic}` : '/src/components/assets/default-avatar.png'} alt="User Profile" class="user-pic">
+                                    <img src={note.profilePic ? `${import.meta.env.VITE_BASE_URL}${note.profilePic}` : '/src/components/assets/default-avatar.png'} alt="User Profile" class="user-pic">
                                 </span>
                                 <span class="content">
                                     {@html note.message}

@@ -15,12 +15,18 @@ onMount(async () => {
     const userRole = currentUser?.role || '';  
     const userOffice = currentUser?.office || '';  
 
-    const res = await fetch(`http://localhost:3000/tasks?userId=${userId}&role=${userRole}&office=${userOffice}`);
+    const url = userRole === 'Admin'
+        ? `${import.meta.env.VITE_BASE_URL}/tasks`
+        : `${import.meta.env.VITE_BASE_URL}/tasks?userId=${userId}&role=${userRole}&office=${userOffice}`;
+
+    const res = await fetch(url);
     const data = await res.json();
 
     const events = Array.isArray(data) ? data.map((task: TaskData) => ({
         id: task.id != null ? String(task.id) : undefined,
-        title: task.title,
+        title: userRole === 'Admin' 
+            ? `${task.title} - ${task.assignedToName}` 
+            : task.title,
         start: task.startDate,
         end: task.endDate,
         color: task.status === 'Completed' ? 'green' : (task.status === 'In Progress' ? 'blue' : (task.status === 'Pending' ? 'orange' : 'red')),
@@ -40,14 +46,15 @@ onMount(async () => {
         headerToolbar: {
             left: isMobile ? 'prev,today,next' : 'prev,next today',
             center: 'title',
-            right: isMobile ? '' : 'dayGridMonth,dayGridWeek'
+            right: isMobile ? '' : 'dayGridMonth,dayGridWeek,dayGridDay'
         },
         buttonText: {
             today: isMobile ? 'Now' : 'Today',
             prev: isMobile ? '◀' : 'Prev',
             next: isMobile ? '▶' : 'Next',
             dayGridMonth: isMobile ? 'Month' : 'Month',
-            dayGridWeek: isMobile ? 'Week' : 'Week'
+            dayGridWeek: isMobile ? 'Week' : 'Week',
+            dayGridDay: isMobile ? 'Day' : 'Day'
         },
         events,
         eventClick: function (info) {

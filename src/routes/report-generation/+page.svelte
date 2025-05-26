@@ -11,7 +11,7 @@
     import flatpickr from "flatpickr";
     import type { Instance } from "flatpickr/dist/types/instance";
 
-    const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+    const API_URL = `${import.meta.env.VITE_BASE_URL}`;
     const currentDate = new Date();
     const formattedDate = currentDate.toLocaleDateString();
     

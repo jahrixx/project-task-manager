@@ -1,6 +1,6 @@
 import { writable } from "svelte/store";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/dashboard";
+const API_URL = `${import.meta.env.VITE_BASE_URL}/dashboard`;
 
 export interface DashboardStats {
     employees: number;

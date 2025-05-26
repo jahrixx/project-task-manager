@@ -5,7 +5,7 @@ export async function fetchActivities(userId: number, role: string) {
     threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
 
     try {
-        const res = await fetch(`http://localhost:3000/activities?userId=${userId}&role=${role}`);
+        const res = await fetch(`${import.meta.env.VITE_BASE_URL}/activities?userId=${userId}&role=${role}`);
         if(!res.ok){
             throw new Error('Failed to fetch activities');
         }

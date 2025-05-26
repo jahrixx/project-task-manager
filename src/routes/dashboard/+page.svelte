@@ -71,7 +71,7 @@
 
     async function fetchTaskCounts(userId: number) {
         try {
-            const url = lastUpdated ? `http://localhost:3000/tasks/status-count/${userId}?since=${encodeURIComponent(lastUpdated)}` : `http://localhost:3000/tasks/status-count/${userId}`;
+            const url = lastUpdated ? `${import.meta.env.VITE_BASE_URL}/tasks/status-count/${userId}?since=${encodeURIComponent(lastUpdated)}` : `${import.meta.env.VITE_BASE_URL}/tasks/status-count/${userId}`;
             const response = await fetch(url);
         
             if (!response.ok) { throw new Error(`HTTP error! status: ${response.status}`); }

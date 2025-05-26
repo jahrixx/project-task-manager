@@ -4,7 +4,7 @@ import { isAuthenticated, user, type User } from "$lib/stores/user";
 import { derived, get } from "svelte/store";
 import { json } from "@sveltejs/kit";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+const API_URL = `${import.meta.env.VITE_BASE_URL}`;
 export const tasks = writable<TaskData[]>([]);
 export let allTasks: Record<string, TaskData[]> = {}; 
 export let errorMessage= '';

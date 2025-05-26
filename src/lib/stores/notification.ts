@@ -38,7 +38,7 @@ export const notifications = writable<Notification[]>([]);
 
 export async function loadAdminNotifications() {
     try {
-        const res = await fetch(`http://localhost:3000/notification/admin/all`);
+        const res = await fetch(`${import.meta.env.VITE_BASE_URL}/notification/admin/all`);
         const data = await res.json();
         const notificationsData = data.notifications || [];
         notifications.set(notificationsData);
@@ -52,7 +52,7 @@ export async function loadAdminNotifications() {
 
 export async function loadUserNotifications(userId: number) {
     try {
-        const res = await fetch(`http://localhost:3000/notification/${userId}`);
+        const res = await fetch(`${import.meta.env.VITE_BASE_URL}/notification/${userId}`);
         const data = await res.json();
         const notificationsData = data.notifications || [];
         notifications.set(notificationsData);

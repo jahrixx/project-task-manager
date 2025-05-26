@@ -21,7 +21,7 @@
                 return;
             }
 
-            const response = await fetch(`http://localhost:3000/users/${currentUser.id}`);
+            const response = await fetch(`${import.meta.env.VITE_BASE_URL}/users/${currentUser.id}`);
             if (!response.ok) throw new Error("Failed to fetch user data");
 
             const userData: User = await response.json();
@@ -30,7 +30,7 @@
             user.update(u => ({ ...u, profilePic: userData.profilePic }));
 
             profilePic = userData.profilePic 
-                ? `http://localhost:3000${userData.profilePic}`  // Ensure no extra `/uploads/`
+                ? `${import.meta.env.VITE_BASE_URL}${userData.profilePic}`  // Ensure no extra `/uploads/`
                 : '/src/components/assets/default-avatar.png';
 
             console.log(profilePic)
@@ -53,7 +53,7 @@
         }
 
         try {
-            const response = await fetch(`http://localhost:3000/users/update-password`, {
+            const response = await fetch(`${import.meta.env.VITE_BASE_URL}/users/update-password`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id: get(user)?.id, oldPassword, newPassword }),
@@ -84,7 +84,7 @@
             formData.append('profilePic', file);
 
             try {
-                const response = await fetch(`http://localhost:3000/users/upload/${get(user)?.id}`, {
+                const response = await fetch(`${import.meta.env.VITE_BASE_URL}/users/upload/${get(user)?.id}`, {
                     method: 'POST',
                     body: formData,
                 });
@@ -92,7 +92,7 @@
                 if (!response.ok) throw new Error('Failed to upload profile picture');
 
                 const data = await response.json();
-                const newProfilePicUrl = `http://localhost:3000${data.profilePicUrl}?t=${Date.now()}`;
+                const newProfilePicUrl = `${import.meta.env.VITE_BASE_URL}${data.profilePicUrl}?t=${Date.now()}`;
                 
                 profilePic = newProfilePicUrl;
                                 

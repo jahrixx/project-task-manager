@@ -162,7 +162,7 @@
 /* table styles */
 .table-container {
     width: 92%;
-    height: 73vh;
+    height: 7vh;
     border-collapse: collapse;
     padding: 5px;
     margin: auto;
@@ -205,8 +205,9 @@ thead, tbody tr {
 
 tbody {
     display: block;
-    max-height: 450px;
+    max-height: 470px;
     overflow-y: auto;
+    /* border: 1px solid black; */
 }
 
 /* Scrollbar Styles */

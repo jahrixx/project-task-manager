@@ -30,7 +30,7 @@
             <img src="{currentUser?.profilePic
             ? currentUser.profilePic.startsWith('http')
             ? currentUser.profilePic
-            : `http://localhost:3000${currentUser.profilePic}`
+            : `${import.meta.env.VITE_BASE_URL}${currentUser.profilePic}`
             : '/src/components/assets/default-avatar.png'}" alt="Profile" class="profile-pic" />
             <div class="user-info">
                 <button class="user-name" 

@@ -7,7 +7,7 @@ export let archivedTasks = writable<TaskData[]>([]);
 
 export async function fetchArchivedTasks(): Promise<TaskData[]> {
     try {
-        const response = await fetch('http://localhost:3000/tasks/archived', {
+        const response = await fetch(`${import.meta.env.VITE_BASE_URL}/tasks/archived`, {
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
             }
@@ -22,7 +22,7 @@ export async function fetchArchivedTasks(): Promise<TaskData[]> {
 
 export async function archiveTask(taskId: number): Promise<void> {
     try {
-        const response = await fetch(`http://localhost:3000/tasks/${taskId}/archive`, {
+        const response = await fetch(`${import.meta.env.VITE_BASE_URL}/tasks/${taskId}/archive`, {
             method: 'PATCH',
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -41,7 +41,7 @@ export async function archiveTask(taskId: number): Promise<void> {
 
 export async function unarchiveTask(taskId: number): Promise<void> {
     try {
-        const response = await fetch(`http://localhost:3000/tasks/${taskId}/unarchive`, {
+        const response = await fetch(`${import.meta.env.VITE_BASE_URL}/tasks/${taskId}/unarchive`, {
             method: 'PATCH',
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`,

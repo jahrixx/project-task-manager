@@ -5,7 +5,7 @@
     let username = '';
     let password = '';
     let errorMessage = '';
-    const BACKEND_URL = "http://localhost:3000";
+    const BACKEND_URL = `${import.meta.env.VITE_BASE_URL}`;
 
     async function login() {
         errorMessage = '';

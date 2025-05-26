@@ -1,6 +1,6 @@
 import { type User } from "$lib/stores/user";
 
-const API_URL = "http://localhost:3000/users";
+const API_URL = `${import.meta.env.VITE_BASE_URL}users`;
 
 export async function getUsers() {
     const res = await fetch(API_URL);
@@ -57,11 +57,11 @@ export async function deleteUser(id: number) {
 }
 
 export async function getRoles() {
-    const res = await fetch('http://localhost:3000/roles');
+    const res = await fetch(`${import.meta.env.VITE_BASE_URL}/roles`);
     return res.json();
 }
 
 export async function getOffices() {
-    const res = await fetch('http://localhost:3000/offices');
+    const res = await fetch(`${import.meta.env.VITE_BASE_URL}/offices`);
     return res.json();
 }
