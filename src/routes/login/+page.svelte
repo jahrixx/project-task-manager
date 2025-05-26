@@ -1,51 +1,31 @@
 <script lang="ts">
     import { goto } from '$app/navigation';
-    import { user, isAuthenticated } from '$lib/stores/user';
-
+    import { login } from '$lib/api/authService';
+    
     let username = '';
     let password = '';
     let errorMessage = '';
-    const BACKEND_URL = `${import.meta.env.VITE_BASE_URL}`;
 
-    async function login() {
+    async function handleLogin(event: Event) {
+        event.preventDefault();
         errorMessage = '';
-
         try {
-            const response = await fetch(`${BACKEND_URL}/auth/login`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ username, password }),
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                $user = data;
-                $isAuthenticated = true;
-                goto('/dashboard');
-            } else {
-                errorMessage = data.message || 'Login Failed!';
-                alert(errorMessage);
-            }
-        } catch (error) {
-            errorMessage = "An error occurred during login.";
+            await login(username, password);
+            goto('/dashboard');
+        } catch (error: any) {
+            errorMessage = error?.message || 'Login Failed!';
             alert(errorMessage);
         }
     }
 </script>
-<head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-</head>
-<main>
-    <title>Login</title>
-    <div class="login-container">
-        <form on:submit|preventDefault={login}>
+<main class="login-container">
+    <div class="login-wrapper">
+        <form on:submit={handleLogin}>
             <div class="login-box">
                 <div class="logo-container">
                     <img src="/src/components/assets/logo.png" alt="Logo">
                     <h2>Project Task Manager</h2>
                 </div>
-                
                 <input type="text" id="username" placeholder="Username" bind:value={username} required/>
                 <input type="password" id="password" placeholder="Password" bind:value={password} required/>
                 <button type="submit">Login</button>
@@ -53,7 +33,6 @@
         </form>
     </div>
 </main>
-
 <style>
  .login-container {
         display: flex;
