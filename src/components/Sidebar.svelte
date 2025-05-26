@@ -331,7 +331,7 @@
         .sidebar {
             display: none;
             width: 100%;
-            height: 100vh;
+            height: 95vh;
             background-color: #333;
             position: absolute;
             top: 0;
@@ -363,6 +363,10 @@
 
         .sidebar .btn-logout > span {
             text-align: center;
+        }
+
+        .sidebar .btn-logout {
+            background-color: red;
         }
     }
 </style>

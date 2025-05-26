@@ -38,9 +38,6 @@
 </head>
 <main>
     <title>Login</title>
-    <!-- {#if errorMessage}
-        <p style="color: red;">{errorMessage}</p>
-    {/if} -->
     <div class="login-container">
         <form on:submit|preventDefault={login}>
             <div class="login-box">
@@ -63,8 +60,6 @@
         justify-content: center;
         align-items: center;
         height: 95vh; 
-        /* Full height */
-        /* width: 100%; Full width */
     }
 
     .login-box {
@@ -73,8 +68,6 @@
         align-items: center;
         background: white;
         padding: 2rem;
-        /* border-radius: 8px;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); */
         width: 350px;
     }
 
@@ -125,6 +118,7 @@
 
     @media screen and (max-width: 500px) and (min-width: 300px) {
         .login-container {
+            margin-top: 15vh;
             padding: 0 10px;
             height: auto;
         }
@@ -138,6 +132,7 @@
             flex-direction: column;
             gap: 10px;
             text-align: center;
+            margin-bottom: 6.5vh;
         }
         .login-container img {
             width: 100px;
@@ -152,6 +147,7 @@
             font-size: 1rem;
         }
         button {
+            margin-top: 3vh;
             font-size: 1rem;
             padding: 10px;
         }
