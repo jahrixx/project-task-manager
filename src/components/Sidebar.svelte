@@ -15,23 +15,19 @@
     function toggleSidebar() {
         isSidebarOpen = !isSidebarOpen;
     }
-
     function logoutUser() {
         if (!user) {
             console.error("No user is currently logged in!");
             return;
         } 
-        
-        if (!confirm("Are you sure you want to logout?")) {
-            return;
-        }
-
+            if (!confirm("Are you sure you want to logout?")) {
+                return;
+            }
         user.set(null);
         localStorage.removeItem("user");
         isAuthenticated.set(false);
         goto('/login');
     }
-
     function handleScroll() {
         const currentScrollPosition = window.pageYOffset;
 
@@ -42,21 +38,18 @@
         }
         lastScrollPosition = currentScrollPosition;
     }
-
     onMount(() => {
         const unsubscribe = user.subscribe($user => {
             if (!$user && get(isAuthenticated)) {
                 goto('/login');
             }
         });
-
         window.addEventListener('scroll', handleScroll);
 
-        return () => {
-            unsubscribe();
-            window.removeEventListener('scroll', handleScroll);
-        } 
-
+            return () => {
+                unsubscribe();
+                window.removeEventListener('scroll', handleScroll);
+            } 
     });
 </script>
 <button type="button" class="burger" on:click={() => toggleSidebar()} aria-label="toggle-sidebar" class:visible={burgerVisible}>☰</button>

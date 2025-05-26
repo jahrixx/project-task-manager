@@ -8,16 +8,16 @@ import { get } from 'svelte/store';
 import type{ TaskData } from '$lib/stores/task';
 
 let calendarEl: any;
+const API_URL = `${import.meta.env.VITE_BASE_URL}`;
 
 onMount(async () => {
     const currentUser = get(user);
     const userId = currentUser?.id ?? 0;
     const userRole = currentUser?.role || '';  
     const userOffice = currentUser?.office || '';  
-
     const url = userRole === 'Admin'
-        ? `${import.meta.env.VITE_BASE_URL}/tasks`
-        : `${import.meta.env.VITE_BASE_URL}/tasks?userId=${userId}&role=${userRole}&office=${userOffice}`;
+        ? `${API_URL}/tasks`
+        : `${API_URL}/tasks?userId=${userId}&role=${userRole}&office=${userOffice}`;
 
     const res = await fetch(url);
     const data = await res.json();
@@ -64,7 +64,6 @@ onMount(async () => {
     });
     calendar.render();
 
-    // Update on window resize
     window.addEventListener('resize', () => {
         const mobile = window.innerWidth <= 500;
         calendar.setOption('headerToolbar', {

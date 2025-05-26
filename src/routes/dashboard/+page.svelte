@@ -2,7 +2,7 @@
     import { onMount } from 'svelte';
     import { goto } from '$app/navigation';
     import { user, isAuthenticated, userRole } from '$lib/stores/user';
-    import { dashboardStats, fetchDashboardStats } from '$lib/api/dashboardService';
+    import { dashboardStats, fetchDashboardStats, fetchTaskCounts, taskCounts } from '$lib/api/dashboardService';
     import Login from '../login/+page.svelte';
     import Sidebar from '../../components/Sidebar.svelte';
     import UserProfile from '../../components/UserProfile.svelte';
@@ -12,23 +12,6 @@
     import { fetchActivities } from '$lib/api/activityService';
     import NotificationPanel from '../../components/NotificationPanel.svelte';
 
-    let pendingTasks: {id: number, title: string }[] = [];
-    let inProgressTasks: {id: number, title: string }[] = [];
-    let completedTasks: {id: number, title: string }[] = [];
-    let archivedTasks: {id: number, title: string }[] = [];
-    let overdueTasks: {id: number, title: string }[] = [];
-    let cancelledTasks: {id: number, title: string }[] = [];
-
-    let pendingCount = 0;
-    let inProgressCount = 0;
-    let completedCount = 0;
-    let archivedCount = 0;
-    let overdueCount = 0;
-    let cancelledCount = 0;
-
-    let error = null;
-    let lastUpdated: string | null = null;
-    
     let activeModal = '';
     let activities: any = [];
     let role = '';
@@ -68,50 +51,6 @@
     function toggleModal(type: string) {
         activeModal = activeModal === type ? '' : type;
     }
-
-    async function fetchTaskCounts(userId: number) {
-        try {
-            const url = lastUpdated ? `${import.meta.env.VITE_BASE_URL}/tasks/status-count/${userId}?since=${encodeURIComponent(lastUpdated)}` : `${import.meta.env.VITE_BASE_URL}/tasks/status-count/${userId}`;
-            const response = await fetch(url);
-        
-            if (!response.ok) { throw new Error(`HTTP error! status: ${response.status}`); }
-
-            const data = await response.json();
-            
-            pendingCount = data.pendingCount;
-            inProgressCount = data.inProgressCount;
-            completedCount = data.completedCount;
-            cancelledCount = data.cancelledCount;
-            overdueCount = data.overdueCount;
-            archivedCount = data.archivedCount;
-
-            pendingTasks = data.pendingTasks || [];
-            inProgressTasks = data.inProgressTasks || [];
-            completedTasks = data.completedTasks || [];
-            cancelledTasks = data.cancelledTasks || [];
-            overdueTasks = data.overdueTasks || [];
-            archivedTasks = data.archivedTasks || [];
-            
-            if (data.lastUpdated) {
-                lastUpdated = data.lastUpdated;
-            }
-
-            error = null;
-        } catch (err) {
-            console.error('Error fetching task counts:', err);
-            error = err instanceof Error ? err.message : 'An unexpected error occurred.';
-        }
-    }
-
-    // console.log(Notification.permission);
-
-    // if(Notification.permission === 'granted'){
-    //     alert("We have permission");
-    // } else if (Notification.permission !== 'denied'){
-    //     Notification.requestPermission().then(Permissions => {
-    //         console.log(Permissions);
-    //     });
-    // }
 </script>
 
 <title>Dashboard</title>
@@ -129,7 +68,6 @@
                 <UserProfile />
                 <div class="dash-controls">
                     <div class="task-card">
-                        <!-- <span class="circle">No.</span> -->
                         <span class="task-text">No. of Managers</span>
                         <button class="add-btn" on:click={() => toggleModal('Managers')}>
                             {#if activeModal === 'Managers'}
@@ -147,7 +85,6 @@
                         {/if}
                     </div>
                     <div class="task-card">
-                        <!-- <span class="circle">No.</span> -->
                         <span class="task-text">No. of Employees</span>
                         <button class="add-btn" on:click={() => toggleModal('Employees')}>
                             {#if activeModal === 'Employees'}
@@ -165,7 +102,6 @@
                         {/if}
                     </div>
                     <div class="task-card">
-                        <!-- <span class="circle">No.</span> -->
                         <span class="task-text">No. of Offices</span>
                         <button class="add-btn" on:click={() => toggleModal('Offices')}>
                             {#if activeModal === 'Offices'}
@@ -214,19 +150,18 @@
                 <UserProfile />
                 <div class="dash-controls-emp">
                     <div class="task-card-emp">
-                        <!-- <span class="circle"></span> -->
                         <span class="empTxt">Pending Tasks</span>
                         <button class="add-btn-emp" on:click={() => toggleModal("Pending")}>
                             {#if activeModal === 'Pending'}
                                 <span class="x-icon">❌</span>
                             {:else}
-                                {pendingCount ?? 0}
+                                {$taskCounts.pendingCount ?? 0}
                             {/if}
                         </button>
                         {#if activeModal === 'Pending'}
                             <div class="overlay-top">
-                                {#if pendingTasks.length > 0}
-                                    {#each pendingTasks as task, index (task.id)}
+                                {#if $taskCounts.pendingTasks.length > 0}
+                                    {#each $taskCounts.pendingTasks as task, index (task.id)}
                                         <p>{index + 1}. {task.title}</p>
                                     {/each}
                                 {:else}
@@ -236,19 +171,18 @@
                         {/if}
                     </div>
                     <div class="task-card-emp">
-                        <!-- <span class="circle"></span> -->
                         <span class="empTxt">In Progress Tasks</span>
                         <button class="add-btn-emp" on:click={() => toggleModal("inProgress")}>
                             {#if activeModal === 'inProgress'}
                                 <span class="x-icon">❌</span>
                             {:else}
-                                {inProgressCount ?? 0}
+                                {$taskCounts.inProgressCount ?? 0}
                             {/if}
                         </button>
                         {#if activeModal === 'inProgress'}
                             <div class="overlay-top">
-                                {#if inProgressTasks.length > 0}
-                                    {#each inProgressTasks as task, index (task.id)}
+                                {#if $taskCounts.inProgressTasks.length > 0}
+                                    {#each $taskCounts.inProgressTasks as task, index (task.id)}
                                         <p>{index + 1}. {task.title}</p>
                                     {/each}
                                 {:else}
@@ -258,19 +192,18 @@
                         {/if}
                     </div>
                     <div class="task-card-emp">
-                        <!-- <span class="circle"></span> -->
                         <span class="empTxt">Completed Tasks</span>
                         <button class="add-btn-emp" on:click={() => toggleModal("Completed")}>
                             {#if activeModal === 'Completed'}
                                 <span class="x-icon">❌</span>
                             {:else}
-                                {completedCount ?? 0}
+                                {$taskCounts.completedCount ?? 0}
                             {/if}
                         </button>
                         {#if activeModal === 'Completed'}
                             <div class="overlay-top">
-                                {#if completedTasks.length > 0}
-                                    {#each completedTasks as task, index (task.id)}
+                                {#if $taskCounts.completedTasks.length > 0}
+                                    {#each $taskCounts.completedTasks as task, index (task.id)}
                                         <p>{index + 1}. {task.title}</p>
                                     {/each}
                                 {:else}
@@ -280,19 +213,18 @@
                         {/if}
                     </div>
                     <div class="task-card-emp">
-                        <!-- <span class="circle"></span> -->
                         <span class="empTxt">Archived Tasks</span>
                         <button class="add-btn-emp" on:click={() => toggleModal("Archived")}>
                             {#if activeModal === 'Archived'}
                                 <span class="x-icon">❌</span>
                             {:else}
-                                {archivedCount ?? 0}
+                                {$taskCounts.archivedCount ?? 0}
                             {/if}
                         </button>
                         {#if activeModal === 'Archived'}
                             <div class="overlay-bottom">
-                                {#if archivedTasks.length > 0}
-                                    {#each archivedTasks as task, index (task.id)}
+                                {#if $taskCounts.archivedTasks.length > 0}
+                                    {#each $taskCounts.archivedTasks as task, index (task.id)}
                                         <p>{index + 1}. {task.title}</p>
                                     {/each}
                                 {:else}
@@ -302,19 +234,18 @@
                         {/if}
                     </div>
                     <div class="task-card-emp">
-                        <!-- <span class="circle"></span> -->
                         <span class="empTxt">Cancelled Tasks</span>
                         <button class="add-btn-emp" on:click={() => toggleModal("Cancelled")}>
                             {#if activeModal === 'Cancelled'}
                                 <span class="x-icon">❌</span>
                             {:else}
-                                {cancelledCount ?? 0}
+                                {$taskCounts.cancelledCount ?? 0}
                             {/if}
                         </button>
                         {#if activeModal === 'Cancelled'}
                             <div class="overlay-bottom">
-                                {#if cancelledTasks.length > 0}
-                                    {#each cancelledTasks as task, index (task.id)}
+                                {#if $taskCounts.cancelledTasks.length > 0}
+                                    {#each $taskCounts.cancelledTasks as task, index (task.id)}
                                         <p>{index + 1}. {task.title}</p>
                                     {/each}
                                 {:else}
@@ -324,19 +255,18 @@
                         {/if}
                     </div>
                     <div class="task-card-emp">
-                        <!-- <span class="circle"></span> -->
                         <span class="empTxt">Overdue Tasks</span>
                         <button class="add-btn-emp" on:click={() => toggleModal("Overdue")}>
                             {#if activeModal === 'Overdue'}
                                 <span class="x-icon">❌</span>
                             {:else}
-                                {overdueCount ?? 0}
+                                {$taskCounts.overdueCount ?? 0}
                             {/if}
                         </button>
                         {#if activeModal === 'Overdue'}
                             <div class="overlay-bottom">
-                                {#if overdueTasks.length > 0}
-                                    {#each overdueTasks as task, index (task.id)}
+                                {#if $taskCounts.overdueTasks.length > 0}
+                                    {#each $taskCounts.overdueTasks as task, index (task.id)}
                                         <p>{index + 1}. {task.title}</p>
                                     {/each}
                                 {:else}
@@ -353,12 +283,6 @@
                         <RecentActivities {activities} {role}/>
                     </div>
                 </div>
-                <!-- <div class="current-task-and-notifications">
-                    <h2 style="margin: auto; width: 100%;">Current Tasks<hr style="height: 3px; background-color: lightgray;"></h2>
-                    <div class="current-task-list-emp"style="margin: auto; width: 100%;">
-                        <CurrentTasks />
-                    </div>
-                </div> -->
                 <div class="section">
                     <div class="current-task-and-notifications">
                         <h2 style="margin: auto; width: 100%;">Current Tasks<hr style="height: 3px; background-color: lightgray;"></h2>

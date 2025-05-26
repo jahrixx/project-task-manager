@@ -298,7 +298,7 @@
     }
     
     function clearInputs() {
-        window.location.reload();
+        activeReport.set(null);
     }
 </script>
 

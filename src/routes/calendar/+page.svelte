@@ -8,12 +8,9 @@
     import { get } from 'svelte/store';
     import { fetchActivities } from '$lib/api/activityService';
     import TaskCalendar from '../../components/TaskCalendar.svelte';
-
-
+    
     let activities: any = [];
     let role = '';
-    const currentUser = get(user);
-    const userId = currentUser?.id ?? 0;
 
     onMount(async () => {  
         if(!isAuthenticated){
@@ -59,10 +56,7 @@
 <style>
     .task-calendar-container {
         margin: 15px;
-        /* height: 70vh;
-        border: 1px solid black;     */
     }
-
     @media screen and (max-width: 700px) and (min-width: 300px) {
         .main-container {margin: 0;}
     }

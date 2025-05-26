@@ -1,13 +1,12 @@
 <script lang="ts">
 import type { TaskData } from "$lib/stores/task";
 import { onMount } from "svelte";
-import { userRole, user, type User } from "$lib/stores/user";
-import { derived, get } from "svelte/store";
-import { createTask, deleteTask, fetchEmployees, refreshTasks, fetchTasks, tasks, updateTask } from "$lib/api/taskService";
+import { userRole, user } from "$lib/stores/user";
+import { get } from "svelte/store";
+import { createTask, fetchEmployees, refreshTasks, fetchTasks, updateTask } from "$lib/api/taskService";
 
 let errorMessage = '';
 let employeesInOffice: { id: number; name: string; role: string; office: string }[] = [];
-// let allTasks: Record<string, TaskData[]> = {}; 
 
 export let showForm: boolean = false;
 export const openTaskForm: boolean = false;
@@ -182,5 +181,4 @@ async function handleSubmit() {
             width: 82%;
         }
     }
-    
 </style>
