@@ -174,6 +174,7 @@ async function handleSubmit() {
             margin: auto;
             padding: 0;
             width: 100%;
+            z-index: 99999;
         }    
         .form-container {
             margin: 0;

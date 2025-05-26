@@ -351,7 +351,6 @@
     {#if successMessage}
         <p style="color: green; text-align: center;">{successMessage}</p>
     {/if}
-
     <div class="container">
         <Sidebar />
         <div class="main-container">
@@ -427,12 +426,8 @@
                 </div>
             </div>
             {#if $userRole === 'Manager' || $userRole === 'Employee'}
-            <hr>
-                <TaskForm 
-                    bind:showForm
-                    bind:taskData
-                    bind:editId
-                />
+                <hr>
+                    <TaskForm bind:showForm bind:taskData bind:editId />
             {/if}
         </div>
         <div class="task-view">
@@ -489,195 +484,10 @@
                 {/if}
             {/if}
             {#if filteredManagerTasks || filteredManagerTasks || filteredArchivedTasks}
-                <TaskListManager 
-                    filteredManagerTasks={$filteredManagerTasks}
-                    filteredEmployeeTasks={$filteredEmployeeTasks}
-                    filteredArchivedTasks={$filteredArchivedTasks}
-                    {openTaskForm}
-                />
+                <TaskListManager filteredManagerTasks={$filteredManagerTasks} filteredEmployeeTasks={$filteredEmployeeTasks} filteredArchivedTasks={$filteredArchivedTasks} {openTaskForm} />
             {:else}
                 <p>Loading Task Lists!</p>
             {/if}
         </div>
     </div>
 {/if}
-<style>
-    @media screen and (max-width: 500px) and (min-width: 300px) {
-        hr {
-            margin: auto;
-            width: 95%;
-        }
-        .container {margin-bottom: 10px;}
-        .main-container {margin: 0;}
-        .filter-container {
-            left: 5px;
-            padding: 5px;
-            font-size: 12px;
-        }
-        .header {
-            flex-direction: column;
-            align-items: flex-start;
-            padding: 8px;
-        }
-        .control-btn {
-            width: 100%;
-            justify-content: flex-end;
-        }
-        .btn-text {
-            display: none;
-        }
-        .search {
-            width: 100%;
-        }
-        .search-bar {
-            margin-top: 10px;
-            width: 100%;
-            padding: 6px 25px 6px 8px;
-            font-size: 14px;
-        }
-        .reset-icon svg,
-        .filter-btn svg,
-        .add-btn svg,
-        .add-btn-emp svg {
-            width: 20px;
-            height: 20px;
-        }
-        .search-icon svg {
-            width: 26px;
-            height: 26px;
-        }
-        .header-title {
-            font-size: 16px;
-            margin: 0 auto;
-        }
-        .filter-btn {
-            height: 35px;
-            width: 35px;
-        }
-        .add-btn {
-            padding: 0;
-        }
-        .add-btn-emp {
-            padding: 0;
-            width: auto;
-        }
-        .add-btn-emp span {
-            font-size: 14px;
-            padding-top: 9px;
-            padding-right: 8px;
-        }
-        .add-btn-emp svg {
-            margin: 0;
-            padding-top: 6px;
-            padding-left: 8px;
-        }
-        .add-btn svg {
-            margin: 0;
-            padding-top: 6px;
-            padding-left: 8px;   
-        }
-        .add-btn span {
-            font-size: 14px;
-            padding-top: 9px;
-            padding-right: 8px;
-        }
-        .reset-icon {
-            padding-top: 14.5px;
-        }
-        .search-icon {
-            padding-top: 15.6px;
-        }
-        .search-input-container {
-            width: 100%;
-        }
-        .task-view {
-            margin: 0;
-        }
-        h3 {
-            margin-top: 5px;
-            margin-left: 0;
-            margin-bottom: 0;
-        }
-        .office-name {
-            margin-left: 20px;
-        }
-        .task-holder-container{
-            max-width: 100%;
-        }
-        .task-holder {
-            gap: 5px;
-            padding: 5px;
-        }
-        .task-card{
-            padding: 0.5rem;
-            margin: 0.5rem 0;
-            min-width: 190px;
-        }
-        .task-header{
-            font-size: 12px;
-            margin-bottom: 5px;
-            border-bottom: 1px solid lightgray;
-            padding-bottom: 5px;
-            color: white;
-        }
-        .task-card p{
-            text-align: center;
-            margin-bottom: 8px;
-            line-height: 1;
-            color: white;
-            font-size: 10px;
-        }
-        .task-holder-container::-webkit-scrollbar {
-            height: 2px;
-        }
-    }
-
-    @media screen and (max-width: 320px) {
-        .reset-icon svg,
-        .filter-btn svg,
-        .add-btn svg,
-        .add-btn-emp svg {
-            width: 18px;
-            height: 18px;
-        }
-        .add-btn span {
-            font-size: 13px;
-            padding-top: 9.5px;
-            padding-left: 3px;
-            padding-right: 10px;
-        }
-        .add-btn svg {
-            margin: 0;
-            padding-top: 7px;
-            padding-left: 8px;
-        }
-        .add-btn-emp span {
-            font-size: 13px;
-            padding-top: 7.5px;
-            padding-left: 3px;
-            padding-right: 10px;
-        }
-
-        .add-btn-emp svg {
-            margin: 0;
-            padding-top: 5px;
-            padding-left: 8px;
-        }
-        .reset-icon svg {
-            width: 16px;
-            height: 16px;
-        }
-        .search-icon svg {
-            width: 21px;
-            height: 21px;
-        }
-        .reset-icon {
-            padding-top: 15.5px;
-            right: 8px;
-        }
-        .search-icon {
-            padding-top: 15px;
-            right: 25.5px;
-        }
-    }
-</style>
