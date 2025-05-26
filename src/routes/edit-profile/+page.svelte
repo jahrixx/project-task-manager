@@ -1,18 +1,19 @@
 <script lang="ts">
-    import type { User } from '$lib/stores/user';
     import { get } from 'svelte/store';
     import { user } from '$lib/stores/user';
     import { onMount } from 'svelte';
     import Sidebar from '../../components/Sidebar.svelte';
-
+    import { fetchUserProfile, uploadImage, updatePassword } from '$lib/api/profileService';
+    
     let profilePic = '';
     let oldPassword = '';
     let newPassword = '';
     let confirmPassword = '';
     let loading = true;
     let currentUsername = get(user)?.username || '';
+    
+    const API_URL = import.meta.env.VITE_BASE_URL;
 
-    // **Fetch User Data**
     onMount(async () => {
         try {
             const currentUser = get(user);
@@ -21,16 +22,13 @@
                 return;
             }
 
-            const response = await fetch(`${import.meta.env.VITE_BASE_URL}/users/${currentUser.id}`);
-            if (!response.ok) throw new Error("Failed to fetch user data");
-
-            const userData: User = await response.json();
+            const userData = await fetchUserProfile(String(currentUser?.id));
             console.log(currentUser.id);
             
             user.update(u => ({ ...u, profilePic: userData.profilePic }));
 
             profilePic = userData.profilePic 
-                ? `${import.meta.env.VITE_BASE_URL}${userData.profilePic}`  // Ensure no extra `/uploads/`
+                ? `${API_URL}${userData.profilePic}`
                 : '/src/components/assets/default-avatar.png';
 
             console.log(profilePic)
@@ -41,8 +39,25 @@
         }
     });
 
-    // **Update Password**
-    async function updatePassword() {
+    async function handleImageUpload(event: Event) {
+        const target = event.target as HTMLInputElement;
+        if (target?.files?.length) {
+            try {
+                const currentUser = get(user);
+                if (!currentUser?.id) {
+                    alert("User ID not found!");
+                    return;
+                }
+
+                profilePic = await uploadImage(target.files[0], String(currentUser.id));
+                alert("✅ Profile Picture Updated Successfully!");
+            } catch (error) {
+                alert("❌ Network error during file upload!");
+            }
+        }
+    }
+
+    async function handlePasswordUpdate() {
         if (!oldPassword || !newPassword || !confirmPassword) {
             alert('All password fields are required.');
             return;
@@ -53,61 +68,19 @@
         }
 
         try {
-            const response = await fetch(`${import.meta.env.VITE_BASE_URL}/users/update-password`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: get(user)?.id, oldPassword, newPassword }),
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                alert(data.message);
+            const currentUser = get(user);
+            if (!currentUser?.id) {
+                alert("User ID not found!");
                 return;
             }
 
+            const data = await updatePassword(oldPassword, newPassword, String(currentUser.id));
             alert(data.message);
             if (data.redirect) {
                 window.location.href = data.redirect;
             }
         } catch (error) {
             alert("An error occurred. Please try again.");
-        }
-    }
-
-    // **Upload Profile Picture**
-    async function uploadImage(event: Event) {
-        const target = event.target as HTMLInputElement;
-        if (target?.files?.length) {
-            const file = target.files[0];
-            const formData = new FormData();
-            formData.append('profilePic', file);
-
-            try {
-                const response = await fetch(`${import.meta.env.VITE_BASE_URL}/users/upload/${get(user)?.id}`, {
-                    method: 'POST',
-                    body: formData,
-                });
-
-                if (!response.ok) throw new Error('Failed to upload profile picture');
-
-                const data = await response.json();
-                const newProfilePicUrl = `${import.meta.env.VITE_BASE_URL}${data.profilePicUrl}?t=${Date.now()}`;
-                
-                profilePic = newProfilePicUrl;
-                                
-                user.update((u) => {
-                    if (u) {
-                        const updatedUser = { ...u, profilePic: newProfilePicUrl };
-                        localStorage.setItem("user", JSON.stringify(updatedUser)); // Save to localStorage
-                        return updatedUser;
-                    }
-                    return u;
-                });
-                alert("✅ Profile Picture Updated Successfully!");
-            } catch (error) {
-                alert("❌ Network error during file upload!");
-            }
         }
     }
 </script>
@@ -126,7 +99,7 @@
         <div class="profile-section">
             <img src="{profilePic}" alt="Profile" class="profile-pic" />
             <label class="custom-file-upload">
-                <input type="file" accept="image/*" on:change={uploadImage} />
+                <input type="file" accept="image/*" on:change={handleImageUpload} />
                 Upload New Photo
             </label>
         </div>
@@ -153,7 +126,7 @@
         </div>
 
         <div style="display: flex; justify-content: center; text-align: center;">
-            <button class="update-btn" on:click={updatePassword}>Change Password</button>
+            <button class="update-btn" on:click={handlePasswordUpdate}>Change Password</button>
         </div>
     </div>    
 {/if}
@@ -166,7 +139,6 @@
             justify-content: center;
             margin: 0;
             padding: 0;
-            /* padding: 20px 10px; */
             width: 100%;
             box-sizing: border-box;            
         }
@@ -208,10 +180,5 @@
             padding: 10px 10px;
             font-size: 12px;
         }
-
     }
-
-    /* @media screen and (max-width: 320px) {
-        
-    } */
 </style>
