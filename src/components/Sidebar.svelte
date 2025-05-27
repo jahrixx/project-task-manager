@@ -353,4 +353,17 @@
             background-color: red;
         }
     }
+    /* Remove all tap highlights and focus rings */
+    button {
+        -webkit-tap-highlight-color: transparent;
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        user-select: none;
+        outline: none;
+
+        /* For IE/Edge */
+        -ms-touch-action: manipulation;
+        touch-action: manipulation;
+    }
+
 </style>

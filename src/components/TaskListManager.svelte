@@ -406,6 +406,14 @@
         .table-container {
             margin: 10px 0;
             border-radius: 8px;
+            width: 97%;
+            overflow-x: hidden;
+            overflow-y: hidden;
+        }
+        .table-container tbody {
+            height: 90vh;
+            margin: 0;
+            padding: 0;
         }
         th, td {
             padding: 5px;

@@ -417,7 +417,9 @@ width: 95%;
 margin: auto;
 }
 table {
-    margin-top: 0;
+margin-top: 0;
+/* border: 1px solid blue; */
+height: 60vh;
 }
 th {
 padding: 2.5px;
