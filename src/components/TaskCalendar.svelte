@@ -80,16 +80,7 @@ onMount(async () => {
 
 });
 </script>
-
-<div bind:this={calendarEl} class="calendar-container"></div>
-
-<style>
-    .calendar-container {
-        width: 100%;
-        height: 73.5vh;
-    }
-
-    @media screen and (max-width: 700px) and (min-width: 300px) {
-        .calendar-container {margin: 0;}
-    }
-</style>
+<head>
+    <link rel="stylesheet" href="src/components/assets/css/calendar.css">
+</head>
+    <div bind:this={calendarEl} class="calendar-container"></div>

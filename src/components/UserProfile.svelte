@@ -42,7 +42,7 @@
             </div>
 {/if}
 <style>
-    .user-header {
+.user-header {
 display: flex;
 align-items: center;
 gap: 5px;
@@ -81,7 +81,19 @@ color: #555;
 
 @media screen and (max-width: 500px) and (min-width: 300px) {
 .user-header {
-    margin-bottom: 10px;
+margin-bottom: 10px;
+}
+/* Remove all tap highlights and focus rings */
+button {
+-webkit-tap-highlight-color: transparent;
+-webkit-touch-callout: none;
+-webkit-user-select: none;
+user-select: none;
+outline: none;
+
+/* For IE/Edge */
+-ms-touch-action: manipulation;
+touch-action: manipulation;
 }
 }
 </style>

@@ -91,7 +91,9 @@
     <link rel="stylesheet" href="src/components/assets/css/edit-profile.css">
 </head>
 {#if loading}
-    <p style="text-align: center;">Loading Profile...</p>
+    <div class="fullpage-loader">
+        <div class="spinner"></div>
+    </div>
 {:else}
     <Sidebar />
     <div class="edit-profile">
