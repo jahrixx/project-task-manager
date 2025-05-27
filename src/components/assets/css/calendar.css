@@ -63,3 +63,21 @@ animation: spin 1s linear infinite;
 0% { transform: rotate(0deg); }
 100% { transform: rotate(360deg); }
 }
+
+/* calendar scrollbar */
+.calendar-container {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+}
+.calendar-container::-webkit-scrollbar {
+    width: 0px;
+    height: 0px;
+    background-color: transparent;
+}
+.calendar-container::-webkit-scrollbar-thumb {
+    background-color: transparent;
+    border-radius: 4px;
+}
+.calendar-container::-webkit-scrollbar-track {
+    background-color: transparent;
+}

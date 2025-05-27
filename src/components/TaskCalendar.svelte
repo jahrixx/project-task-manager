@@ -34,7 +34,8 @@ onMount(async () => {
             description: task.description,
             status: task.status,
             assignedToName: task.assignedToName,
-            createdByName: task.createdByName
+            createdByName: task.createdByName,
+            endDate: task.endDate
         }
     })) : [];
 
@@ -57,6 +58,28 @@ onMount(async () => {
             dayGridDay: isMobile ? 'Day' : 'Day'
         },
         events,
+        eventContent: function (args) {
+            const { event, view } = args;
+            const { title, extendedProps } = event;
+
+            let html = `<div style="padding: 7px 5px 1.5px; font-weight: bold; font-size: .9rem; color: #B2FFFF; white-space: normal; word-wrap: break-word;">${title}</div>`;
+
+            if (view.type === 'dayGridWeek') {
+                html += `<div style="font-size: 0.8rem; white-space: normal; word-wrap: break-word; color: #F0F8FF; padding: 7px;">${extendedProps.description}</div>`;
+            }
+
+            if (view.type === 'dayGridDay') {
+                html += `
+                    <div style="font-size: 0.78rem; color: #333; background-color: #f9f9f9; border-left: 4px solid #073980; padding: 6px 8px; margin-top: 6px; border-radius: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+                        <div style="margin-bottom: 4px;"><strong style="color: #1f2937;">Description:</strong> ${extendedProps.description || ''}</div>
+                        <div style="margin-bottom: 4px;"><strong style="color: #1f2937;">Created by:</strong> ${extendedProps.createdByName || ''}</div>
+                        <div style="margin-bottom: 4px;"><strong style="color: #1f2937;">Assigned to:</strong> ${extendedProps.assignedToName || ''}</div>
+                        <div style="margin-bottom: 4px;"><strong style="color: #1f2937;">Status:</strong> <span style="text-transform: capitalize;">${extendedProps.status || ''}</span></div>
+                        <div><strong style="color: #1f2937;">End Date:</strong> ${extendedProps.endDate || ''}</div>
+                    </div>`;
+            }
+            return { html };
+        },
         eventClick: function (info) {
             const { title, extendedProps } = info.event;
             alert(`${title}\nDescription: ${extendedProps.description}\nStatus: ${extendedProps.status}`);
