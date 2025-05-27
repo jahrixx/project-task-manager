@@ -14,8 +14,6 @@
     const API_URL = `${import.meta.env.VITE_BASE_URL}`;
     const currentDate = new Date();
     const formattedDate = currentDate.toLocaleDateString();
-    let loading = true;
-    let authed = false;
     
     type Report = {
         id: number;
@@ -40,25 +38,22 @@
     let timeInterval: NodeJS.Timeout;
 
     onMount(async () => {
-        authed = get(isAuthenticated);
-        if (!authed) {
-            loading = false;
-            // goto('/login');
+        if (!isAuthenticated) {
+            goto('/login');
             return;
         }
         
-        try {
-            await Promise.all([fetchOffices(), fetchUsers(), fetchReports()]);
-            initializeCalendar([]);
-            if ($user) {
-                fetchTaskDates(String($user?.id));
-            }
-                timeInterval = setInterval(() => { now = new Date(); }, 1000);    
-        } catch (error) {
-            console.error("Error fetching data:", error);
-        } finally {
-            loading = false;
+        await Promise.all([fetchOffices(), fetchUsers(), fetchReports()]);
+        initializeCalendar([]);
+
+        if ($user) {
+            fetchTaskDates(String($user?.id));
         }
+
+        timeInterval = setInterval(() =>  {
+            now = new Date();
+
+        }, 1000);
     });
 
     onDestroy(() => {
@@ -312,179 +307,211 @@
 </script>
 
 <title>Reports Generation</title>
-<svelte:head>
+<head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="src/components/assets/css/report-generation.css">
-</svelte:head>
-{#if loading}
-    <div class="fullpage-loader">
-        <div class="spinner"></div>
-    </div>
+</head>
+{#if !isAuthenticated}
+    <Login />
 {:else}
-    {#if !authed}
-        <Login />
-    {:else}
-        <div class="container">
-            <Sidebar />
-            <div class="main-container">
-                <UserProfile />
-                <h2 class="h2"><u>Generate Report</u></h2>
-                <div class="report-container">
-                    <div class="report-fields">
-                        {#if $userRole === "Admin"}
-                            <div class="form-group">
-                                <label for="office">Select Office</label>
-                                <select bind:value={selectedOffice} on:change={fetchUsers}>
-                                    <option value="" disabled selected>Select an office...</option>
-                                    <!-- <option>All Offices</option> -->
-                                    {#each $officeList as office}
-                                        <option value={office.officeName}>{office.officeName}</option>
-                                    {/each}
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="search">Select User</label>
-                                <select bind:value={selectedUser} on:change={() => fetchTaskDates(selectedUser)}>
-                                    {#each filterUsersByOffice().filter(user =>
-                                        (user.firstName ?? "").toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
-                                        (user.lastName ?? "").toLowerCase().includes(searchQuery.toLowerCase().trim())
-                                    ) as user}
-                                        <option value={user.id}>{user.firstName} {user.lastName} - {user.role}</option>
-                                    {/each}
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="datePicker">Select Date Range</label>
-                                <input id="datePicker" type="text" placeholder="Select Date Range" required />
-                            </div>
-                    
-                        {:else if $userRole === "Manager"}
-                            <div class="form-group">
-                                <label for="manager">Manager</label>
-                                <input type="text" value="{$user?.firstName} {$user?.lastName}" readonly />
-                            </div>
-                            <div class="form-group">
-                                <label for="search">Select Employee</label>
-                                <select bind:value={selectedUser} on:change={() => fetchTaskDates(selectedUser)}>
-                                    <option value={$user?.id}>
-                                        {$user?.firstName} {$user?.lastName} (Manager)
-                                    </option>
-                                    
-                                    {#each $userList.filter(emp => emp.office === $user?.office && emp.role === "Employee") as emp}
-                                        <option value={emp.id}>{emp.firstName} {emp.lastName} - {emp.role}</option>
-                                    {/each}
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="datePicker">Select Date Range</label>
-                                <input id="datePicker" type="text" placeholder="Select Date Range" required />
-                            </div>
-                        {:else} 
-                            <div class="form-group">
-                                <label for="employee">Employee</label>
-                                <input type="text" value="{$user?.firstName} {$user?.lastName}" readonly />
-                            </div>
-                            <div class="form-group">
-                                <label for="datePicker">Select Date Range</label>
-                                <input id="datePicker" type="text" placeholder="Select Date Range" required />
-                            </div>
+    <div class="container">
+        <Sidebar />
+        <div class="main-container">
+            <UserProfile />
+            <h2 class="h2"><u>Generate Report</u></h2>
+            <div class="report-container">
+                <div class="report-fields">
+                    {#if $userRole === "Admin"}
+                        <div class="form-group">
+                            <label for="office">Select Office</label>
+                            <select bind:value={selectedOffice} on:change={fetchUsers}>
+                                <option value="" disabled selected>Select an office...</option>
+                                <!-- <option>All Offices</option> -->
+                                {#each $officeList as office}
+                                    <option value={office.officeName}>{office.officeName}</option>
+                                {/each}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="search">Select User</label>
+                            <select bind:value={selectedUser} on:change={() => fetchTaskDates(selectedUser)}>
+                                {#each filterUsersByOffice().filter(user =>
+                                    (user.firstName ?? "").toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
+                                    (user.lastName ?? "").toLowerCase().includes(searchQuery.toLowerCase().trim())
+                                ) as user}
+                                    <option value={user.id}>{user.firstName} {user.lastName} - {user.role}</option>
+                                {/each}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="datePicker">Select Date Range</label>
+                            <input id="datePicker" type="text" placeholder="Select Date Range" required />
+                        </div>
+                
+                    {:else if $userRole === "Manager"}
+                        <div class="form-group">
+                            <label for="manager">Manager</label>
+                            <input type="text" value="{$user?.firstName} {$user?.lastName}" readonly />
+                        </div>
+                        <div class="form-group">
+                            <label for="search">Select Employee</label>
+                            <select bind:value={selectedUser} on:change={() => fetchTaskDates(selectedUser)}>
+                                <option value={$user?.id}>
+                                    {$user?.firstName} {$user?.lastName} (Manager)
+                                </option>
+                                
+                                {#each $userList.filter(emp => emp.office === $user?.office && emp.role === "Employee") as emp}
+                                    <option value={emp.id}>{emp.firstName} {emp.lastName} - {emp.role}</option>
+                                {/each}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="datePicker">Select Date Range</label>
+                            <input id="datePicker" type="text" placeholder="Select Date Range" required />
+                        </div>
+                    {:else} 
+                        <div class="form-group">
+                            <label for="employee">Employee</label>
+                            <input type="text" value="{$user?.firstName} {$user?.lastName}" readonly />
+                        </div>
+                        <div class="form-group">
+                            <label for="datePicker">Select Date Range</label>
+                            <input id="datePicker" type="text" placeholder="Select Date Range" required />
+                        </div>
+                    {/if}
+                </div>
+                <div class="report-actions">
+                        {#if selectedUser && $taskDates.length === 0}
+                            <span><p style="color: red;">No Tasks Assigned For This User.</p></span>
                         {/if}
-                    </div>
-                    <div class="report-actions">
-                            {#if selectedUser && $taskDates.length === 0}
-                                <span><p style="color: red;">No Tasks Assigned For This User.</p></span>
-                            {/if}
-                        <div class="buttons">
-                            <button class="generate-btn" on:click={generateReport}>Generate Report</button>
-                            <button class="clear-btn" on:click={clearInputs}>Reset</button>
-                        </div>
+                    <div class="buttons">
+                        <button class="generate-btn" on:click={generateReport}>Generate Report</button>
+                        <button class="clear-btn" on:click={clearInputs}>Reset</button>
                     </div>
                 </div>
-                {#if $activeReport}
-                    <div class="controls-container">
-                        <div class="report-controls">
-                            <button aria-label="download-report" class="control-btn download" on:click={() => downloadReport($activeReport.id, $activeReport.startDate, $activeReport.endDate)}>
-                                <svg width="20px" height="20px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M12.5535 16.5061C12.4114 16.6615 12.2106 16.75 12 16.75C11.7894 16.75 11.5886 16.6615 11.4465 16.5061L7.44648 12.1311C7.16698 11.8254 7.18822 11.351 7.49392 11.0715C7.79963 10.792 8.27402 10.8132 8.55352 11.1189L11.25 14.0682V3C11.25 2.58579 11.5858 2.25 12 2.25C12.4142 2.25 12.75 2.58579 12.75 3V14.0682L15.4465 11.1189C15.726 10.8132 16.2004 10.792 16.5061 11.0715C16.8118 11.351 16.833 11.8254 16.5535 12.1311L12.5535 16.5061Z" fill="#1C274C"/>
-                                    <path d="M3.75 15C3.75 14.5858 3.41422 14.25 3 14.25C2.58579 14.25 2.25 14.5858 2.25 15V15.0549C2.24998 16.4225 2.24996 17.5248 2.36652 18.3918C2.48754 19.2919 2.74643 20.0497 3.34835 20.6516C3.95027 21.2536 4.70814 21.5125 5.60825 21.6335C6.47522 21.75 7.57754 21.75 8.94513 21.75H15.0549C16.4225 21.75 17.5248 21.75 18.3918 21.6335C19.2919 21.5125 20.0497 21.2536 20.6517 20.6516C21.2536 20.0497 21.5125 19.2919 21.6335 18.3918C21.75 17.5248 21.75 16.4225 21.75 15.0549V15C21.75 14.5858 21.4142 14.25 21 14.25C20.5858 14.25 20.25 14.5858 20.25 15C20.25 16.4354 20.2484 17.4365 20.1469 18.1919C20.0482 18.9257 19.8678 19.3142 19.591 19.591C19.3142 19.8678 18.9257 20.0482 18.1919 20.1469C17.4365 20.2484 16.4354 20.25 15 20.25H9C7.56459 20.25 6.56347 20.2484 5.80812 20.1469C5.07435 20.0482 4.68577 19.8678 4.40901 19.591C4.13225 19.3142 3.9518 18.9257 3.85315 18.1919C3.75159 17.4365 3.75 16.4354 3.75 15Z" fill="#1C274C"/>
-                                </svg>
-                            </button>
-                            <button aria-label="print-report" class="control-btn print" on:click={printReport}>
-                                <svg width="20px" height="20px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M17 7H7V6h10v1zm0 12H7v-6h10v6zm2-12V3H5v4H1v8.996C1 17.103 1.897 18 3.004 18H5v3h14v-3h1.996A2.004 2.004 0 0 0 23 15.996V7h-4z" fill="#000000"/></svg>
-                            </button>
-                        </div>
+            </div>
+            {#if $activeReport}
+                <div class="controls-container">
+                    <div class="report-controls">
+                        <button aria-label="download-report" class="control-btn download" on:click={() => downloadReport($activeReport.id, $activeReport.startDate, $activeReport.endDate)}>
+                            <svg width="20px" height="20px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12.5535 16.5061C12.4114 16.6615 12.2106 16.75 12 16.75C11.7894 16.75 11.5886 16.6615 11.4465 16.5061L7.44648 12.1311C7.16698 11.8254 7.18822 11.351 7.49392 11.0715C7.79963 10.792 8.27402 10.8132 8.55352 11.1189L11.25 14.0682V3C11.25 2.58579 11.5858 2.25 12 2.25C12.4142 2.25 12.75 2.58579 12.75 3V14.0682L15.4465 11.1189C15.726 10.8132 16.2004 10.792 16.5061 11.0715C16.8118 11.351 16.833 11.8254 16.5535 12.1311L12.5535 16.5061Z" fill="#1C274C"/>
+                                <path d="M3.75 15C3.75 14.5858 3.41422 14.25 3 14.25C2.58579 14.25 2.25 14.5858 2.25 15V15.0549C2.24998 16.4225 2.24996 17.5248 2.36652 18.3918C2.48754 19.2919 2.74643 20.0497 3.34835 20.6516C3.95027 21.2536 4.70814 21.5125 5.60825 21.6335C6.47522 21.75 7.57754 21.75 8.94513 21.75H15.0549C16.4225 21.75 17.5248 21.75 18.3918 21.6335C19.2919 21.5125 20.0497 21.2536 20.6517 20.6516C21.2536 20.0497 21.5125 19.2919 21.6335 18.3918C21.75 17.5248 21.75 16.4225 21.75 15.0549V15C21.75 14.5858 21.4142 14.25 21 14.25C20.5858 14.25 20.25 14.5858 20.25 15C20.25 16.4354 20.2484 17.4365 20.1469 18.1919C20.0482 18.9257 19.8678 19.3142 19.591 19.591C19.3142 19.8678 18.9257 20.0482 18.1919 20.1469C17.4365 20.2484 16.4354 20.25 15 20.25H9C7.56459 20.25 6.56347 20.2484 5.80812 20.1469C5.07435 20.0482 4.68577 19.8678 4.40901 19.591C4.13225 19.3142 3.9518 18.9257 3.85315 18.1919C3.75159 17.4365 3.75 16.4354 3.75 15Z" fill="#1C274C"/>
+                            </svg>
+                        </button>
+                        <button aria-label="print-report" class="control-btn print" on:click={printReport}>
+                            <svg width="20px" height="20px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M17 7H7V6h10v1zm0 12H7v-6h10v6zm2-12V3H5v4H1v8.996C1 17.103 1.897 18 3.004 18H5v3h14v-3h1.996A2.004 2.004 0 0 0 23 15.996V7h-4z" fill="#000000"/></svg>
+                        </button>
                     </div>
-                {/if}
-                <div class="">
+                </div>
+            {/if}
+            <div class="">
 
+            </div>
+            {#if !$activeReport}
+                <div class="banner">
+                    <div class="report-controls">
+                        <button aria-label="download-report" class="control-btn download" style="cursor: not-allowed;">
+                            <svg width="20px" height="20px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12.5535 16.5061C12.4114 16.6615 12.2106 16.75 12 16.75C11.7894 16.75 11.5886 16.6615 11.4465 16.5061L7.44648 12.1311C7.16698 11.8254 7.18822 11.351 7.49392 11.0715C7.79963 10.792 8.27402 10.8132 8.55352 11.1189L11.25 14.0682V3C11.25 2.58579 11.5858 2.25 12 2.25C12.4142 2.25 12.75 2.58579 12.75 3V14.0682L15.4465 11.1189C15.726 10.8132 16.2004 10.792 16.5061 11.0715C16.8118 11.351 16.833 11.8254 16.5535 12.1311L12.5535 16.5061Z" fill="#1C274C"/>
+                                <path d="M3.75 15C3.75 14.5858 3.41422 14.25 3 14.25C2.58579 14.25 2.25 14.5858 2.25 15V15.0549C2.24998 16.4225 2.24996 17.5248 2.36652 18.3918C2.48754 19.2919 2.74643 20.0497 3.34835 20.6516C3.95027 21.2536 4.70814 21.5125 5.60825 21.6335C6.47522 21.75 7.57754 21.75 8.94513 21.75H15.0549C16.4225 21.75 17.5248 21.75 18.3918 21.6335C19.2919 21.5125 20.0497 21.2536 20.6517 20.6516C21.2536 20.0497 21.5125 19.2919 21.6335 18.3918C21.75 17.5248 21.75 16.4225 21.75 15.0549V15C21.75 14.5858 21.4142 14.25 21 14.25C20.5858 14.25 20.25 14.5858 20.25 15C20.25 16.4354 20.2484 17.4365 20.1469 18.1919C20.0482 18.9257 19.8678 19.3142 19.591 19.591C19.3142 19.8678 18.9257 20.0482 18.1919 20.1469C17.4365 20.2484 16.4354 20.25 15 20.25H9C7.56459 20.25 6.56347 20.2484 5.80812 20.1469C5.07435 20.0482 4.68577 19.8678 4.40901 19.591C4.13225 19.3142 3.9518 18.9257 3.85315 18.1919C3.75159 17.4365 3.75 16.4354 3.75 15Z" fill="#1C274C"/>
+                            </svg>
+                        </button>
+                        <button aria-label="print-report" class="control-btn print" style="cursor: not-allowed;">
+                            <svg width="20px" height="20px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M17 7H7V6h10v1zm0 12H7v-6h10v6zm2-12V3H5v4H1v8.996C1 17.103 1.897 18 3.004 18H5v3h14v-3h1.996A2.004 2.004 0 0 0 23 15.996V7h-4z" fill="#000000"/></svg>
+                        </button>
+                    </div>
                 </div>
-                {#if !$activeReport}
-                    <div class="banner">
-                        <div class="report-controls">
-                            <button aria-label="download-report" class="control-btn download" style="cursor: not-allowed;">
-                                <svg width="20px" height="20px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M12.5535 16.5061C12.4114 16.6615 12.2106 16.75 12 16.75C11.7894 16.75 11.5886 16.6615 11.4465 16.5061L7.44648 12.1311C7.16698 11.8254 7.18822 11.351 7.49392 11.0715C7.79963 10.792 8.27402 10.8132 8.55352 11.1189L11.25 14.0682V3C11.25 2.58579 11.5858 2.25 12 2.25C12.4142 2.25 12.75 2.58579 12.75 3V14.0682L15.4465 11.1189C15.726 10.8132 16.2004 10.792 16.5061 11.0715C16.8118 11.351 16.833 11.8254 16.5535 12.1311L12.5535 16.5061Z" fill="#1C274C"/>
-                                    <path d="M3.75 15C3.75 14.5858 3.41422 14.25 3 14.25C2.58579 14.25 2.25 14.5858 2.25 15V15.0549C2.24998 16.4225 2.24996 17.5248 2.36652 18.3918C2.48754 19.2919 2.74643 20.0497 3.34835 20.6516C3.95027 21.2536 4.70814 21.5125 5.60825 21.6335C6.47522 21.75 7.57754 21.75 8.94513 21.75H15.0549C16.4225 21.75 17.5248 21.75 18.3918 21.6335C19.2919 21.5125 20.0497 21.2536 20.6517 20.6516C21.2536 20.0497 21.5125 19.2919 21.6335 18.3918C21.75 17.5248 21.75 16.4225 21.75 15.0549V15C21.75 14.5858 21.4142 14.25 21 14.25C20.5858 14.25 20.25 14.5858 20.25 15C20.25 16.4354 20.2484 17.4365 20.1469 18.1919C20.0482 18.9257 19.8678 19.3142 19.591 19.591C19.3142 19.8678 18.9257 20.0482 18.1919 20.1469C17.4365 20.2484 16.4354 20.25 15 20.25H9C7.56459 20.25 6.56347 20.2484 5.80812 20.1469C5.07435 20.0482 4.68577 19.8678 4.40901 19.591C4.13225 19.3142 3.9518 18.9257 3.85315 18.1919C3.75159 17.4365 3.75 16.4354 3.75 15Z" fill="#1C274C"/>
-                                </svg>
-                            </button>
-                            <button aria-label="print-report" class="control-btn print" style="cursor: not-allowed;">
-                                <svg width="20px" height="20px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M17 7H7V6h10v1zm0 12H7v-6h10v6zm2-12V3H5v4H1v8.996C1 17.103 1.897 18 3.004 18H5v3h14v-3h1.996A2.004 2.004 0 0 0 23 15.996V7h-4z" fill="#000000"/></svg>
-                            </button>
-                        </div>
-                    </div>
-                {/if}
-                <div class="report-display">
-                    <div class="report-content print-area">
-                    <div class="report-header">
-                        <h2>
-                            {#if $activeReport}
-                                {$activeReport.title}
-                            {:else}
-                                Task Completion Report
-                            {/if}
-                        </h2>
-                        <div class="report-meta">
-                            <span>
-                                Generated on: 
-                                {#if $activeReport}
-                                    {$activeReport.generatedDate}
-                                {:else}
-                                    {formattedDate} at {now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-                                {/if}
-                            </span>
-                            <span>
-                                Date range: 
-                                {#if $activeReport}
-                                    {$activeReport.startDate} to {$activeReport.endDate}
-                                {:else}
-                                    mm/dd/yyyy to mm/dd/yyyy
-                                {/if}
-                            </span>
-                        </div>
-                    </div>
-                    <!-- <div class="report-content print-area"> -->
-                        <div class="report-logo">
-                            <div class="logo">Report Generated By:</div>
-                            <div class="user-info-reports">
-                                <div class="user-name">
-                                    {#if $activeReport}
-                                            {$user?.firstName} {$user?.lastName}
-                                    {:else}
-                                        User Full Name
-                                    {/if}
-                                </div>
-                                <div class="user-role">
-                                    {#if $activeReport}
-                                        {$user?.role}
-                                    {:else}
-                                        User Role
-                                    {/if}
-                                </div>
-                            </div>  
-                        </div>
+            {/if}
+            <div class="report-display">
+                <div class="report-content print-area">
+                <div class="report-header">
+                    <h2>
                         {#if $activeReport}
-                            {#if $activeReport.tasks && $activeReport.tasks.length > 0}
-                                <table class="task-table">
+                            {$activeReport.title}
+                        {:else}
+                            Task Completion Report
+                        {/if}
+                    </h2>
+                    <div class="report-meta">
+                        <span>
+                            Generated on: 
+                            {#if $activeReport}
+                                {$activeReport.generatedDate}
+                            {:else}
+                                {formattedDate} at {now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                            {/if}
+                        </span>
+                        <span>
+                            Date range: 
+                            {#if $activeReport}
+                                {$activeReport.startDate} to {$activeReport.endDate}
+                            {:else}
+                                mm/dd/yyyy to mm/dd/yyyy
+                            {/if}
+                        </span>
+                    </div>
+                </div>
+                <!-- <div class="report-content print-area"> -->
+                    <div class="report-logo">
+                        <div class="logo">Report Generated By:</div>
+                        <div class="user-info-reports">
+                            <div class="user-name">
+                                {#if $activeReport}
+                                        {$user?.firstName} {$user?.lastName}
+                                {:else}
+                                    User Full Name
+                                {/if}
+                            </div>
+                            <div class="user-role">
+                                {#if $activeReport}
+                                    {$user?.role}
+                                {:else}
+                                    User Role
+                                {/if}
+                            </div>
+                        </div>  
+                    </div>
+                    {#if $activeReport}
+                        {#if $activeReport.tasks && $activeReport.tasks.length > 0}
+                            <table class="task-table">
+                                <thead>
+                                    <tr>
+                                        <th>Task ID</th>
+                                        <th>Title</th>
+                                        <th>Assigned To</th>
+                                        <th>Created By</th>
+                                        <th>Office</th>
+                                        <th>Description</th>
+                                        <th>Start Date</th>
+                                        <th>End Date</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {#each $activeReport.tasks as task}
+                                        <tr>
+                                            <td>{task.id}</td>
+                                            <td>{task.title}</td>
+                                            <td>{task.assignedToName}</td>
+                                            <td>{task.createdByName}</td>
+                                            <td>{task.office}</td>
+                                            <td>{task.description}</td>
+                                            <td>{new Date(task.startDate).toLocaleDateString()}</td>
+                                            <td>{new Date(task.endDate).toLocaleDateString()}</td>
+                                            <td>{task.status}</td>
+                                        </tr>
+                                    {/each}
+                                </tbody>
+                            </table>
+                        {:else}
+                            <div class="no-tasks">No Tasks Found For This Date Range.</div>
+                        {/if}
+                    {:else}
+                        <div class="placeholder-content">
+                            <div class="placeholder-text">Generated Report Will Appear Here!</div>
+                            <div class="placeholder-table">
+                                <table>
                                     <thead>
                                         <tr>
                                             <th>Task ID</th>
@@ -499,62 +526,24 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {#each $activeReport.tasks as task}
-                                            <tr>
-                                                <td>{task.id}</td>
-                                                <td>{task.title}</td>
-                                                <td>{task.assignedToName}</td>
-                                                <td>{task.createdByName}</td>
-                                                <td>{task.office}</td>
-                                                <td>{task.description}</td>
-                                                <td>{new Date(task.startDate).toLocaleDateString()}</td>
-                                                <td>{new Date(task.endDate).toLocaleDateString()}</td>
-                                                <td>{task.status}</td>
-                                            </tr>
-                                        {/each}
+                                        <tr>
+                                            <td>--</td>
+                                            <td>--</td>
+                                            <td>--</td>
+                                            <td>--</td>
+                                            <td>--</td>
+                                            <td>--</td>
+                                            <td>--</td>
+                                            <td>--</td>
+                                            <td>--</td>
+                                        </tr>
                                     </tbody>
                                 </table>
-                            {:else}
-                                <div class="no-tasks">No Tasks Found For This Date Range.</div>
-                            {/if}
-                        {:else}
-                            <div class="placeholder-content">
-                                <div class="placeholder-text">Generated Report Will Appear Here!</div>
-                                <div class="placeholder-table">
-                                    <table>
-                                        <thead>
-                                            <tr>
-                                                <th>Task ID</th>
-                                                <th>Title</th>
-                                                <th>Assigned To</th>
-                                                <th>Created By</th>
-                                                <th>Office</th>
-                                                <th>Description</th>
-                                                <th>Start Date</th>
-                                                <th>End Date</th>
-                                                <th>Status</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td>--</td>
-                                                <td>--</td>
-                                                <td>--</td>
-                                                <td>--</td>
-                                                <td>--</td>
-                                                <td>--</td>
-                                                <td>--</td>
-                                                <td>--</td>
-                                                <td>--</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
                             </div>
-                        {/if}
-                    </div>
+                        </div>
+                    {/if}
                 </div>
             </div>
         </div>
-    {/if}
+    </div>
 {/if}
