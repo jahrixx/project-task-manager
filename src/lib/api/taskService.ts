@@ -1,8 +1,7 @@
 import { writable } from "svelte/store";
 import type { TaskData, TaskResponse } from "$lib/stores/task";
-import { isAuthenticated, user, type User } from "$lib/stores/user";
-import { derived, get } from "svelte/store";
-import { json } from "@sveltejs/kit";
+import { user } from "$lib/stores/user";
+import { get } from "svelte/store";
 
 const API_URL = `${import.meta.env.VITE_BASE_URL}`;
 export const tasks = writable<TaskData[]>([]);

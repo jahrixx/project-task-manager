@@ -245,14 +245,14 @@ router.get("/status-count/:assignedTo", async (req, res) => {
                 endDate: task.endDate
             };
 
-        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        const endDate = new Date(task.endDate);
-        const taskDate = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
-        const isOverdue = ((task.status === 'Pending' || task.status === 'In Progress') && taskDate < today);
+        // const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        // const endDate = new Date(task.endDate);
+        // const taskDate = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+        // const isOverdue = ((task.status === 'Pending' || task.status === 'In Progress') && taskDate < today);
 
-            if(isOverdue){
-                categorizedTasks.overdueTasks.push(taskInfo);
-            }
+        //     if(isOverdue){
+        //         categorizedTasks.overdueTasks.push(taskInfo);
+        //     }
 
             switch (task.status) {
                 case 'Pending':
@@ -266,6 +266,9 @@ router.get("/status-count/:assignedTo", async (req, res) => {
                     break;
                 case 'Cancelled':
                     categorizedTasks.cancelledTasks.push(taskInfo);
+                    break;
+                case 'Overdue':
+                    categorizedTasks.overdueTasks.push(taskInfo);
                     break;
                 default:
                     break;

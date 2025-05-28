@@ -260,37 +260,76 @@
 
     function printReport() {
         const printContent = document.querySelector('.print-area');
-        if (printContent) {
-            const printWindow = window.open('', '', 'width=800,height=600');
-            printWindow?.document.write(`
-                <html>
-                    <head>
-                        <title>Task Management Report</title>
-                        <style>
-                            body { font-family: Arial, sans-serif; margin: 20px; }
-                            .report-header { margin-bottom: 20px; }
-                            .report-meta { display: flex; justify-content: space-between; padding-bottom: 20px; border-bottom: 1px solid #ddd; }
-                            .report-logo { display: flex; justify-content: space-between; margin-bottom: 20px; }
-                            .logo { font-size: 24px; font-weight: bold; }
-                            .user-info { text-align: left; }
-                            .task-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-                            .task-table th, .task-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-                            .task-table th { background-color: #f2f2f2; }
-                        </style>
-                    </head>
-                    <body>
-                        ${printContent.innerHTML}
-                    </body>
-                </html>
-            `);
-            printWindow?.document.close();
-            printWindow?.focus();
+        if (!printContent) return;
+
+        const iframe = document.createElement('iframe');
+        iframe.style.position = 'fixed';
+        iframe.style.right = '0';
+        iframe.style.bottom = '0';
+        iframe.style.width = '0';
+        iframe.style.height = '0';
+        iframe.style.border = '0';
+        document.body.appendChild(iframe);
+
+        iframe.onload = () => {
+            const doc = iframe.contentDocument || iframe.contentWindow?.document;
+                if(!doc) return;
+            
+            const style = `
+                <style>
+                    body{ font-family: Arial, sans-serif; margin: 20px; }
+                    .report-header { margin-bottom: 20px; }
+                    .report-meta { display: flex; justify-content: space-between; padding-bottom: 20px; border-bottom: 1px solid #ddd; }
+                    .report-logo { display: flex; justify-content: space-between; margin-bottom: 20px; }
+                    .user-info { text-align: left; }
+                    .task-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                    .task-table th, .task-table td { padding: 8px; border: 1px solid #ddd; }
+                    .task-table th { background-color: #f2f2f2; }
+                    @media print {
+                        body { margin: 0; }
+                    }
+                </style>
+            `;
+
+            doc.head.innerHTML = `<meta name="viewport" content="width=device-width, initial-scale=1.0">` + style;
+            doc.body.innerHTML = printContent.innerHTML;
+
             setTimeout(() => {
-                printWindow?.print();
-                printWindow?.close();
-            }, 500);
+                iframe.contentWindow?.focus();
+                iframe.contentWindow?.print();
+                setTimeout(() => document.body.removeChild(iframe), 500);
+            }, 300);
         }
     }
+
+    // function printReport() {
+    //     const printContent = document.querySelector('.print-area');
+    //         if (!printContent) return;
+
+    //     const printWindow = window.open('', '_blank', 'width=800,height=600');
+    //         if(!printWindow) return;
+
+    //         printWindow?.document.head.insertAdjacentHTML('beforeend',
+    //             `<style>
+    //                 body { font-family: Arial, sans-serif; margin: 20px; }
+    //                 .report-header { margin-bottom: 20px; }
+    //                 .report-meta { display: flex; justify-content: space-between; padding-bottom: 20px; border-bottom: 1px solid #ddd; }
+    //                 .report-logo { display: flex; justify-content: space-between; margin-bottom: 20px; }
+    //                 .logo { font-size: 24px; font-weight: bold; }
+    //                 .user-info { text-align: left; }
+    //                 .task-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    //                 .task-table th, .task-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    //                 .task-table th { background-color: #f2f2f2; }
+    //             </style>`
+    //         );
+    //         printWindow?.document.body.insertAdjacentHTML('beforeend',printContent.innerHTML);
+    //         printWindow?.document.close();
+    //         printWindow?.focus();
+    //         setTimeout(() => {
+    //             printWindow?.print();
+    //             printWindow?.close();
+    //         }, 500);
+    // }
 
     function filterUsersByOffice() {
         if(!selectedOffice) return get(userList);
@@ -299,6 +338,7 @@
     
     function clearInputs() {
         activeReport.set(null);
+        selectedUser = "";
         const datePicker = document.getElementById('datePicker');
         if (datePicker) {
             (datePicker as HTMLInputElement).value = '';

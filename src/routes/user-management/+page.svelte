@@ -198,9 +198,9 @@
 </script>
 
 <title>User Management</title>
-<svelte:head>
+<head>
     <link rel="stylesheet" href="src/components/assets/css/user-management.css">
-</svelte:head>
+</head>
 
 {#if loading}
     <div class="fullpage-loader">
