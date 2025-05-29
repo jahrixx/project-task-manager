@@ -58,10 +58,10 @@
     }
 </script>
 
+<title>Dashboard</title>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="src/components/assets/css/dashboard.css">
-    <title>Dashboard</title>
 </head>
 
 {#if loading}

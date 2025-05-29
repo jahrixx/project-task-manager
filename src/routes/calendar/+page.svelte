@@ -38,11 +38,11 @@
     });
 
 </script>
-<svelte:head>
+<title>Task Calendar</title>
+<head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="src/components/assets/css/calendar.css">
-    <title>Task Calendar</title>
-</svelte:head>
+</head>
 
 {#if loading}
     <div class="fullpage-loader">

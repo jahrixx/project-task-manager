@@ -5,21 +5,27 @@
     let username = '';
     let password = '';
     let errorMessage = '';
+    let loading = false;
 
     async function handleLogin(event: Event) {
         event.preventDefault();
+        if (loading) return;
         errorMessage = '';
+        loading = true;
         try {
             await login(username, password);
             goto('/dashboard');
         } catch (error: any) {
             errorMessage = error?.message || 'Login Failed!';
             alert(errorMessage);
+        } finally {
+            loading = false;
         }
     }
 </script>
+<title>Login</title>
 <main class="login-container">
-    <div class="login-wrapper">
+    <div class="login-wrapper { loading ? 'loading-state' : '' }">
         <form on:submit={handleLogin}>
             <div class="login-box">
                 <div class="logo-container">
@@ -28,13 +34,19 @@
                 </div>
                 <input type="text" id="username" placeholder="Username" bind:value={username} required/>
                 <input type="password" id="password" placeholder="Password" bind:value={password} required/>
-                <button type="submit">Login</button>
+                <button type="submit" disabled={loading}>
+                    {#if loading}
+                        <span class="spinner"></span> Logging In...
+                    {:else}
+                        Login
+                    {/if}
+                </button>
             </div>    
         </form>
     </div>
 </main>
 <style>
- .login-container {
+    .login-container {
         display: flex;
         justify-content: center;
         align-items: center;
@@ -93,6 +105,28 @@
     button:hover {
         background-color: #23BEDA;
         opacity: 70%;
+    }
+
+    .spinner {
+        border: 3px solid #ddd;
+        border-top: 3px solid #333;
+        border-radius: 50%;
+        width: 16px;
+        height: 16px;
+        animation: spin 0.6s linear infinite;
+        display: inline-block;
+        vertical-align: middle;
+        margin-right: 8px;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    .login-wrapper.loading-state {
+        position: relative;
+        pointer-events: none;
+        opacity: 0.7;
     }
 
     @media screen and (max-width: 500px) and (min-width: 300px) {
