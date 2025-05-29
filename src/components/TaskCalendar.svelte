@@ -28,8 +28,11 @@ onMount(async () => {
             ? `${task.title} - ${task.assignedToName}` 
             : task.title,
         start: task.startDate,
-        end: task.endDate,
-        color: task.status === 'Completed' ? 'green' : (task.status === 'In Progress' ? 'blue' : (task.status === 'Pending' ? 'orange' : 'red')),
+        // end: task.endDate,
+        end: new Date(new Date(task.endDate).getTime() + 86400000).toISOString().split('T')[0],
+        color: task.status === 'Completed' ? 'green' : 
+           task.status === 'In Progress' ? 'blue' : 
+           task.status === 'Pending' ? 'orange' : 'red',
         extendedProps : {
             description: task.description,
             status: task.status,

@@ -11,22 +11,34 @@
     let isSidebarOpen = false;
     let lastScrollPosition = 0;
     let burgerVisible = true;
+    let isLoading = false;
 
     function toggleSidebar() {
         isSidebarOpen = !isSidebarOpen;
     }
-    function logoutUser() {
-        if (!user) {
+    async function logoutUser() {
+        if (!get(user)) {
             console.error("No user is currently logged in!");
             return;
-        } 
-            if (!confirm("Are you sure you want to logout?")) {
-                return;
-            }
-        user.set(null);
-        localStorage.removeItem("user");
-        isAuthenticated.set(false);
-        goto('/login');
+        }
+
+        if (!confirm("Are you sure you want to logout?")) {
+            return;
+        }
+
+        isLoading = true;
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        try {
+            user.set(null);
+            localStorage.removeItem("user");
+            isAuthenticated.set(false);
+            await goto('/login');    
+        } catch (error) {
+            console.error("Error logging out user:", error);
+        } finally {
+            isLoading = false;
+        }
     }
     function handleScroll() {
         const currentScrollPosition = window.pageYOffset;
@@ -176,10 +188,55 @@
                 </button>
             </li>
         {/if}
-        <li><button class="btn-logout" on:click={logoutUser}><span>Logout</span></button></li>
+        <li>
+            <button class="btn-logout" on:click={logoutUser} disabled={isLoading}>
+                {#if isLoading}
+                    <div class="simple-spinner"></div>
+                {:else}
+                    <span>Logout</span>
+                {/if}
+            </button>
+        </li>
+        {#if isLoading}
+            <div class="fullscreen-loader">
+                <div class="spinner-fullscreen"></div>
+            </div>
+        {/if}
     </ul>
 </div>
 <style>
+    .fullscreen-loader {
+        position: fixed;
+        inset: 0;
+        background: rgba(255, 255, 255, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    }
+    .spinner-fullscreen {
+        width: 3rem;
+        height: 3rem;
+        border: 4px solid #ccc;
+        border-top-color: #333;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+    .simple-spinner {
+        border: 3px solid #ddd;
+        border-top: 3px solid #333;
+        border-radius: 50%;
+        width: 16px;
+        height: 16px;
+        animation: spin 0.6s linear infinite;
+        display: inline-block;
+        vertical-align: middle;
+        margin-right: 8px;
+        }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
     .burger {
         margin: 0;
         padding: 0;
