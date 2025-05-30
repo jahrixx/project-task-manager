@@ -197,41 +197,19 @@
                 {/if}
             </button>
         </li>
-        {#if isLoading}
-            <div class="fullscreen-loader">
-                <div class="spinner-fullscreen"></div>
-            </div>
-        {/if}
     </ul>
 </div>
 <style>
-    .fullscreen-loader {
-        position: fixed;
-        inset: 0;
-        background: rgba(255, 255, 255, 0.8);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 9999;
-    }
-    .spinner-fullscreen {
-        width: 3rem;
-        height: 3rem;
-        border: 4px solid #ccc;
-        border-top-color: #333;
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-    }
     .simple-spinner {
-        border: 3px solid #ddd;
-        border-top: 3px solid #333;
+        border: 3px solid #D22B2B;
+        border-top: 3px solid 	#F88379;
         border-radius: 50%;
         width: 16px;
         height: 16px;
         animation: spin 0.6s linear infinite;
         display: inline-block;
         vertical-align: middle;
-        margin-right: 8px;
+        margin: auto;
         }
 
     @keyframes spin {
