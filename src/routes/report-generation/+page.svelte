@@ -6,6 +6,7 @@
     import Sidebar from "../../components/Sidebar.svelte";
     import UserProfile from "../../components/UserProfile.svelte";
     import Login from '../login/+page.svelte';
+    import ToastContainer from "../../components/ToastContainer.svelte";
     import "flatpickr/dist/flatpickr.min.css";
     import type { TaskData } from "$lib/stores/task";
     import flatpickr from "flatpickr";
@@ -22,7 +23,7 @@
         endDate: string;
         filePath: string;
     };
-
+    let toasts: { id: number; type: string; message: string }[] = [];
     let reports = writable<Report[]>([]);
     let userList = writable<User[]>([]);
     let officeList = writable<{ id: number, officeName: string }[]>([]);
@@ -109,6 +110,10 @@
             if (!tasks || tasks.length === 0) {
                 taskDates.set([]);
                 initializeCalendar([]);
+                showToast ({
+                    type: "error",
+                    message: "No Tasks Assigned For This User."
+                });
                 return;
             }
 
@@ -126,6 +131,14 @@
             taskDates.set([]);
             initializeCalendar([]);
         }
+    }
+
+    function showToast({ type, message }: { type: string; message: string }) {
+        const id = Date.now();
+        toasts = [...toasts, { id, type, message }];
+        setTimeout(() => {
+            toasts = toasts.filter((toast) => toast.id !== id);
+        }, 5000);
     }
 
     function initializeCalendar(taskDateRanges: { startDate: string, endDate: string }[]) {
@@ -346,10 +359,10 @@
     }
 </script>
 
-<title>Reports Generation</title>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="src/components/assets/css/report-generation.css">
+    <title>Report Generation</title>
 </head>
 {#if !isAuthenticated}
     <Login />
@@ -422,7 +435,8 @@
                 </div>
                 <div class="report-actions">
                         {#if selectedUser && $taskDates.length === 0}
-                            <span><p style="color: red;">No Tasks Assigned For This User.</p></span>
+                            <ToastContainer {toasts} />
+                            <!-- <span><p style="color: red;">No Tasks Assigned For This User.</p></span> -->
                         {/if}
                     <div class="buttons">
                         <button class="generate-btn" on:click={generateReport}>Generate Report</button>
