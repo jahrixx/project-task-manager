@@ -16,14 +16,10 @@ function getStatusColor(status) {
     }
 }
 
-// GET: Fetch tasks with filtering based on the requester
 router.get("/", async (req, res) => {
     const { userId, role, office } = req.query;
     const numericUserId = Number(userId);
     const pool = getPool();
-
-    console.log("GET /tasks called with:", { userId, role, office, numericUserId });
-
     let baseQuery = `
         SELECT tasks.id, 
                tasks.title, 
@@ -70,16 +66,11 @@ router.get("/", async (req, res) => {
     if (conditions.length > 0) {
         baseQuery += " WHERE " + conditions.join(" AND ");
     }
-    
-    console.log("Executing Query:", baseQuery);
-    console.log("With Parameters:", queryParams);
 
     try {
         await updateTaskStatuses();
 
         const [tasks] = await pool.query(baseQuery, queryParams);
-        console.log("Tasks Retrieved:", tasks);
-
         if(role === "Admin"){
             const groupedTasks = tasks.reduce((acc, task) => {
                 if(!acc[task.creatorOffice]) {
@@ -89,10 +80,8 @@ router.get("/", async (req, res) => {
                 return acc;
             }, {});
 
-            // console.log("Tasks Retrieved (Grouped By Office):", groupedTasks);
             res.json(groupedTasks);
         } else {
-            console.log("Tasks Retrieved: ", tasks);
             res.json(tasks);
         }
     } catch (error) {
@@ -102,7 +91,6 @@ router.get("/", async (req, res) => {
 });
 
 router.get("/archived", async (req, res) => {
-    // const userId = req.query.userId;
     const pool = getPool();
 
     const sql = `
@@ -185,7 +173,6 @@ router.patch("/:id/unarchive", async (req, res) => {
 });
 
 router.get("/status-count/:assignedTo", async (req, res) => {
-    // const counts = {};
     const userId = req.params.assignedTo;
     const since = req.params.since;
     const pool = getPool();
@@ -245,15 +232,6 @@ router.get("/status-count/:assignedTo", async (req, res) => {
                 endDate: task.endDate
             };
 
-        // const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        // const endDate = new Date(task.endDate);
-        // const taskDate = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
-        // const isOverdue = ((task.status === 'Pending' || task.status === 'In Progress') && taskDate < today);
-
-        //     if(isOverdue){
-        //         categorizedTasks.overdueTasks.push(taskInfo);
-        //     }
-
             switch (task.status) {
                 case 'Pending':
                     categorizedTasks.pendingTasks.push(taskInfo);
@@ -305,7 +283,6 @@ router.get("/status-count/:assignedTo", async (req, res) => {
     }
 });
 
-// Add a new route to fetch employees in the same office
 router.get("/employees/:office", async (req, res) => {
     const { office } = req.params;
 
@@ -324,7 +301,6 @@ router.get("/employees/:office", async (req, res) => {
             return res.json([]);
         }
 
-        // Format the employee data for display in the dropdown
         const formattedEmployees = employeeRows.map(employee => ({
             id: employee.id,
             name: `${employee.firstName} ${employee.lastName}`,
@@ -339,7 +315,6 @@ router.get("/employees/:office", async (req, res) => {
     }
 });
 
-// POST: Create a new task (Managers can only assign to employees in the same office)
 router.post("/", async (req, res) => {
     const { title, description, startDate, endDate, status = "Pending", assignedTo, createdBy } = req.body;
 
@@ -349,8 +324,6 @@ router.post("/", async (req, res) => {
 
     try {
         const pool = getPool();
-
-        // Fetch manager's office and role
         const [managerRows] = await pool.query("SELECT office, role, firstName, lastName, profilePic FROM users WHERE id = ?", [createdBy]);
         if (managerRows.length === 0) {
             return res.status(404).json({ message: "Manager not found." });
@@ -362,44 +335,27 @@ router.post("/", async (req, res) => {
         let assignedUserId = assignedTo || createdBy;
 
         if (managerRole === "Manager" && assignedTo) {
-            // Check if the assigned employee belongs to the same office
             const [employeeRows] = await pool.query("SELECT office, firstName, lastName FROM users WHERE id = ?", [assignedTo]);
-
-            if (employeeRows.length === 0) {
-                return res.status(404).json({ message: "Assigned employee not found." });
-            }
-            if (employeeRows[0].office !== managerOffice) {
-                return res.status(403).json({ message: "Managers can only assign tasks to employees within their office." });
-            }
+                if (employeeRows.length === 0) {
+                    return res.status(404).json({ message: "Assigned employee not found." });
+                }
+                if (employeeRows[0].office !== managerOffice) {
+                    return res.status(403).json({ message: "Managers can only assign tasks to employees within their office." });
+                }
         }
-
         const formattedStartDate = new Date(startDate).toISOString().split("T")[0];
         const formattedEndDate = new Date(endDate).toISOString().split("T")[0];
-
         const formattedDueDate = new Date(endDate).toLocaleDateString('en-US', {
             year: 'numeric',
             month: 'long',
             day: 'numeric',
             weekday: 'long'
-        });
-        
-        // Insert new task (insert timestamps)
+        });        
         const [result] = await pool.query(
             "INSERT INTO tasks (title, description, startDate, endDate, status, assignedTo, createdBy, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
             [title, description, formattedStartDate, formattedEndDate, status, assignedUserId, createdBy]
         );
-
-        console.log("Created Task Start Date", formattedStartDate)
-        console.log("Created Task End Date", formattedEndDate)
-
         const taskId = result.insertId;
-
-        // create task insert to activities table
-        // await pool.query(
-        //     "INSERT INTO activities (message, createdBy, assignedTo, taskId) VALUES (?, ?, ?, ?)",
-        //     [`created task ${title} with status <span style="font-weight: bold; color: ${getStatusColor(status)}">"${status.toLowerCase()}".</span>`, createdBy, assignedTo, taskId]
-        // );
-
         if(assignedUserId === createdBy) {
             await pool.query(
                 `INSERT INTO activities (message, createdBy, assignedTo, taskId) VALUES (?,?,?,?)`,
@@ -429,8 +385,6 @@ router.post("/", async (req, res) => {
                 ]
             );
         }
-
-        //Create Notification
         if(assignedUserId === createdBy){
             await createNotification(
                 createdBy, 
@@ -476,13 +430,11 @@ router.post("/", async (req, res) => {
     }
 });
 
-// PUT: Update an existing task
 router.put("/:id", async (req, res) => {
     const { id } = req.params;
     let { title, description, startDate, endDate, status, createdBy, assignedTo } = req.body;
     const completedBy = createdBy || assignedTo;
 
-    console.log(startDate, endDate);
 
     if (!title || !description || !startDate || !endDate || !status) {
         return res.status(400).json({ message: "Missing required fields in update request." });
@@ -496,7 +448,6 @@ router.put("/:id", async (req, res) => {
             return res.status(404).json({ message: "Task not found." });
         }
 
-        // Convert dates to MySQL-friendly format
         const formattedStartDate = new Date(startDate).toISOString().split("T")[0];
         const formattedEndDate = new Date(endDate).toISOString().split("T")[0];
         const formattedDueDate = new Date(endDate).toLocaleDateString('en-US', {
@@ -506,18 +457,11 @@ router.put("/:id", async (req, res) => {
             weekday: 'long'
         });
         const today = new Date().toISOString().split("T")[0];
-
-        //(insert timestamps)
         const [result] = await pool.query(
             "UPDATE tasks SET title = ?, description = ?, startDate = ?, endDate = ?, status = ?, assignedTo = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?", 
             [title, description, formattedStartDate, formattedEndDate, status, assignedTo, id]
         );
-        
-        console.log("Updated Task Start Date", formattedStartDate)
-        console.log("Updated Task End Date", formattedEndDate)
-        console.log("Updated Task Status", status)
 
-        // insert activity table 
         await pool.query(`
             INSERT INTO activities (message, createdBy, assignedTo, taskId) VALUES (?,?,?,?)`,
             [`updated task <b>"${title}"</b> with status <span style="font-weight: bold; color: ${getStatusColor(status)}">"${status.toLowerCase()}".</span>`, completedBy, null, id]);
@@ -526,7 +470,6 @@ router.put("/:id", async (req, res) => {
             return res.status(500).json({ message: "Failed to update task. No rows affected." });
         }
 
-        // Get user details for notifications
         const [createdByRows] = await pool.query(
             `SELECT firstName, lastName FROM users WHERE id = ?`,
             [createdBy]
@@ -543,11 +486,8 @@ router.put("/:id", async (req, res) => {
             ? `${assignedToRows[0].firstName} ${assignedToRows[0].lastName}`
             : 'a team member';
 
-        // Create notifications based on who made the update and the new status
         if (completedBy === createdBy) {
-            // Creator updated their own task
             if (assignedTo === createdBy) {
-                // Personal task update
                 await createNotification(
                     createdBy,
                     `Updated your personal task: <b>"${title}"</b>.<br>` +
@@ -557,7 +497,6 @@ router.put("/:id", async (req, res) => {
                     'task_updated'
                 );
             } else {
-                // Creator updated a task assigned to someone else
                 await createNotification(
                     createdBy,
                     `Updated task <b>"${title}"</b> assigned to <b>${assignedToFullName}</b>.<br>` +
@@ -577,7 +516,6 @@ router.put("/:id", async (req, res) => {
                 );
             }
         } else {
-            // Assigned user updated the task
             await createNotification(
                 createdBy,
                 `<b>${assignedToFullName}</b> updated task <b>"${title}"</b>.<br>` +
@@ -604,7 +542,6 @@ router.put("/:id", async (req, res) => {
     }
 });
 
-// DELETE: Remove a task
 router.delete("/:id", async (req, res) => {
     const pool = getPool();
     const { id } = req.params;
@@ -616,7 +553,6 @@ router.delete("/:id", async (req, res) => {
         }
 
         const { title, status, createdBy } = task[0];
-        // insert to activities table
         await pool.query(
             `INSERT INTO activities (message, createdBy, assignedTo, taskId) VALUES (?,?,?,?)`,
             [`deleted task <b>"${title}"</b> with status <span style="font-weight: bold; color: ${getStatusColor(status)}">"${status.toLowerCase()}".</span>`, createdBy, null, id]
@@ -634,7 +570,6 @@ router.delete("/:id", async (req, res) => {
     }
 });
 
-// GET: Fetch a single task by ID
 router.get("/:id", async (req, res) => {
     const { id } = req.params;
     const pool = getPool();
