@@ -5,7 +5,8 @@
     import { removeNotification } from '$lib/api/notificationService';
     import { markNotificationAsRead, markNotificationAsUnread } from '$lib/api/notificationService';
     import { notifications, loadAdminNotifications, loadUserNotifications } from '../lib/stores/notification';
-    
+    import ToastContainer from './ToastContainer.svelte';
+
     export let userId: number;
     export let role: string;
     
@@ -73,6 +74,7 @@
 </script>
 <link rel="stylesheet" href="src/components/assets/css/notification-panel.css">
 <div class="notification-container">
+    <ToastContainer />
     {#if loading && !initialized}
         <p style="text-align: center">Loading Notifications...</p>
     {:else if error}
@@ -166,8 +168,7 @@
             font-size: 12px;
         }
     }
-    
-    @media screen and (max-width: 320px) {
+    /* @media screen and (max-width: 320px) {
         
-    }
+    } */
 </style>

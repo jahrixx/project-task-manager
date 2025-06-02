@@ -12,6 +12,7 @@
     import TaskListManager from "../../components/TaskListManager.svelte";
     import { selectedStatuses } from "$lib/stores/task";
     import { loadArchiveTasks } from "$lib/api/archive";
+    import ToastContainer from "../../components/ToastContainer.svelte";
 
     export const userRole = derived(user, ($user: User | null) => $user?.role || "");
     
@@ -123,7 +124,6 @@
                                         
             const archivedTask = await loadArchiveTasks();
             archivedTasks.set(archivedTask);
-            // console.log('Archived Tasks (Console in the parent component): ',archivedTasks)
             if (currentUser.role === "Admin") {
                 allTasks = fetchedTasks 
                     ? Object.fromEntries(fetchedTasks.map(group => [group.officeName, group.tasks])) : {};
@@ -368,6 +368,7 @@
             <Sidebar />
             <div class="main-container">
                 <UserProfile />
+                <ToastContainer />
                 <div class="header">
                     <div class="control-btn">
                         {#if $userRole === 'Admin'}

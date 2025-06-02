@@ -195,6 +195,7 @@
             return;
         }
             await deleteUser(id);
+            showToast({ type: "success", message: "User Deleted Successfully!" });
             await refreshUsers();
     }
 </script>

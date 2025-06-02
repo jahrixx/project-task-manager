@@ -2,47 +2,42 @@ import { writable } from "svelte/store";
 import type { TaskData, TaskResponse } from "$lib/stores/task";
 import { user } from "$lib/stores/user";
 import { get } from "svelte/store";
+import { showToast } from "./toastService";
 
 const API_URL = `${import.meta.env.VITE_BASE_URL}`;
 export const tasks = writable<TaskData[]>([]);
 export let allTasks: Record<string, TaskData[]> = {}; 
 export let errorMessage= '';
-
 export async function createTask(taskData: TaskData): Promise<TaskResponse> {    
-    // Convert dates to Date objects for validation
     const startDate = new Date(taskData.startDate);
     const endDate = new Date(taskData.endDate);
-
     if(endDate.getTime() < startDate.getTime()){
-        alert("End Date Cannot Be Earlier Than The Start Date!");
-        return Promise.reject("End Date Validation Failed!")
+        showToast({ type: "error", message: "End Date Cannot Be Earlier Than The Start Date!" });
+        return Promise.reject("End Date Validation Failed!");
+
     } else if(endDate.getTime() === startDate.getTime()){
-        alert("Start Date Cannot Be Equal To End Date!");
-        return Promise.reject("End Date Validation Failed!")
+        showToast({ type: "error", message: "Start Date Cannot Be Equal To End Date!" });
+        return Promise.reject("End Date Validation Failed!");
     }
-    
-    try {
-        const response = await fetch(`${API_URL}/tasks`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(taskData),
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || "Failed to create task.");
+        try {
+            const response = await fetch(`${API_URL}/tasks`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(taskData),
+            });
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || "Failed to create task.");
+            }
+            return await response.json();
+        } catch (error) {
+            console.error("Error creating task:", error);
+            throw error;
         }
-
-        return await response.json();
-    } catch (error) {
-        console.error("Error creating task:", error);
-        throw error;
-    }
 }
 
-// Function to fetch employees based on office ID
 export async function fetchEmployees(office: string | number): Promise<{ id: number; name: string; role: string; office: string }[]> {
     try {
         const response = await fetch(`${API_URL}/tasks/employees/${office}`);
@@ -61,44 +56,25 @@ export async function fetchEmployees(office: string | number): Promise<{ id: num
 
 export async function fetchTasks(userId: number | null, role: string | null, office: string | null) {
     try {
-       
         const userIdParam = userId ?? 0;
         const roleParam = role ?? "";
         const officeParam = office ?? "";
-        // let response: any = [];
-           
         const response = await fetch(`${API_URL}/tasks?userId=${userIdParam}&role=${roleParam}&office=${officeParam}`);
-    
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || "Failed to fetch tasks.");
-        }
-
-        const data = await response.json();
-        console.log("Data Fetched: ", data);
-
-        if(role !== "Admin"){
-            data.forEach((task: TaskData) => {
-                const now = new Date();
-                const endDate = new Date(task.endDate);
-    
-                // if(task.status !== "Completed"){
-                //     if (endDate < now) {
-                //         task.status = "Overdue";
-                //     }
-                //     if(endDate.toDateString() === now.toDateString()){
-                //         task.status = "Due Today";
-                //     } else if(endDate < now){
-                //         task.status = "Overdue";
-                //     }
-                // }
-            });
-        }
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || "Failed to fetch tasks.");
+            }
         
-        return role === "Admin"
-            ? transformGroupedTasks(data)
-            : [{ officeName: "My Tasks", tasks: data }];
-
+        const data = await response.json();
+            if(role !== "Admin"){
+                data.forEach((task: TaskData) => {
+                    const now = new Date();
+                    const endDate = new Date(task.endDate);
+                });
+            }
+            return role === "Admin"
+                ? transformGroupedTasks(data)
+                : [{ officeName: "My Tasks", tasks: data }];
     } catch (error) {
         console.error("Failed to fetch tasks:", error);
     }
@@ -114,8 +90,6 @@ export async function refreshTasks() {
                 currentUser?.role ?? '', 
                 currentUser?.office ?? ''
             );
-            console.log("Fetched tasks after execution:", fetchedTasks);
-
         if (currentUser?.role === "Admin") {
             allTasks = fetchedTasks
                 ? Object.fromEntries(fetchedTasks.map(group => [group.officeName, group.tasks]))
@@ -134,7 +108,7 @@ export async function removeTask(taskId: number | null) {
     } 
         try {
             await deleteTask(taskId);
-            alert("Task and Notification card deleted successfully");
+            showToast({ type: "success", message: "Task and Notification card deleted successfully!" });
             await refreshTasks();
         } catch (error) {
             console.error("Error deleting task :", error);
@@ -146,16 +120,12 @@ function transformGroupedTasks(data: any){
     return Object.entries(data).map(([officeName, tasks]) => ({officeName, tasks}))
 }
 
-//Update Task
-export async function updateTask(id: number | undefined, taskData: TaskData): Promise<TaskResponse> {
-    console.log("Updating Task with ID :", id);
-    
-    // Convert dates to Date objects for validation
+export async function updateTask(id: number | undefined, taskData: TaskData): Promise<TaskResponse> {    
     const startDate = new Date(taskData.startDate);
     const endDate = new Date(taskData.endDate);
 
     if (endDate < startDate){
-        alert("End Date Cannot Be Earlier Than The Start Date!");
+        showToast({ type: "error", message: "End Date Cannot Be Earlier Than The Start Date!" });
         return Promise.reject("End Date Validation Failed!");
     }
     
@@ -165,25 +135,21 @@ export async function updateTask(id: number | undefined, taskData: TaskData): Pr
             headers: { "Content-Type" : "application/json" },
             body: JSON.stringify(taskData),
         });
-        
-        if(!response.ok){
-            const errorData = await response.json();
-            throw new Error(errorData.message || "Failed to update task!");
-        }
-        return await response.json();
-
+            if(!response.ok){
+                const errorData = await response.json();
+                throw new Error(errorData.message || "Failed to update task!");
+            }
+            return await response.json();
     } catch (error) {
         console.error("Error updating task", error);
         throw error;
     }
 }
 
-//Delete Task
 export async function deleteTask(id: number) {
     const res = await fetch(`${API_URL}/tasks/${id}`, { 
         method: "DELETE",
     });
-
     if(!res.ok){
         throw new Error("Failed to Delete Task!")
     }

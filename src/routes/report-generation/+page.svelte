@@ -24,7 +24,6 @@
         endDate: string;
         filePath: string;
     };
-    // let toasts: { id: number; type: string; message: string }[] = [];
     let reports = writable<Report[]>([]);
     let userList = writable<User[]>([]);
     let officeList = writable<{ id: number, officeName: string }[]>([]);
@@ -44,14 +43,11 @@
             goto('/login');
             return;
         }
-        
         await Promise.all([fetchOffices(), fetchUsers(), fetchReports()]);
         initializeCalendar([]);
-
         if ($user) {
             fetchTaskDates(String($user?.id));
         }
-
         timeInterval = setInterval(() =>  {
             now = new Date();
 
@@ -107,20 +103,16 @@
         try {
             const res = await fetch(`${API_URL}/reports/tasks?assignedTo=${userId}`);
             const tasks = await res.json();
-
             if (!tasks || tasks.length === 0) {
                 taskDates.set([]);
                 initializeCalendar([]);
                 showToast ({type: "error", message: "No Tasks Assigned For This User."});
                 return;
             }
-
             const formattedTasks = tasks.map((task: TaskData) => ({
                 startDate: new Date(task.startDate).toLocaleDateString("en-CA"),
                 endDate: new Date(task.endDate).toLocaleDateString("en-CA"),
             }));
-
-            console.log("Tasks of the Selected User: ",formattedTasks)
             taskDates.set(formattedTasks);
             await tick();
             initializeCalendar(formattedTasks);
@@ -132,12 +124,9 @@
     }
 
     function initializeCalendar(taskDateRanges: { startDate: string, endDate: string }[]) {
-        let highlightedDates: string[] = [];
-        console.log("Task Dates: ", taskDateRanges);
-        
+        let highlightedDates: string[] = [];        
         let allStartDates = taskDateRanges.map(task => new Date(task.startDate));
         let allEndDates = taskDateRanges.map(task => new Date(task.endDate));
-        
         let minDate = new Date(Math.min(...allStartDates.map(date => date.getTime())));
         let maxDate = new Date(Math.max(...allEndDates.map(date => date.getTime())));
         
@@ -150,12 +139,10 @@
                 currentDate.setDate(currentDate.getDate() + 1);
             }
         });
-
         if (calendarInstance) {
             calendarInstance.destroy();
             calendarInstance = null;
         }
-
         calendarInstance = flatpickr(document.getElementById("datePicker") as HTMLInputElement, {
             mode: "range",
             dateFormat: "Y-m-d",
@@ -166,12 +153,9 @@
                 if (selectedDates.length === 2) {
                     startDate = selectedDates[0].toLocaleDateString("en-CA");
                     endDate = selectedDates[1].toLocaleDateString("en-CA");
-                    console.log("Selected Date Range:", startDate, "to", endDate);
-
-                    const selectedRangeHasGaps = !selectedDates.every(date => 
-                        highlightedDates.includes(date.toLocaleDateString("en-CA"))
-                    );
-
+                        const selectedRangeHasGaps = !selectedDates.every(date => 
+                            highlightedDates.includes(date.toLocaleDateString("en-CA"))
+                        );
                     if(selectedRangeHasGaps){
                         showToast({type: "error", message: "Selection Includes Date With No Tasks!"})
                         calendarInstance?.clear();
@@ -198,7 +182,6 @@
     }
 
     async function generateReport() {
-        console.log("Requesting:", `${API_URL}/reports/generate`);
         try {
             const res = await fetch(`${API_URL}/reports/generate`, {
                 method: "POST",
@@ -208,9 +191,7 @@
             
             if (res.ok) {
                 const data = await res.json();
-                console.log("Report Generated: ", data);
                 showToast({ type: "success", message: "Report Generated Successfully!" });
-
                 activeReport.set({
                     id: data.reportId,
                     title: `Task Report - ${startDate} to ${endDate}`,
@@ -219,7 +200,6 @@
                     generatedDate: formattedDate,
                     tasks: data.tasks as TaskData[]
                 });
-
                 fetchReports();
             } else {
                 showToast({ type: "error", message: "Failed To Generate Report!" });
@@ -231,10 +211,6 @@
     }
 
     async function downloadReport(reportId: number, startDate: string, endDate: string) {
-        console.log("Report ID:", reportId);
-        console.log("Selected Start Date:", startDate);
-        console.log("Selected End Date:", endDate);
-
         if (!startDate || !endDate) {
             console.error("Start date and end date are required.");
             return;
@@ -256,6 +232,7 @@
             a.click();
             document.body.removeChild(a);
             window.URL.revokeObjectURL(url);
+            showToast({ type: "success", message: "Report Downloaded Successfully!" });
         } else {
             console.error("Failed to download report", await res.json());
         }
@@ -342,6 +319,7 @@
     function clearInputs() {
         activeReport.set(null);
         selectedUser = "";
+        selectedOffice = "";
         const datePicker = document.getElementById('datePicker');
         if (datePicker) {
             (datePicker as HTMLInputElement).value = '';

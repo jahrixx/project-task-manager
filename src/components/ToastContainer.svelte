@@ -46,6 +46,11 @@
         background-color: #28a745; 
     }
 
+    .toast.read {
+        background-color: #D3D3D3;
+        color: #6082B6; 
+    }
+
     .toast.error {
         background-color: #dc3545; 
     }

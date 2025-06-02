@@ -3,9 +3,7 @@ const { getPool } = require("../../db");
 const updateTaskStatuses = async () => {
     try {
         const pool = getPool();
-        const today = new Date().toISOString().split("T")[0];
-        console.log("Running automatic status update check. Today's Date: ", today);        
-        
+        const today = new Date().toISOString().split("T")[0];        
         const [overdueResult] = await pool.query(`
             UPDATE tasks 
             SET status = 'Overdue', updated_at = CURRENT_TIMESTAMP

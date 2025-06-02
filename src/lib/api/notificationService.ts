@@ -1,12 +1,11 @@
 import { loadAdminNotifications, loadUserNotifications } from "$lib/stores/notification";
-import { isAuthenticated, user, type User } from "$lib/stores/user";
-import { derived, get, writable } from "svelte/store";
-
+import { user } from "$lib/stores/user";
+import { get } from "svelte/store";
+import { showToast } from "./toastService";
 
 const API_URL = `${import.meta.env.VITE_BASE_URL}`;
 let currentUser;
 let errorMessage = "";
-
 $: currentUser = get(user);
 let role = currentUser?.role;
 let userId = currentUser?.id;
@@ -20,14 +19,13 @@ export async function removeNotification(notificationId: number | null) {
     } 
         try {
             await deleteNotification(notificationId);
-            alert("Notification Deleted Successfully");
+            showToast({ type: "success", message: "Notification Deleted Successfully!" });
         } catch (error) {
             console.error("Error deleting notification :", error);
             errorMessage = "Failed to delete notification. Please try again later!";
         }
 }
 
-//Delete Task
 export async function deleteNotification(id: number) {
     const res = await fetch(`${API_URL}/notification/${id}`, { 
         method: "DELETE",
@@ -42,12 +40,13 @@ export async function deleteNotification(id: number) {
 export async function markNotificationAsRead(id: number) {
     try { 
         const response = await fetch(`${API_URL}/notification/read/${id}`, { method: 'POST' });
-
         if(!response.ok) throw new Error('Failed to mark as unread.');
         if (role === "Admin") {
             await loadAdminNotifications();
+            showToast({ type: "read", message: "Notification Marked As Read Successfully!" });
         } else if (typeof userId === "number") {
             await loadUserNotifications(userId);
+            showToast({ type: "read", message: "Notification Marked As Read Successfully!" });
         } else {
             console.error("User ID is undefined. Cannot load user notifications.");
         }
@@ -59,12 +58,13 @@ export async function markNotificationAsRead(id: number) {
 export async function markNotificationAsUnread(id: number) {
     try { 
         const response = await fetch(`${API_URL}/notification/unread/${id}`, { method: 'POST' });
-
         if(!response.ok) throw new Error('Failed to mark as unread.');
         if (role === "Admin") {
             await loadAdminNotifications();
+            showToast({ type: "read", message: "Notification Marked As Unread Successfully!" });
         } else if (typeof userId === "number") {
             await loadUserNotifications(userId);
+            showToast({ type: "read", message: "Notification Marked As Unread Successfully!" });
         } else {
             console.error("User ID is undefined. Cannot load user notifications.");
         }
