@@ -111,10 +111,7 @@
             if (!tasks || tasks.length === 0) {
                 taskDates.set([]);
                 initializeCalendar([]);
-                showToast ({
-                    type: "error",
-                    message: "No Tasks Assigned For This User."
-                });
+                showToast ({type: "error", message: "No Tasks Assigned For This User."});
                 return;
             }
 
@@ -366,6 +363,7 @@
             <UserProfile />
             <h2 class="h2"><u>Generate Report</u></h2>
             <div class="report-container">
+                <ToastContainer />
                 <div class="report-fields">
                     {#if $userRole === "Admin"}
                         <div class="form-group">
@@ -427,10 +425,9 @@
                     {/if}
                 </div>
                 <div class="report-actions">
-                        {#if selectedUser && $taskDates.length === 0}
+                        <!-- {#if selectedUser && $taskDates.length === 0}
                             <ToastContainer />
-                            <!-- <span><p style="color: red;">No Tasks Assigned For This User.</p></span> -->
-                        {/if}
+                        {/if} -->
                     <div class="buttons">
                         <button class="generate-btn" on:click={generateReport}>Generate Report</button>
                         <button class="clear-btn" on:click={clearInputs}>Reset</button>

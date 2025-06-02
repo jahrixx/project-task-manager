@@ -8,7 +8,6 @@ router.get("/", async (req, res) => {
         const [employees] = await pool.query("SELECT COUNT(*) as count FROM users WHERE role = 'Employee'");
         const [managers] = await pool.query("SELECT COUNT(*) as count FROM users WHERE role = 'Manager'");
         const [offices] = await pool.query("SELECT DISTINCT office FROM users WHERE office IS NOT NULL AND office != ''");
-
         const [employeesList] = await pool.query(`
             SELECT 
                 id, 
@@ -17,7 +16,6 @@ router.get("/", async (req, res) => {
             FROM users
             WHERE role = 'Employee'
         `);
-
         const [managersList] = await pool.query(`
             SELECT 
                 id, 
@@ -26,12 +24,10 @@ router.get("/", async (req, res) => {
             FROM users
             WHERE role = 'Manager'
         `);
-
         const officesList = offices.map((o, index) => ({
             id: index + 1,
             name: o.office
         }));
-
         res.json({
             employees: employees[0].count,
             managers: managers[0].count,
@@ -45,5 +41,4 @@ router.get("/", async (req, res) => {
         res.status(500).json({ error: "Internal Server Error" });
     }
 });
-
 module.exports = router;

@@ -1,4 +1,3 @@
-// const { title } = require("process");
 const { getPool } = require("../../db");
 const { createNotification } = require("../notification");
 
@@ -10,7 +9,6 @@ async function checkOverdueTasks() {
     );
 
     for (const task of tasks){
-        // const message = `<br><span>Task "${task.title}" is <span style="font-weight: bold; color: red;">Overdue</span></span>!`;
         const message = `<div style="margin-top: 10px;">Task "${task.title}" is <span style="font-weight: bold; color: red;">Overdue</span>!</div>`;
 
         const [ existing ] = await pool.query(
@@ -20,9 +18,8 @@ async function checkOverdueTasks() {
 
         if(existing.length === 0){
             await createNotification(task.assignedTo, message, task.id);
-            // console.log(`Notification Created For Task: ${task.title}.`);
         } else {
-            // console.log(`Notification For Task: ${task.title}. already exists! Skipped!`);
+            return 0;
         }
     }
 }

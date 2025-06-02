@@ -23,17 +23,11 @@
                 showToast({ type: "error", message: "User ID not found!" });
                 return;
             }
-
             const userData = await fetchUserProfile(String(currentUser?.id));
-            console.log(currentUser.id);
-            
             user.update(u => ({ ...u, profilePic: userData.profilePic }));
-
             profilePic = userData.profilePic 
                 ? `${API_URL}${userData.profilePic}`
                 : '/src/components/assets/default-avatar.png';
-
-            console.log(profilePic)
         } catch (error) {
             showToast({ type: "error", message: "Network Error." });
         } finally {
@@ -50,7 +44,6 @@
                     showToast({ type: "error", message: "User ID not found!" });
                     return;
                 }
-
                 profilePic = await uploadImage(target.files[0], String(currentUser.id));
                 showToast({ type: "success", message: "Profile Picture Updated Successfully!" });
             } catch (error) {
@@ -81,7 +74,6 @@
             if (data.redirect) {
                 setTimeout(() => {
                     window.location.href = data.redirect;
-
                 }, 2000)
             }
         } catch (error) {
