@@ -4,6 +4,8 @@
     import { onMount } from 'svelte';
     import Sidebar from '../../components/Sidebar.svelte';
     import { fetchUserProfile, uploadImage, updatePassword } from '$lib/api/profileService';
+    import { showToast } from '$lib/api/toastService';
+    import ToastContainer from '../../components/ToastContainer.svelte';
     
     let profilePic = '';
     let oldPassword = '';
@@ -18,7 +20,7 @@
         try {
             const currentUser = get(user);
             if (!currentUser?.id) {
-                alert("User ID not found!");
+                showToast({ type: "error", message: "User ID not found!" });
                 return;
             }
 
@@ -33,7 +35,7 @@
 
             console.log(profilePic)
         } catch (error) {
-            alert("Network Error.")
+            showToast({ type: "error", message: "Network Error." });
         } finally {
             loading = false;
         }
@@ -45,42 +47,45 @@
             try {
                 const currentUser = get(user);
                 if (!currentUser?.id) {
-                    alert("User ID not found!");
+                    showToast({ type: "error", message: "User ID not found!" });
                     return;
                 }
 
                 profilePic = await uploadImage(target.files[0], String(currentUser.id));
-                alert("✅ Profile Picture Updated Successfully!");
+                showToast({ type: "success", message: "Profile Picture Updated Successfully!" });
             } catch (error) {
-                alert("❌ Network error during file upload!");
+                showToast({ type: "error", message: "Network error during file upload!" });
             }
         }
     }
 
     async function handlePasswordUpdate() {
         if (!oldPassword || !newPassword || !confirmPassword) {
-            alert('All password fields are required.');
+            showToast({ type: "error", message: "All password fields are required." });
             return;
         }
         if (newPassword !== confirmPassword) {
-            alert('New password and confirm password do not match.');
+            showToast({ type: "error", message: "New password and confirm password do not match." });
             return;
         }
 
         try {
             const currentUser = get(user);
             if (!currentUser?.id) {
-                alert("User ID not found!");
+                showToast({ type: "error", message: "User ID not found!" });
                 return;
             }
 
             const data = await updatePassword(oldPassword, newPassword, String(currentUser.id));
-            alert(data.message);
+            showToast({ type: "success", message: data.message });
             if (data.redirect) {
-                window.location.href = data.redirect;
+                setTimeout(() => {
+                    window.location.href = data.redirect;
+
+                }, 2000)
             }
         } catch (error) {
-            alert("An error occurred. Please try again.");
+            showToast({ type: "error", message: "An error occurred. Please try again." });
         }
     }
 </script>
@@ -99,6 +104,7 @@
     <div class="edit-profile">
         <h1 style="margin-bottom: 20px; margin-top: 20px;">Change Password</h1>
         <div class="profile-section">
+            <ToastContainer />
             <img src="{profilePic}" alt="Profile" class="profile-pic" />
             <label class="custom-file-upload">
                 <input type="file" accept="image/*" on:change={handleImageUpload} />

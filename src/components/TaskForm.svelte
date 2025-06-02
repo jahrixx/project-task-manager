@@ -4,6 +4,8 @@ import { onMount } from "svelte";
 import { userRole, user } from "$lib/stores/user";
 import { get } from "svelte/store";
 import { createTask, fetchEmployees, refreshTasks, fetchTasks, updateTask } from "$lib/api/taskService";
+import { showToast } from "$lib/api/toastService";
+import ToastContainer from "./ToastContainer.svelte";
 
 let errorMessage = '';
 let employeesInOffice: { id: number; name: string; role: string; office: string }[] = [];
@@ -86,20 +88,20 @@ function handleDateInput(event: Event, key: keyof TaskData) {
 
 async function handleSubmit() {
     if(!taskData.title || !taskData.description || !taskData.startDate || !taskData.endDate || !taskData.status){
-        alert("Title, Description, Start and End Date, Status are Required!");
+        showToast({ type: "error", message: "Title, Description, Start and End Date, Status are Required." });
         return;
     } else {
         try {
             if(editId) {
                 await updateTask(editId, taskData);
-                alert("Task Updated Successfully!");
+                showToast({ type: "success", message: "Task Updated Successfully!" });
             } else {
                 await createTask(taskData);
-                alert("Task Created Successfully!");
+                showToast({ type: "success", message: "Task Created Successfully!" });
             } 
         } catch (error) {
             console.error("Task creation error:", error);
-            alert("An error occured!");
+            showToast({ type: "error", message: "An error occured!" });
         } finally {
             await refreshTasks();
             closeForm();

@@ -42,7 +42,7 @@ border: 1px solid #ccc;
 border-radius: 4px;
 }
 
-button {
+button[type="submit"] {
 width: 100%;
 padding: 10px;
 background-color: #23BEDA;
@@ -54,7 +54,7 @@ margin-top: 20px;
 font-size: 1rem;
 }
 
-button:hover {
+button[type="submit"]:hover {
 background-color: #23BEDA;
 opacity: 70%;
 }
@@ -129,7 +129,7 @@ input {
     width: 100%;
     font-size: 1rem;
 }
-button {
+button[type="submit"] {
     margin-top: 3vh;
     font-size: 1rem;
     padding: 10px;

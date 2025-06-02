@@ -6,12 +6,13 @@
     import Sidebar from "../../components/Sidebar.svelte";
     import UserProfile from "../../components/UserProfile.svelte";
     import Login from '../login/+page.svelte';
-    import ToastContainer from "../../components/ToastContainer.svelte";
     import "flatpickr/dist/flatpickr.min.css";
     import type { TaskData } from "$lib/stores/task";
     import flatpickr from "flatpickr";
     import type { Instance } from "flatpickr/dist/types/instance";
-
+    import ToastContainer from "../../components/ToastContainer.svelte";    
+    import { showToast } from "$lib/api/toastService";
+    
     const API_URL = `${import.meta.env.VITE_BASE_URL}`;
     const currentDate = new Date();
     const formattedDate = currentDate.toLocaleDateString();
@@ -23,7 +24,7 @@
         endDate: string;
         filePath: string;
     };
-    let toasts: { id: number; type: string; message: string }[] = [];
+    // let toasts: { id: number; type: string; message: string }[] = [];
     let reports = writable<Report[]>([]);
     let userList = writable<User[]>([]);
     let officeList = writable<{ id: number, officeName: string }[]>([]);
@@ -133,14 +134,6 @@
         }
     }
 
-    function showToast({ type, message }: { type: string; message: string }) {
-        const id = Date.now();
-        toasts = [...toasts, { id, type, message }];
-        setTimeout(() => {
-            toasts = toasts.filter((toast) => toast.id !== id);
-        }, 5000);
-    }
-
     function initializeCalendar(taskDateRanges: { startDate: string, endDate: string }[]) {
         let highlightedDates: string[] = [];
         console.log("Task Dates: ", taskDateRanges);
@@ -183,7 +176,7 @@
                     );
 
                     if(selectedRangeHasGaps){
-                        alert("Selection Includes Date With No Tasks!");
+                        showToast({type: "error", message: "Selection Includes Date With No Tasks!"})
                         calendarInstance?.clear();
                         return;
                     }
@@ -219,7 +212,7 @@
             if (res.ok) {
                 const data = await res.json();
                 console.log("Report Generated: ", data);
-                alert("Report Generated Successfully!")
+                showToast({ type: "success", message: "Report Generated Successfully!" });
 
                 activeReport.set({
                     id: data.reportId,
@@ -232,11 +225,11 @@
 
                 fetchReports();
             } else {
-                alert("Failed To Generate Report!")
+                showToast({ type: "error", message: "Failed To Generate Report!" });
             }
         } catch (error) {
             console.error("Error: ", error);
-            alert("An Error Occured While Generating The Report!")
+            showToast({ type: "error", message: "An Error Occured While Generating The Report!" });
         }
     }
 
@@ -435,7 +428,7 @@
                 </div>
                 <div class="report-actions">
                         {#if selectedUser && $taskDates.length === 0}
-                            <ToastContainer {toasts} />
+                            <ToastContainer />
                             <!-- <span><p style="color: red;">No Tasks Assigned For This User.</p></span> -->
                         {/if}
                     <div class="buttons">

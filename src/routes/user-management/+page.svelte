@@ -7,6 +7,8 @@
     import Sidebar from '../../components/Sidebar.svelte';
     import UserProfile from '../../components/UserProfile.svelte';
     import { get } from 'svelte/store';
+    import { showToast } from '$lib/api/toastService';
+    import ToastContainer from '../../components/ToastContainer.svelte';
     
     let users: User[] = [];
     let allUsers: User[] = [];
@@ -128,17 +130,17 @@
     
     async function handleSubmit() {
         if (!form.firstName || !form.lastName) {
-            alert("First Name and Last Name are required.");
+            showToast({ type: "error", message: "First Name and Last Name are required." });
             return;
         }
 
         try {
             if (editId) {
                 await updateUser(editId, form);
-                alert("User updated successfully!");
+                showToast({ type: "success", message: "User updated successfully!" });
             } else {
                 await createUser(form);
-                alert("User created successfully!");
+                showToast({ type: "success", message: "User created successfully!" });
             }
 
             await refreshUsers();
@@ -147,7 +149,7 @@
             showForm = false;
         } catch (error) {
             console.error("Error:", error);
-            alert("An error occurred.");
+            showToast({ type: "error", message: "An error occurred. Please try again." });
         }
     }
 
@@ -215,6 +217,7 @@
             <div class="main-container">
                 <UserProfile />
                 <div class="header">
+                    <ToastContainer />
                     <div class="control-btn">
                         <button class="filter-btn" on:click={toggleFilter} aria-label="filter-btn">
                             <svg width="26px" height="26px" viewBox="0 0 24 24" fill="#FFFFFF" xmlns="http://www.w3.org/2000/svg">

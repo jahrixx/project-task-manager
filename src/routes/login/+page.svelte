@@ -1,6 +1,8 @@
 <script lang="ts">
     import { goto } from '$app/navigation';
     import { login } from '$lib/api/authService';
+    import { showToast } from '$lib/api/toastService';
+    import ToastContainer from '../../components/ToastContainer.svelte';
     
     let username = '';
     let password = '';
@@ -21,8 +23,7 @@
             await sleep(2000);
             await goto('/dashboard');
         } catch (error: any) {
-            errorMessage = error?.message || 'Login Failed!';
-            alert(errorMessage);
+            showToast({ type: "error", message: "Login Failed!" });
         } finally {
             loading = false;
         }
@@ -32,6 +33,8 @@
 <head>
     <link rel="stylesheet" href="src/components/assets/css/login.css">
 </head>
+
+<ToastContainer />
 <main class="login-container">
     <div class="login-wrapper { loading ? 'loading-state' : '' }">
         <form on:submit={handleLogin}>

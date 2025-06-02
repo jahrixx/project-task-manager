@@ -6,9 +6,20 @@ import interactionPlugin from '@fullcalendar/interaction/index.js';
 import { user } from '$lib/stores/user';
 import { get } from 'svelte/store';
 import type{ TaskData } from '$lib/stores/task';
+import { showToast } from '$lib/api/toastService';
+import ToastContainer from './ToastContainer.svelte';
 
 let calendarEl: any;
 const API_URL = `${import.meta.env.VITE_BASE_URL}`;
+
+function getStatusColor(status: string) {
+    const statusMaps: Record<string, string> = { 
+        'completed': '#355E3B', 
+        'in progress': '#00008B', 
+        'pending': '#FFA500', 
+        'overdue': '#C41E3A' };
+    return statusMaps[status.toLocaleLowerCase()] || '#36454F';
+}
 
 onMount(async () => {
     const currentUser = get(user);
@@ -85,7 +96,16 @@ onMount(async () => {
         },
         eventClick: function (info) {
             const { title, extendedProps } = info.event;
-            alert(`${title}\nDescription: ${extendedProps.description}\nStatus: ${extendedProps.status}`);
+            showToast({ 
+                type: "info", 
+                message: `
+                    <div style="padding-right: 20px;">
+                        <span><strong><u>${title}</u></strong><span><br>
+                        <span style="display: inline-block; max-width: 320px; word-break: break-word; white-space: normal;"><strong>Description:</strong> ${extendedProps.description}</span><br>
+                        <strong>Status:</strong><span style="color: ${getStatusColor(extendedProps.status)}; text-transform: capitalize;"> ${extendedProps.status}</span><br>
+                    </div>
+                `
+            });
         }
     });
     calendar.render();
@@ -109,4 +129,5 @@ onMount(async () => {
 <head>
     <link rel="stylesheet" href="src/components/assets/css/calendar.css">
 </head>
+    <ToastContainer />
     <div bind:this={calendarEl} class="calendar-container"></div>
