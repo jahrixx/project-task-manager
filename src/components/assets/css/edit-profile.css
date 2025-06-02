@@ -79,7 +79,7 @@ outline: none;
 }
 
 .update-btn {
-width: 80%;
+width: 200px;
 padding: 12px;
 background-color: #23BEDA;
 color: white;
@@ -164,7 +164,6 @@ outline: none;
 touch-action: manipulation;
 }
 }
-
 /* page-loader */
 .fullpage-loader {
 position: fixed;
