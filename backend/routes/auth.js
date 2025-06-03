@@ -8,29 +8,21 @@ router.post("/login", async (req, res) => {
     const { username, password } = req.body;
     const pool = await getPool();
 
-    console.log("Username received:", username);
-    console.log("Password received:", password);
-
     try {
         const [rows] = await pool.query("SELECT * FROM users WHERE username = ?", [username]);
-        console.log("Rows from database: ", rows);
 
         if (rows.length === 0) {
-            console.log("User not found");
             return res.status(401).json({ message: "Invalid username or password" });
         }
 
         const user = rows[0];
-
         const passwordMatch = await bcrypt.compare(password, user.password);
-        console.log("Password Match:", passwordMatch);
         if (!passwordMatch) {
-            console.log("Password Mismatch:");
             return res.status(401).json({ message: "Invalid username or password" });
         }
 
         const firstTimeLogin = await bcrypt.compare("default123", user.password);
-
+        
         res.json({
             id: user.id,
             username: user.username,

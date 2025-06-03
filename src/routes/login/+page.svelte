@@ -57,7 +57,8 @@
     </div>
     {#if loading}
         <div class="fullscreen-loader">
-            <div class="spinner-fullscreen"></div>
+            <div class="lds-default"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
+            <!-- <div class="spinner-fullscreen"></div> -->
         </div>
     {/if}
 </main>

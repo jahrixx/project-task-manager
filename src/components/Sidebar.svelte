@@ -191,7 +191,22 @@
         <li>
             <button class="btn-logout" on:click={logoutUser} disabled={isLoading}>
                 {#if isLoading}
-                    <div class="simple-spinner"></div>
+                    <div class="lds-spinner">
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                    </div>
+                    <!-- <div class="simple-spinner"></div> -->
                 {:else}
                     <span>Logout</span>
                 {/if}
@@ -200,7 +215,47 @@
     </ul>
 </div>
 <style>
-    .simple-spinner {
+    .lds-spinner {
+        color: #191970;
+        display: inline-block;
+        position: relative;
+        width: 15px;
+        height: 15px;
+    }
+    .lds-spinner div {
+        transform-origin: 9px 9px;
+        animation: lds-spinner 1.5s linear infinite;
+    }
+    .lds-spinner div:after {
+        content: "";
+        display: block;
+        position: absolute;
+        top: -1px;
+        left: -4px;
+        width: 4px;
+        height: 6px;
+        border-radius: 1px;
+        background-color: #986868;
+    }
+    .lds-spinner div:nth-child(1) { transform: rotate(0deg); animation-delay: -1.2s;}
+    .lds-spinner div:nth-child(2) { transform: rotate(30deg); animation-delay: -1.1s;}
+    .lds-spinner div:nth-child(3) { transform: rotate(60deg); animation-delay: -1s;}
+    .lds-spinner div:nth-child(4) { transform: rotate(90deg); animation-delay: -0.9s;}
+    .lds-spinner div:nth-child(5) { transform: rotate(120deg); animation-delay: -0.8s;}
+    .lds-spinner div:nth-child(6) { transform: rotate(150deg); animation-delay: -0.7s;}
+    .lds-spinner div:nth-child(7) { transform: rotate(180deg); animation-delay: -0.6s;}
+    .lds-spinner div:nth-child(8) { transform: rotate(210deg); animation-delay: -0.5s;}
+    .lds-spinner div:nth-child(9) { transform: rotate(240deg); animation-delay: -0.4s;}
+    .lds-spinner div:nth-child(10) { transform: rotate(270deg); animation-delay: -0.3s;}
+    .lds-spinner div:nth-child(11) { transform: rotate(300deg); animation-delay: -0.2s;}
+    .lds-spinner div:nth-child(12) { transform: rotate(330deg); animation-delay: -0.1s;}
+    .lds-spinner div:nth-child(13) { transform: rotate(360deg); animation-delay: 0s;}
+
+    @keyframes lds-spinner{
+        0% { opacity: 1; }
+        100% { opacity: 0; }
+    }
+    /* .simple-spinner {
         border: 3px solid #D22B2B;
         border-top: 3px solid 	#F88379;
         border-radius: 50%;
@@ -214,7 +269,7 @@
 
     @keyframes spin {
         to { transform: rotate(360deg); }
-    }
+    } */
     .burger {
         margin: 0;
         padding: 0;
