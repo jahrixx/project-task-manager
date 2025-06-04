@@ -15,7 +15,7 @@
     
     const API_URL = `${import.meta.env.VITE_BASE_URL}`;
     const currentDate = new Date();
-    const formattedDate = currentDate.toLocaleDateString();
+    const formattedDate = currentDate.toISOString().split('T')[0];
     
     type Report = {
         id: number;
@@ -28,7 +28,7 @@
     let userList = writable<User[]>([]);
     let officeList = writable<{ id: number, officeName: string }[]>([]);
     let taskDates = writable<{ startDate: string, endDate: string }[]>([]);
-    let activeReport = writable<{ id: number, title: string, startDate: string, endDate: string, generatedDate: string, tasks: TaskData[]} | null>(null);
+    let activeReport = writable<{ id: number, title: string, startDate: string, endDate: string, generatedDate: string, tasks: TaskData[] } | null>(null);
     let selectedUser = "";
     let selectedOffice = "";
     let startDate = "";
@@ -37,21 +37,27 @@
     let calendarInstance: Instance | null = null;
     let now = new Date();
     let timeInterval: NodeJS.Timeout;
+    let loading = true;
 
     onMount(async () => {
         if (!isAuthenticated) {
             goto('/login');
             return;
         }
-        await Promise.all([fetchOffices(), fetchUsers(), fetchReports()]);
-        initializeCalendar([]);
-        if ($user) {
-            fetchTaskDates(String($user?.id));
+        try {
+            await Promise.all([fetchOffices(), fetchUsers(), fetchReports()]);
+            initializeCalendar([]);
+            if ($user) {
+                fetchTaskDates(String($user?.id));
+            }
+            timeInterval = setInterval(() =>  {
+                now = new Date();
+            }, 1000);    
+        } catch (error) {
+            console.error("Error fetching data:", error);
+        } finally {
+            loading = false;
         }
-        timeInterval = setInterval(() =>  {
-            now = new Date();
-
-        }, 1000);
     });
 
     onDestroy(() => {
@@ -109,10 +115,17 @@
                 showToast ({type: "error", message: "No Tasks Assigned For This User."});
                 return;
             }
-            const formattedTasks = tasks.map((task: TaskData) => ({
-                startDate: new Date(task.startDate).toLocaleDateString("en-CA"),
-                endDate: new Date(task.endDate).toLocaleDateString("en-CA"),
-            }));
+            const formattedTasks = tasks.map((task: TaskData) => {
+                const startDate = new Date(task.startDate);
+                const endDate = new Date(task.endDate);
+                endDate.setDate(endDate.getDate() + 1);
+                startDate.setDate(startDate.getDate() + 1);
+
+                return {
+                    startDate: startDate.toISOString().split('T')[0],
+                    endDate: endDate.toISOString().split('T')[0],
+                };
+            });
             taskDates.set(formattedTasks);
             await tick();
             initializeCalendar(formattedTasks);
@@ -124,26 +137,48 @@
     }
 
     function initializeCalendar(taskDateRanges: { startDate: string, endDate: string }[]) {
-        let highlightedDates: string[] = [];        
-        let allStartDates = taskDateRanges.map(task => new Date(task.startDate));
-        let allEndDates = taskDateRanges.map(task => new Date(task.endDate));
-        let minDate = new Date(Math.min(...allStartDates.map(date => date.getTime())));
-        let maxDate = new Date(Math.max(...allEndDates.map(date => date.getTime())));
+        const formatDate = (date: Date) => date.toISOString().split('T')[0];
+        let highlightedDates: string[] = [];
+        
+        let allStartDates = taskDateRanges.map(task => {
+            const date = new Date(task.startDate);
+            date.setHours(0, 0, 0, 0);
+            return date;
+        });
+        let allEndDates = taskDateRanges.map(task => {
+            const date = new Date(task.startDate);
+            date.setHours(0, 0, 0, 0);
+            return date;
+        });
+        
+        let minDate = taskDateRanges.length > 0 
+            ? new Date(Math.min(...allStartDates.map(date => date.getTime())))
+            : new Date();
+        let maxDate = taskDateRanges.length > 0
+            ? new Date(Math.max(...allEndDates.map(date => date.getTime())) + 86400000)
+            : new Date(new Date().setFullYear(new Date().getFullYear() + 1));
         
         taskDateRanges.forEach(({ startDate, endDate }) => {
             let currentDate = new Date(startDate);
+            currentDate.setHours(0, 0, 0, 0);
             let end = new Date(endDate);
+            end.setHours(0, 0, 0, 0);
 
             while (currentDate <= end) {
-                highlightedDates.push(new Date(currentDate).toLocaleDateString("en-CA"));
+                highlightedDates.push(formatDate(currentDate));
                 currentDate.setDate(currentDate.getDate() + 1);
             }
         });
+        const datePickerElement = document.getElementById("datePicker");
+            if (!datePickerElement) return;
+            (datePickerElement as HTMLInputElement).placeholder = "Click To Select Date Range";
+        
         if (calendarInstance) {
             calendarInstance.destroy();
             calendarInstance = null;
         }
-        calendarInstance = flatpickr(document.getElementById("datePicker") as HTMLInputElement, {
+
+        calendarInstance = flatpickr(datePickerElement, {
             mode: "range",
             dateFormat: "Y-m-d",
             disableMobile: true,
@@ -151,20 +186,25 @@
             maxDate: maxDate,
             onChange: (selectedDates) => {
                 if (selectedDates.length === 2) {
-                    startDate = selectedDates[0].toLocaleDateString("en-CA");
-                    endDate = selectedDates[1].toLocaleDateString("en-CA");
-                        const selectedRangeHasGaps = !selectedDates.every(date => 
-                            highlightedDates.includes(date.toLocaleDateString("en-CA"))
-                        );
-                    if(selectedRangeHasGaps){
-                        showToast({type: "error", message: "Selection Includes Date With No Tasks!"})
+                    startDate = formatDate(selectedDates[0]);
+                    endDate = formatDate(selectedDates[1]);
+                    
+                    const selectedRangeHasGaps = !selectedDates.every(date => 
+                        highlightedDates.includes(formatDate(date))
+                    );
+                    
+                    if (selectedRangeHasGaps) {
+                        showToast({
+                            type: "error", 
+                            message: "Selection includes dates with no tasks!"
+                        });
                         calendarInstance?.clear();
                         return;
                     }
                 }
             },
             onDayCreate: function(_, __, ___, dayElem) {
-                const dateStr = dayElem.dateObj.toLocaleDateString("en-CA");
+                const dateStr = formatDate(dayElem.dateObj);
                 if (highlightedDates.includes(dateStr)) {
                     dayElem.style.backgroundColor = "lightgreen";
                     dayElem.style.color = "black";
@@ -183,10 +223,20 @@
 
     async function generateReport() {
         try {
+            // Validate that dates are selected
+            if (!startDate || !endDate) {
+                showToast({ type: "error", message: "Please select a valid date range" });
+                return;
+            }
+
             const res = await fetch(`${API_URL}/reports/generate`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ startDate, endDate, userId: selectedUser })
+                body: JSON.stringify({ 
+                    startDate: startDate, 
+                    endDate: endDate, 
+                    userId: selectedUser 
+                })
             });
             
             if (res.ok) {
@@ -194,19 +244,26 @@
                 showToast({ type: "success", message: "Report Generated Successfully!" });
                 activeReport.set({
                     id: data.reportId,
-                    title: `Task Report - ${startDate} to ${endDate}`,
-                    startDate,
-                    endDate,
-                    generatedDate: formattedDate,
-                    tasks: data.tasks as TaskData[]
+                    title: `Task Report - ${data.adjustedStartDate} to ${data.adjustedEndDate}`,
+                    startDate: data.adjustedStartDate,
+                    endDate: data.adjustedEndDate,
+                    generatedDate: new Date().toISOString().split('T')[0],
+                    tasks: data.tasks
                 });
                 fetchReports();
             } else {
-                showToast({ type: "error", message: "Failed To Generate Report!" });
+                const errorData = await res.json();
+                showToast({ 
+                    type: "error", 
+                    message: errorData.message || "Failed To Generate Report!" 
+                });
             }
         } catch (error) {
-            console.error("Error: ", error);
-            showToast({ type: "error", message: "An Error Occured While Generating The Report!" });
+            console.error("Error generating report:", error);
+            showToast({ 
+                type: "error", 
+                message: "An Error Occurred While Generating The Report!" 
+            });
         }
     }
 
@@ -317,16 +374,20 @@
     }
     
     function clearInputs() {
-        activeReport.set(null);
-        selectedUser = "";
-        selectedOffice = "";
         const datePicker = document.getElementById('datePicker');
+        activeReport.set(null);
+        selectedOffice = "";
+        if($userRole === "Manager" || $userRole === "Admin") {
+            selectedUser = "";
+        }
         if (datePicker) {
             (datePicker as HTMLInputElement).value = '';
+            if(calendarInstance) {
+                calendarInstance.clear();
+            }
         }
     }
 </script>
-
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="src/components/assets/css/report-generation.css">
@@ -334,6 +395,11 @@
 </head>
 {#if !isAuthenticated}
     <Login />
+{:else if loading}
+    <div class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <p>Loading Application Data...</p>
+    </div>
 {:else}
     <div class="container">
         <Sidebar />
@@ -407,7 +473,7 @@
                             <ToastContainer />
                         {/if} -->
                     <div class="buttons">
-                        <button class="generate-btn" on:click={generateReport}>Generate Report</button>
+                        <button class="generate-btn" on:click={generateReport} disabled={!startDate || !endDate}>Generate Report</button>
                         <button class="clear-btn" on:click={clearInputs}>Reset</button>
                     </div>
                 </div>
@@ -569,3 +635,43 @@
         </div>
     </div>
 {/if}
+<style>
+    .loading-overlay {
+        position: fixed; /* Covers entire viewport */
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(255, 255, 255, 0.9); /* Semi-transparent white */
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999; /* Appears above everything */
+    }
+
+    .loading-spinner {
+        border: 5px solid #f3f3f3;
+        border-top: 5px solid #3498db;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        animation: spin 1s linear infinite;
+        margin-bottom: 1rem;
+    }
+    .generate-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        filter: grayscale(30%);
+    }
+
+    .generate-btn:disabled:hover {
+        background-color: #e0e0e0;
+        color: #a0a0a0;
+        border-color: #d0d0d0;
+    }
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+</style>

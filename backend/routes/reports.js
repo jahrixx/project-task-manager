@@ -56,18 +56,27 @@ router.get("/", async (req, res) => {
 router.post('/generate', async (req, res) => {
     console.log("Generate report called");
     const pool = getPool();
-    const { startDate, endDate, userId, createdBy } = req.body;
+    let { startDate, endDate, userId } = req.body;
 
-    console.log("Received report request:", { startDate, endDate, userId });
+    if (!startDate || !endDate || !userId) {
+        return res.status(400).json({ message: "Missing required fields" });
+    }
 
     try {
+        const adjustDate = (dateStr) => {
+            const date = new Date(dateStr);
+            date.setDate(date.getDate() + 1);
+            return date.toISOString().split('T')[0];
+        };
+        const adjustedStartDate = adjustDate(startDate);
+        const adjustedEndDate = adjustDate(endDate);
         const [tasks] = await pool.query(`
             SELECT 
                 t.id, 
                 t.title, 
                 t.description, 
-                t.startDate, 
-                t.endDate, 
+                DATE_FORMAT(t.startDate, '%Y-%m-%d') as startDate,
+                DATE_FORMAT(t.endDate, '%Y-%m-%d') as endDate,
                 t.status,
                 t.assignedTo,
                 t.createdBy,
@@ -86,13 +95,15 @@ router.post('/generate', async (req, res) => {
                 (t.endDate BETWEEN ? AND ?) OR 
                 (t.startDate <= ? AND t.endDate >= ?)
             )
-        `, [userId, userId, startDate, endDate, startDate, endDate, startDate, endDate]);
+        `, [userId, userId, 
+            adjustedStartDate, adjustedEndDate,
+            adjustedStartDate, adjustedEndDate,
+            adjustedStartDate, adjustedEndDate]);
 
         if (tasks.length === 0) {
-            return res.status(404).json({ message: "No tasks found for the selected range." });
+            return res.status(404).json({ message: "No tasks found for the adjusted date range." });
         }
 
-        /// Format the tasks with the additional name fields
         const formattedTasks = tasks.map(task => ({
             ...task,
             assignedToName: `${task.assignedToFirstName} ${task.assignedToLastName}`,
@@ -100,13 +111,10 @@ router.post('/generate', async (req, res) => {
             office: task.assignedToOffice || task.createdByOffice || 'No office specified'
         }));
 
-        // console.log("Formatted Tasks: ", formattedTasks);
-
         const report = {
-            title: `Task Report ${startDate} - ${endDate}`,
-            createdBy,
-            startDate,
-            endDate,
+            title: `Task Report ${adjustedStartDate} to ${adjustedEndDate}`,
+            startDate: adjustedStartDate,
+            endDate: adjustedEndDate,
             userId
         };
 
@@ -114,14 +122,17 @@ router.post('/generate', async (req, res) => {
         res.json({ 
             message: "Report generated successfully", 
             reportId: result.insertId,
-            tasks: formattedTasks
+            tasks: formattedTasks,
+            adjustedStartDate,
+            adjustedEndDate
         });
     } catch (error) {
         console.error("Error generating report:", error);
         res.status(500).json({ 
             message: "Error generating report", 
             error: error.message,
-            // stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+            adjustedStartDate,
+            adjustedEndDate
         });
     }
 });
