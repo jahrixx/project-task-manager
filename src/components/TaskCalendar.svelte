@@ -10,6 +10,7 @@ import { showToast } from '$lib/api/toastService';
 import ToastContainer from './ToastContainer.svelte';
 
 let calendarEl: any;
+let loading = true;
 const API_URL = `${import.meta.env.VITE_BASE_URL}`;
 
 function getStatusColor(status: string) {
@@ -123,11 +124,46 @@ onMount(async () => {
             next: mobile ? '▶' : 'Next'
         });
     });
-
 });
 </script>
 <head>
     <link rel="stylesheet" href="src/components/assets/css/calendar.css">
 </head>
     <ToastContainer />
-    <div bind:this={calendarEl} class="calendar-container"></div>
+    <div class="calendar-container" bind:this={calendarEl}>
+        {#if loading}
+            <div class="loading-container">
+                <div class="loading-spinner"></div>
+                <div class="loading-text">Loading Task Calendar...</div>
+            </div>
+        {/if}
+    </div>
+<style>
+    .loading-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 400px;
+        gap: 1rem;
+    }
+
+    .loading-spinner {
+        border: 4px solid rgba(0, 0, 0, 0.1);
+        border-radius: 50%;
+        border-top: 4px solid #3498db;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+    }
+
+    .loading-text {
+        font-size: 1rem;
+        color: #555;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+</style>

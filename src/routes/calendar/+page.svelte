@@ -44,23 +44,52 @@
     <link rel="stylesheet" href="src/components/assets/css/calendar.css">
 </head>
 
-{#if loading}
-    <div class="fullpage-loader">
-        <div class="spinner"></div>
+{#if !authed}
+<Login />
+{:else if loading}
+    <div class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <p>Loading Application Data...</p>
     </div>
 {:else}
-    {#if !authed}
-        <Login />
-    {:else}
-        <div class="container">
-            <Sidebar />
-            <div class="main-container">
-                    <UserProfile />
-                    <h2 class="h2"><u>Task Calendar</u></h2>
-                <div class="task-calendar-container">
-                    <TaskCalendar />  
-                </div>
+    <div class="container">
+        <Sidebar />
+        <div class="main-container">
+                <UserProfile />
+                <h2 class="h2"><u>Task Calendar</u></h2>
+            <div class="task-calendar-container">
+                <TaskCalendar />  
             </div>
         </div>
-    {/if}  
+    </div>  
 {/if}
+<style>
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(255, 255, 255, 0.9);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+    }
+
+    .loading-spinner {
+        border: 5px solid #f3f3f3;
+        border-top: 5px solid #3498db;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        animation: spin 1s linear infinite;
+        margin-bottom: 1rem;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+</style>
