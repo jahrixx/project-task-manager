@@ -20,8 +20,8 @@
     type Report = {
         id: number;
         title: string;
-        startDate: string;
-        endDate: string;
+        startDate: string | null;
+        endDate: string | null;
         filePath: string;
     };
     let reports = writable<Report[]>([]);
@@ -146,7 +146,7 @@
             return date;
         });
         let allEndDates = taskDateRanges.map(task => {
-            const date = new Date(task.startDate);
+            const date = new Date(task.endDate);
             date.setHours(0, 0, 0, 0);
             return date;
         });
@@ -185,6 +185,12 @@
             minDate: minDate,
             maxDate: maxDate,
             onChange: (selectedDates) => {
+                if(selectedDates.length === 0){
+                    startDate = "";
+                    endDate = "";
+                    return;
+                }
+
                 if (selectedDates.length === 2) {
                     startDate = formatDate(selectedDates[0]);
                     endDate = formatDate(selectedDates[1]);
@@ -222,13 +228,12 @@
     }
 
     async function generateReport() {
+        if (!startDate || !endDate) {
+            showToast({ type: "error", message: "Please select a valid date range" });
+            return;
+        }
+        
         try {
-            // Validate that dates are selected
-            if (!startDate || !endDate) {
-                showToast({ type: "error", message: "Please select a valid date range" });
-                return;
-            }
-
             const res = await fetch(`${API_URL}/reports/generate`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -339,35 +344,6 @@
         }
     }
 
-    // function printReport() {
-    //     const printContent = document.querySelector('.print-area');
-    //         if (!printContent) return;
-
-    //     const printWindow = window.open('', '_blank', 'width=800,height=600');
-    //         if(!printWindow) return;
-
-    //         printWindow?.document.head.insertAdjacentHTML('beforeend',
-    //             `<style>
-    //                 body { font-family: Arial, sans-serif; margin: 20px; }
-    //                 .report-header { margin-bottom: 20px; }
-    //                 .report-meta { display: flex; justify-content: space-between; padding-bottom: 20px; border-bottom: 1px solid #ddd; }
-    //                 .report-logo { display: flex; justify-content: space-between; margin-bottom: 20px; }
-    //                 .logo { font-size: 24px; font-weight: bold; }
-    //                 .user-info { text-align: left; }
-    //                 .task-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    //                 .task-table th, .task-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-    //                 .task-table th { background-color: #f2f2f2; }
-    //             </style>`
-    //         );
-    //         printWindow?.document.body.insertAdjacentHTML('beforeend',printContent.innerHTML);
-    //         printWindow?.document.close();
-    //         printWindow?.focus();
-    //         setTimeout(() => {
-    //             printWindow?.print();
-    //             printWindow?.close();
-    //         }, 500);
-    // }
-
     function filterUsersByOffice() {
         if(!selectedOffice) return get(userList);
         return get(userList).filter(user => user.office === selectedOffice);
@@ -381,7 +357,7 @@
             selectedUser = "";
         }
         if (datePicker) {
-            (datePicker as HTMLInputElement).value = '';
+            (datePicker as HTMLInputElement).placeholder = 'Click To Select Date Range';
             if(calendarInstance) {
                 calendarInstance.clear();
             }
@@ -414,7 +390,6 @@
                             <label for="office">Select Office</label>
                             <select bind:value={selectedOffice} on:change={fetchUsers}>
                                 <option value="" disabled selected>Select an office...</option>
-                                <!-- <option>All Offices</option> -->
                                 {#each $officeList as office}
                                     <option value={office.officeName}>{office.officeName}</option>
                                 {/each}
@@ -433,7 +408,7 @@
                         </div>
                         <div class="form-group">
                             <label for="datePicker">Select Date Range</label>
-                            <input id="datePicker" type="text" placeholder="Select Date Range" required />
+                            <input id="datePicker" type="text" required />
                         </div>
                 
                     {:else if $userRole === "Manager"}
@@ -455,7 +430,7 @@
                         </div>
                         <div class="form-group">
                             <label for="datePicker">Select Date Range</label>
-                            <input id="datePicker" type="text" placeholder="Select Date Range" required />
+                            <input id="datePicker" type="text" required />
                         </div>
                     {:else} 
                         <div class="form-group">
@@ -464,16 +439,13 @@
                         </div>
                         <div class="form-group">
                             <label for="datePicker">Select Date Range</label>
-                            <input id="datePicker" type="text" placeholder="Select Date Range" required />
+                            <input id="datePicker" type="text" required />
                         </div>
                     {/if}
                 </div>
                 <div class="report-actions">
-                        <!-- {#if selectedUser && $taskDates.length === 0}
-                            <ToastContainer />
-                        {/if} -->
                     <div class="buttons">
-                        <button class="generate-btn" on:click={generateReport} disabled={!startDate || !endDate}>Generate Report</button>
+                        <button class="generate-btn" on:click={generateReport}>Generate Report</button>
                         <button class="clear-btn" on:click={clearInputs}>Reset</button>
                     </div>
                 </div>
@@ -637,17 +609,17 @@
 {/if}
 <style>
     .loading-overlay {
-        position: fixed; /* Covers entire viewport */
+        position: fixed;
         top: 0;
         left: 0;
         width: 100vw;
         height: 100vh;
-        background: rgba(255, 255, 255, 0.9); /* Semi-transparent white */
+        background: rgba(255, 255, 255, 0.9);
         display: flex;
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        z-index: 9999; /* Appears above everything */
+        z-index: 9999;
     }
 
     .loading-spinner {
@@ -659,17 +631,7 @@
         animation: spin 1s linear infinite;
         margin-bottom: 1rem;
     }
-    .generate-btn:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-        filter: grayscale(30%);
-    }
-
-    .generate-btn:disabled:hover {
-        background-color: #e0e0e0;
-        color: #a0a0a0;
-        border-color: #d0d0d0;
-    }
+    
     @keyframes spin {
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
