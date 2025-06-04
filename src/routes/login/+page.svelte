@@ -1,4 +1,5 @@
 <script lang="ts">
+    import '../../components/assets/css/login.css';
     import { goto } from '$app/navigation';
     import { login } from '$lib/api/authService';
     import { showToast } from '$lib/api/toastService';
@@ -30,9 +31,9 @@
     }
 </script>
 <title>Login</title>
-<head>
+<!-- <head>
     <link rel="stylesheet" href="src/components/assets/css/login.css">
-</head>
+</head> -->
 
 <ToastContainer />
 <main class="login-container">
