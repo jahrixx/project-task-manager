@@ -1,11 +1,21 @@
 import { toasts } from "$lib/stores/toast";
 
-export async function showToast({ type, message }: { type: string; message: string }) {
-        const id = Date.now();
-        toasts.update((current) => [...current, { id, type, message }]);
+type ToastInput = {
+    type: string;
+    message: string;
+    duration?: number;
+    onConfirm?: () => void;
+    onCancel?: () => void;
+}
 
-        setTimeout(() => {
-            toasts.update((current) => current.filter((toast) => toast.id !== id));
-            // toasts = toasts.filter((toast) => toast.id !== id);
-        }, 5000);
+export async function showToast({ type, message, duration, onConfirm, onCancel }: ToastInput) {
+        const id = Date.now();
+        const toast = { id, type, message, duration, onConfirm, onCancel };
+
+        toasts.update((current) => [...current, toast]);
+        if(type !== 'confirm') {
+            setTimeout(() => {
+                toasts.update((current) => current.filter((toast) => toast.id !== id));
+            },duration ?? 5000);    
+        }
     }

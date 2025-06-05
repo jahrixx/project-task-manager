@@ -4,6 +4,7 @@
     import { goto } from "$app/navigation";
     import { page } from "$app/stores";
     import { user, isAuthenticated, type User } from "$lib/stores/user";
+    import { showToast } from "$lib/api/toastService";
 
     export const activePage = derived(page, ($page) => $page.url.pathname);
     export const userRole = derived(user, ($user: User | null) => $user?.role || "");
@@ -22,23 +23,27 @@
             return;
         }
 
-        if (!confirm("Are you sure you want to logout?")) {
-            return;
-        }
-
-        isLoading = true;
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        try {
-            user.set(null);
-            localStorage.removeItem("user");
-            isAuthenticated.set(false);
-            await goto('/login');    
-        } catch (error) {
-            console.error("Error logging out user:", error);
-        } finally {
-            isLoading = false;
-        }
+        showToast({
+            type: "confirm",
+            message: "Are you sure you want to logout?",
+            onConfirm: async () => {
+                isLoading = true;
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                try {
+                    user.set(null);
+                    localStorage.removeItem("user");
+                    isAuthenticated.set(false);
+                    await goto('/login');    
+                } catch (error) {
+                    console.error("Error logging out user:", error);
+                } finally {
+                    isLoading = false;
+                }
+            },
+            onCancel: () => {
+                showToast({ type: "logout", message: "Logout cancelled." });
+            },
+        })
     }
     function handleScroll() {
         const currentScrollPosition = window.pageYOffset;
