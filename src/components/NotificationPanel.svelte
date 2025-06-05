@@ -15,6 +15,7 @@
     let error: string | null = null;
     let hasData = false;
     let showMenu: number | null = null;
+    let marking: Record<number, boolean> = {};
     
     onMount(() => {
         const currentUser = get(user);
@@ -80,7 +81,11 @@
     {:else if error}
         <p style="text-align: center; color: red;">{error}</p>
     {:else if !hasData}
-        <p style="text-align: center; color: red;">No Notifications Available!</p>
+        <!-- <p style="text-align: center; color: red;">No Notifications Available!</p> -->
+        <div class="loading-container">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Loading Notifications...</div>
+        </div>
     {:else}
         <ul>
             {#each $notifications as note (note.id)}
@@ -101,11 +106,32 @@
                                     </button>
                                     
                                     {#if showMenu ===  note.id}
-                                        <div class="options-menu">
+                                        <!-- <div class="options-menu">
                                             {#if !note.isRead}
                                                 <button class="read" on:click={() => markNotificationAsRead(note.id)}>Mark as read</button>
                                             {:else}
                                                 <button class="read" on:click={() => markNotificationAsUnread(note.id)}>Mark as unread</button>
+                                            {/if}
+                                        </div> -->
+                                        <div class="options-menu">
+                                            {#if marking[note.id]}
+                                                <button class="read" aria-label="loading-spinner-read" disabled>
+                                                    <span class="loading-spinner-read"></span>
+                                                </button>
+                                            {:else}
+                                                {#if !note.isRead}
+                                                    <button class="read" on:click={async () => {
+                                                        marking[note.id] = true;
+                                                        await markNotificationAsRead(note.id);
+                                                        marking[note.id] = false;
+                                                    }}>Mark as read</button>
+                                                {:else}
+                                                    <button class="read" on:click={async () => {
+                                                        marking[note.id] = true;
+                                                        await markNotificationAsUnread(note.id);
+                                                        marking[note.id] = false;
+                                                    }}>Mark as unread</button>
+                                                {/if}
                                             {/if}
                                         </div>
                                     {/if}
@@ -171,4 +197,43 @@
     /* @media screen and (max-width: 320px) {
         
     } */
+    .loading-spinner-read {
+        border: 2px solid rgba(0, 0, 0, 0.1);
+        border-top: 2px solid #3498db;
+        border-radius: 50%;
+        width: 15px;
+        height: 15px;
+        animation: spin 0.6s linear infinite;
+        display: inline-block;
+        vertical-align: middle;
+        margin: auto;
+    }
+
+    .loading-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 250px;
+        gap: 1rem;
+    }
+
+    .loading-spinner {
+        border: 4px solid rgba(0, 0, 0, 0.1);
+        border-radius: 50%;
+        border-top: 4px solid #3498db;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+    }
+
+    .loading-text {
+        font-size: 1rem;
+        color: #555;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
 </style>
