@@ -43,7 +43,7 @@ border-radius: 4px;
 }
 
 button[type="submit"] {
-width: 100%;
+width: 50%;
 padding: 10px;
 background-color: #23BEDA;
 color: white;

@@ -192,12 +192,25 @@
         if (id === undefined) {
             console.error("Cannot delete user: ID is undefined.");
             return;
-        } else if (!confirm("Are you sure you want to delete this User?")) {
-            return;
         }
-            await deleteUser(id);
-            showToast({ type: "success", message: "User Deleted Successfully!" });
-            await refreshUsers();
+        showToast({
+            type: "confirm",
+            message: "Are you sure you want to delete this user?",
+            onConfirm: async () => {
+                try {
+                    await deleteUser(id);
+                    showToast({ type: "success", message: "User Deleted Successfully!" });
+                    await refreshUsers();
+                } catch (error) {
+                    console.error("Error deleting user:", error);
+                } finally {
+                    loading = false;
+                }
+            },
+            onCancel: () => {
+                showToast({ type: "cancel", message: "User Deletion Cancelled!" });
+            }
+        })    
     }
 </script>
 

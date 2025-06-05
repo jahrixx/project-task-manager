@@ -180,7 +180,7 @@ async function handleSubmit() {
         }    
         .form-container {
             margin: 0;
-            margin-right: 8px;
+            margin-right: 2px;
             width: 82%;
         }
     }

@@ -14,16 +14,23 @@ export async function removeNotification(notificationId: number | null) {
     if(!notificationId) {
         console.error("Cannot delete Notification id: ID is undefined");
         return;
-    } else if(!confirm("Are you sure you want to delete this Notification?")) {
-        return;
     } 
-        try {
-            await deleteNotification(notificationId);
-            showToast({ type: "success", message: "Notification Deleted Successfully!" });
-        } catch (error) {
-            console.error("Error deleting notification :", error);
-            errorMessage = "Failed to delete notification. Please try again later!";
+    showToast({
+        type: "confirm",
+        message: "Are you sure you want to delete this notification?",
+        onConfirm: async () => {
+            try {
+                await deleteNotification(notificationId);
+                showToast({ type: "success", message: "Notification Deleted Successfully!" });
+            } catch (error) {
+                console.error("Error deleting notification :", error);
+                errorMessage = "Failed to delete notification. Please try again later!";
+            }
+        },
+        onCancel: async () => {
+            showToast({ type: "cancel", message: "Notification Deletion Cancelled!" });
         }
+    })
 }
 
 export async function deleteNotification(id: number) {

@@ -46,7 +46,7 @@
 display: flex;
 align-items: center;
 gap: 5px;
-margin-top: 35px;
+margin-top: 32.5px;
 margin-bottom: 20px;
 margin-left: 15px;
 }

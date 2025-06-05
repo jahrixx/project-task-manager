@@ -41,7 +41,7 @@
                 }
             },
             onCancel: () => {
-                showToast({ type: "logout", message: "Logout cancelled." });
+                showToast({ type: "cancel", message: "Logout cancelled." });
             },
         })
     }
@@ -299,66 +299,19 @@
     border-radius: 50%;
     animation: lds-default 1.2s linear infinite;
     }
-    .lds-default div:nth-child(1) {
-    animation-delay: 0s;
-    top: 36.8px;
-    left: 66.24px;
-    }
-    .lds-default div:nth-child(2) {
-    animation-delay: -0.1s;
-    top: 22.08px;
-    left: 62.29579px;
-    }
-    .lds-default div:nth-child(3) {
-    animation-delay: -0.2s;
-    top: 11.30421px;
-    left: 51.52px;
-    }
-    .lds-default div:nth-child(4) {
-    animation-delay: -0.3s;
-    top: 7.36px;
-    left: 36.8px;
-    }
-    .lds-default div:nth-child(5) {
-    animation-delay: -0.4s;
-    top: 11.30421px;
-    left: 22.08px;
-    }
-    .lds-default div:nth-child(6) {
-    animation-delay: -0.5s;
-    top: 22.08px;
-    left: 11.30421px;
-    }
-    .lds-default div:nth-child(7) {
-    animation-delay: -0.6s;
-    top: 36.8px;
-    left: 7.36px;
-    }
-    .lds-default div:nth-child(8) {
-    animation-delay: -0.7s;
-    top: 51.52px;
-    left: 11.30421px;
-    }
-    .lds-default div:nth-child(9) {
-    animation-delay: -0.8s;
-    top: 62.29579px;
-    left: 22.08px;
-    }
-    .lds-default div:nth-child(10) {
-    animation-delay: -0.9s;
-    top: 66.24px;
-    left: 36.8px;
-    }
-    .lds-default div:nth-child(11) {
-    animation-delay: -1s;
-    top: 62.29579px;
-    left: 51.52px;
-    }
-    .lds-default div:nth-child(12) {
-    animation-delay: -1.1s;
-    top: 51.52px;
-    left: 62.29579px;
-    }
+    .lds-default div:nth-child(1) { animation-delay: 0s; top: 36.8px; left: 66.24px; }
+    .lds-default div:nth-child(2) { animation-delay: -0.1s; top: 22.08px; left: 62.29579px; }
+    .lds-default div:nth-child(3) { animation-delay: -0.2s; top: 11.30421px; left: 51.52px; }
+    .lds-default div:nth-child(4) { animation-delay: -0.3s; top: 7.36px; left: 36.8px; }
+    .lds-default div:nth-child(5) { animation-delay: -0.4s; top: 11.30421px; left: 22.08px; }
+    .lds-default div:nth-child(6) { animation-delay: -0.5s; top: 22.08px; left: 11.30421px; }
+    .lds-default div:nth-child(7) { animation-delay: -0.6s; top: 36.8px; left: 7.36px; }
+    .lds-default div:nth-child(8) { animation-delay: -0.7s; top: 51.52px; left: 11.30421px; }
+    .lds-default div:nth-child(9) { animation-delay: -0.8s; top: 62.29579px; left: 22.08px; }
+    .lds-default div:nth-child(10) { animation-delay: -0.9s; top: 66.24px; left: 36.8px; }
+    .lds-default div:nth-child(11) { animation-delay: -1s; top: 62.29579px; left: 51.52px; }
+    .lds-default div:nth-child(12) { animation-delay: -1.1s; top: 51.52px; left: 62.29579px; }
+
     @keyframes lds-default {
     0%, 20%, 80%, 100% {
         transform: scale(1);
@@ -373,7 +326,7 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(255, 255, 255, 0.9); /* semi-transparent white */
+    background-color: rgba(255, 255, 255, 0.9);
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -387,21 +340,6 @@
     color: #333;
     text-align: center;
     }
-    /* .simple-spinner {
-        border: 3px solid #D22B2B;
-        border-top: 3px solid 	#F88379;
-        border-radius: 50%;
-        width: 16px;
-        height: 16px;
-        animation: spin 0.6s linear infinite;
-        display: inline-block;
-        vertical-align: middle;
-        margin: auto;
-        }
-
-    @keyframes spin {
-        to { transform: rotate(360deg); }
-    } */
     .burger {
         margin: 0;
         padding: 0;
@@ -547,21 +485,21 @@
             height: 100%;
         }
         .logo-container h2 {
-            text-align: left;
+            text-align: center;
             font-size: 1rem;
             margin: 0;
             color: white;
         }
         .logo-container svg {
-            width: 150px;
-            height: 150px;
+            width: 100px;
+            height: 100px;
             margin: 0;
             padding: 0;
         }
         .logo-container {
             padding-top: 10px;
-            padding-left: 40px;
-            padding-right: 20px;
+            padding-left: 10px;
+            padding-right: 10px;
             padding-bottom: 0;
             margin-bottom: .5rem;
             margin-top: 1rem;

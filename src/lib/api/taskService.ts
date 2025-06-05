@@ -103,17 +103,24 @@ export async function removeTask(taskId: number | null) {
     if(!taskId) {
         console.error("Cannot delete task id: ID is undefined");
         return;
-    } else if(!confirm("Are you sure you want to delete this task?")) {
-        return;
-    } 
-        try {
-            await deleteTask(taskId);
-            showToast({ type: "success", message: "Task and Notification card deleted successfully!" });
-            await refreshTasks();
-        } catch (error) {
-            console.error("Error deleting task :", error);
-            errorMessage = "Failed to delete task. Please try again later!";
-        }
+    }
+    showToast({
+        type: "confirm",
+        message: "Are you sure you want to delete this task?",
+        onConfirm: async () => {
+            try {
+                await deleteTask(taskId);
+                showToast({ type: "success", message: "Task and Notification card deleted successfully!" });
+                await refreshTasks();
+            } catch (error) {
+                console.error("Error deleting task :", error);
+                errorMessage = "Failed to delete task. Please try again later!";
+            }        
+        },
+        onCancel() {
+            showToast({ type: "cancel", message: "Task Deletion Cancelled!" });
+        },
+    })
 }
 
 function transformGroupedTasks(data: any){

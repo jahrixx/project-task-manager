@@ -44,7 +44,7 @@
 <style>
     .toast-container {
         position: fixed;
-        top: 3.2rem;
+        top: 3rem;
         right: 1rem;
         z-index: 9999;
         display: flex;
@@ -55,7 +55,7 @@
         display: flex;
         flex-direction: column;
         position: relative;
-        min-width: 300px;
+        width: 300px;
         padding: .75rem 1rem;
         border-radius: 8px;
         font-size: 1.05rem;
@@ -65,9 +65,9 @@
     .toast.success    { background-color: #28a745; }
     .toast.read       { background-color: #D3D3D3; color: #6082B6; }
     .toast.error      { background-color: #dc3545; }
-    .toast.info       { background-color: #17a2b8; color: #2c3e50; padding-right: 2.5rem; }
+    .toast.info       { background-color: #17a2b8; color: #2c3e50; padding-right: 1rem; }
     .toast.warning    { background-color: #ffc107; color: #333; }
-    .toast.logout     { background-color: #ffffff; color: #dc3545; }
+    .toast.cancel     { background-color: #ffffff; color: #dc3545; }
     .toast.confirm {
         position: fixed;
         top: 0.5rem;
@@ -160,11 +160,19 @@
         .toast-container {
             top: .5rem;
             right: .5rem;
+            z-index: 99999999;
         }
 
         .toast {
-            min-width: 150px;
-            font-size: .8rem;
+            width: 240px;
+            font-size: .9rem;
         }
+
+        .toast.confirm {
+            background-color: rgb(35, 190, 218);
+        }
+        
+        .toast.info { padding-right: 1rem; }
+
     }
 </style>
