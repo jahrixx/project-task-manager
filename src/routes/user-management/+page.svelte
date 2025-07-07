@@ -2,7 +2,7 @@
     import { onMount } from 'svelte';
     import { createUser, getUsers, updateUser, deleteUser, getRoles, getOffices } from '$lib/api/userService';
     import { isAuthenticated, user, type User } from '$lib/stores/user';
-    import { goto } from '$app/navigation';
+    import { debounce } from '$lib/utils/debounce';
     import Login from '../login/+page.svelte';
     import Sidebar from '../../components/Sidebar.svelte';
     import UserProfile from '../../components/UserProfile.svelte';
@@ -60,10 +60,12 @@
             // }
         }
     });
+
+    const debouncedFilterUsers = debounce(filterUsers, 500);
     
     $ : {
         if(searchQuery){
-            filterUsers();
+            debouncedFilterUsers();
         } else {
             users = [ ...allUsers ]
         }
@@ -260,7 +262,7 @@
                 </div>
                 <div class="search">
                     <div class="search-input-container">
-                        <input type="text" class="search-bar" placeholder="Search" bind:value={searchQuery} on:keydown={ (e) => { if (e.key === "Enter")e.preventDefault(); }} >
+                        <input type="text" class="search-bar" placeholder="Search" bind:value={searchQuery} on:input={debouncedFilterUsers} on:keydown={ (e) => { if (e.key === "Enter")e.preventDefault(); }} >
                         <button class="search-icon" on:click={filterUsers} aria-label="search-icon">
                             <svg width="30px" height="30px" viewBox="0 0 24 24" fill="#FFFFFF" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path opacity="0.1" fill-rule="evenodd" clip-rule="evenodd" d="M12 3C4.5885 3 3 4.5885 3 12C3 19.4115 4.5885 21 12 21C19.4115 21 21 19.4115 21 12C21 4.5885 19.4115 3 12 3ZM11.5 7.75C9.42893 7.75 7.75 9.42893 7.75 11.5C7.75 13.5711 9.42893 15.25 11.5 15.25C13.5711 15.25 15.25 13.5711 15.25 11.5C15.25 9.42893 13.5711 7.75 11.5 7.75Z" fill="#323232"></path> <path d="M3 12C3 4.5885 4.5885 3 12 3C19.4115 3 21 4.5885 21 12C21 19.4115 19.4115 21 12 21C4.5885 21 3 19.4115 3 12Z" stroke="#323232" stroke-width="2"></path> <path d="M14 14L16 16" stroke="#323232" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path> <path d="M15 11.5C15 13.433 13.433 15 11.5 15C9.567 15 8 13.433 8 11.5C8 9.567 9.567 8 11.5 8C13.433 8 15 9.567 15 11.5Z" stroke="#323232" stroke-width="2"></path> </g></svg>
                         </button>

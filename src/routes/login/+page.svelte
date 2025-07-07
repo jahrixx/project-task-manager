@@ -3,6 +3,7 @@
     import { goto } from '$app/navigation';
     import { login } from '$lib/api/authService';
     import { showToast } from '$lib/api/toastService';
+    import { user } from '$lib/stores/user';
     
     let username = '';
     let password = '';
@@ -31,6 +32,8 @@
         } catch (error: any) {
             loginError = true;
             showToast({ type: "error", message: "Login Failed!" });
+            username = '';
+            password = '';
         } finally {
             loading = false;
         }
