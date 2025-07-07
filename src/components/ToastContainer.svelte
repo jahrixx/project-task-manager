@@ -68,7 +68,7 @@
     .toast.info       { background-color: #17a2b8; color: #2c3e50; padding-right: 1rem; }
     .toast.warning    { background-color: #ffc107; color: #333; }
     .toast.cancel     { background-color: #ffffff; color: #dc3545; }
-    .toast.confirm {
+    /* .toast.confirm {
         position: fixed;
         top: 0.5rem;
         left: 50%;
@@ -85,6 +85,27 @@
         flex-direction: column;
         align-items: center;
         box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+        animation: fadeInSlide 0.3s ease;
+    } */
+    .toast.confirm {
+        background-color: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border-radius: 10px;
+        border: 1px solid rgba(44, 62, 80, 0.5);
+        padding: 1rem .5rem;
+        color: #333;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        position: fixed;
+        top: 0.5rem;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 10000;
+        min-width: 350px;
+        max-width: 90vw;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
         animation: fadeInSlide 0.3s ease;
     }
     .toast-message {
@@ -106,23 +127,21 @@
     }
     .toast.confirm .btn.confirm {
         border: 1px solid #4169E1;
-        background: rgba(255, 255, 255, 0.5);
+        background: rgba(255, 255, 255, 0.2);
         color: #4169E1;
     }
     .toast.confirm .btn.cancel {
         border: 1px solid #C41E3A;
-        background: rgba(255, 255, 255, 0.5);
+        background: rgba(255, 255, 255, 0.2);
         color: #C41E3A;
     }
-    .toast.confirm .btn.confirm:hover {
-        border: none;
-        background: #4169E1;
-        color: #FFFFFF;
+    .btn.confirm:hover,
+    .btn.cancel:hover {
+        transform: scale(1.05);
     }
-    .toast.confirm .btn.cancel:hover {
-        border: none;
-        background: #C41E3A;
-        color: #FFFFFF;
+    .btn.confirm:active,
+    .btn.cancel:active {
+        transform: scale(0.95);
     }
     .btn {
         padding: 0.5rem 1rem;
@@ -168,9 +187,9 @@
             font-size: .9rem;
         }
 
-        .toast.confirm {
+        /* .toast.confirm {
             background-color: rgb(35, 190, 218);
-        }
+        } */
         
         .toast.info { padding-right: 1rem; }
 

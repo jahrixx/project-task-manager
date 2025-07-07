@@ -9,21 +9,28 @@
     let password = '';
     let errorMessage = '';
     let loading = false;
+    let loginError = false;
 
     function sleep (ms: number) {
         return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    function resetErrorState() {
+        loginError = false;
     }
 
     async function handleLogin(event: Event) {
         event.preventDefault();
         if (loading) return;
         errorMessage = '';
+        loginError = false;
         loading = true;
         try {
             await login(username, password);
             await sleep(2000);
             await goto('/dashboard');
         } catch (error: any) {
+            loginError = true;
             showToast({ type: "error", message: "Login Failed!" });
         } finally {
             loading = false;
@@ -35,7 +42,7 @@
     <link rel="stylesheet" href="src/components/assets/css/login.css">
 </head>
 
-<ToastContainer />
+<!-- <ToastContainer /> -->
 <main class="login-container">
     <div class="login-wrapper { loading ? 'loading-state' : '' }">
         <form on:submit={handleLogin}>
@@ -44,15 +51,23 @@
                     <img class="login-logo" src="/logo.png" alt="Logo">
                     <h2 class="login-title">Project Task Manager</h2>
                 </div>
-                <input class="login-inputs" type="text" id="username" placeholder="Username" bind:value={username} required/>
-                <input class="login-inputs" type="password" id="password" placeholder="Password" bind:value={password} required/>
-                <button class="login-submission" disabled={loading}>
-                    {#if loading}
-                        <span class="login-spinner"></span> Logging In...
-                    {:else}
-                        Login
-                    {/if}
-                </button>
+                <div class="form-group {loginError ? 'shake' : ''}">
+                    <input class="form-control {loginError ? 'error' : ''}" type="text" id="username" placeholder="" bind:value={username} on:focus={resetErrorState} required/>
+                    <label for="username" class="floating-label">Username</label>
+                </div>
+                <div class="form-group {loginError ? 'shake' : ''}">
+                    <input class="form-control {loginError ? 'error' : ''}" type="password" id="password" placeholder="" bind:value={password} on:focus={resetErrorState} required/>
+                    <label for="password" class="floating-label">Password</label>
+                </div>
+                <div class="form-group">
+                    <button class="login-submission" disabled={loading}>
+                        {#if loading}
+                            <span class="login-spinner"></span> Logging In...
+                        {:else}
+                            Login
+                        {/if}
+                    </button>
+                </div>
             </div>    
         </form>
     </div>
@@ -150,5 +165,32 @@
     50% {
         transform: scale(1.5);
     }
+    }
+
+    /* Shake animation and error styles */
+    .shake {
+        animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+    }
+
+    .form-control.error {
+        border-color: #ff4444;
+        box-shadow: 0 0 0 1px #ff4444;
+    }
+
+    .form-control.error:focus + .floating-label,
+    .form-control.error:not(:placeholder-shown) + .floating-label{
+        color: #ff4444;
+    }
+    
+    @keyframes shake {
+        0%, 100% {
+            transform: translateX(0);
+        }
+        10%, 30%, 50%, 70%, 90% {
+            transform: translateX(-5px);
+        }
+        20%, 40%, 60%, 80% {
+            transform: translateX(5px);
+        }
     }
 </style>
