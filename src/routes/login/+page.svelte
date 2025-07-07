@@ -168,7 +168,6 @@
     }
     }
 
-    /* Shake animation and error styles */
     .shake {
         animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
     }
@@ -179,7 +178,7 @@
     }
 
     .form-control.error:focus + .floating-label,
-    .form-control.error:not(:placeholder-shown) + .floating-label{
+    .form-control.error:placeholder-shown + .floating-label{
         color: #ff4444;
     }
     
