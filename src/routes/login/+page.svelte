@@ -3,7 +3,6 @@
     import { goto } from '$app/navigation';
     import { login } from '$lib/api/authService';
     import { showToast } from '$lib/api/toastService';
-    import ToastContainer from '../../components/ToastContainer.svelte';
     
     let username = '';
     let password = '';
@@ -42,7 +41,6 @@
     <link rel="stylesheet" href="src/components/assets/css/login.css">
 </head>
 
-<!-- <ToastContainer /> -->
 <main class="login-container">
     <div class="login-wrapper { loading ? 'loading-state' : '' }">
         <form on:submit={handleLogin}>

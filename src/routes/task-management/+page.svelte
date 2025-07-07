@@ -13,6 +13,7 @@
     import { selectedStatuses } from "$lib/stores/task";
     import { loadArchiveTasks } from "$lib/api/archive";
     import ToastContainer from "../../components/ToastContainer.svelte";
+    
 
     export const userRole = derived(user, ($user: User | null) => $user?.role || "");
     
@@ -470,7 +471,7 @@
                     <div class="overlay">
                         <div class="form-container">
                             <button class="close-btn" on:click={clearForm}>&times;</button>
-                            <h4>{selectedOffice}: Task Information</h4>
+                            <h4>{selectedOffice}: Task Details</h4>
                             <div class="form-inputs">
                                 <div class="form-group">
                                     <label for="title">Title</label>

@@ -105,21 +105,21 @@
         </div>
 
         <div class="password-section">
-            <div class="form-group">
+            <div class="form-group-container">
                 <label for="username">Username</label>
                 <input id="username" type="text" bind:value={currentUsername} readonly disabled />
             </div>
-            <div class="form-group">
+            <div class="form-group-container">
                 <label for="oldPassword">Current Password</label>
                 <input id="oldPassword" type="password" bind:value={oldPassword} placeholder="Enter current password" />
             </div>
 
-            <div class="form-group">
+            <div class="form-group-container">
                 <label for="newPassword">New Password</label>
                 <input id="newPassword" type="password" bind:value={newPassword} placeholder="Enter new password" />
             </div>
 
-            <div class="form-group">
+            <div class="form-group-container">
                 <label for="confirmPassword">Confirm Password</label>
                 <input id="confirmPassword" type="password" bind:value={confirmPassword} placeholder="Confirm new password" />
             </div>
